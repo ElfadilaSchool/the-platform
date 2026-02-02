@@ -33,6 +33,7 @@ if (typeof translations === 'undefined') {
             'nav.systems_space': 'Systems Space',
             'nav.dashboard': 'Dashboard',
             'nav.tasks_management': 'Tasks Management',
+            'nav.task_management': 'Task Management',
             'nav.employees': 'Employees',
             'nav.departments': 'Departments',
             'nav.tasks': 'Tasks',
@@ -56,6 +57,10 @@ if (typeof translations === 'undefined') {
             'nav.payslips_admin': 'Payslips Admin',
             'nav.exceptions': 'Exceptions',
 
+            // Complaints and Suggestions
+            'complaints.title': 'Complaints and Suggestions Management',
+            'complaints.subtitle': 'Follow-up and handling of employee complaints and suggestions',
+
             // Dashboard
             'dashboard.welcome': 'Welcome to HR Dashboard',
             'dashboard.loading': 'Loading...',
@@ -69,6 +74,7 @@ if (typeof translations === 'undefined') {
             'dashboard.director_description': 'Global management: departments, responsibles, employees',
             'dashboard.director_title': 'Director Dashboard',
             'dashboard.director_description': 'Overview of operations and performance metrics',
+            'dashboard.stats_subtitle': 'Statistics and Performance Analytics',
             'dashboard.total_responsibles': 'Total Responsibles',
             'dashboard.current_month': 'Current Month',
             'dashboard.last_month': 'Last Month',
@@ -317,6 +323,7 @@ if (typeof translations === 'undefined') {
             'director.auto_sync': 'Auto syncing',
             'director.refresh_data': 'Refresh Data',
             'director.creator_view_label': 'Creator view',
+            'director.subtitle': 'Task Management and Employee Oversight',
             'director.my_tasks_title': 'My Tasks',
             'director.my_tasks_description': 'Everything you have assigned personally, styled for instant clarity.',
             'director.search_filter_label': 'Search & Filter',
@@ -1731,6 +1738,10 @@ if (typeof translations === 'undefined') {
             'nav.salary_management': 'Gestion des Salaires',
             'nav.payslips_admin': 'Bulletins de Paie Admin',
             'nav.exceptions': 'Exceptions',
+
+            // Complaints and Suggestions
+            'complaints.title': 'Gestion des Plaintes et Suggestions',
+            'complaints.subtitle': 'Suivi et traitement des plaintes et suggestions des employés',
             'nav.systems_space': 'Espace Systèmes',
 
             // Dashboard
@@ -1745,6 +1756,7 @@ if (typeof translations === 'undefined') {
             'dashboard.department_overview': 'Aperçu des départements',
             'dashboard.director_title': 'Tableau de Bord Directeur',
             'dashboard.director_description': 'Vue d\'ensemble des opérations et des métriques de performance',
+            'dashboard.stats_subtitle': 'Statistiques et Analytiques de Performance',
             'dashboard.total_responsibles': 'Total des Responsables',
             'dashboard.current_month': 'Mois Actuel',
             'dashboard.last_month': 'Mois Dernier',
@@ -1964,6 +1976,7 @@ if (typeof translations === 'undefined') {
             'director.auto_sync': 'Synchronisation automatique',
             'director.refresh_data': 'Actualiser les données',
             'director.creator_view_label': 'Vue créateur',
+            'director.subtitle': 'Gestion des tâches et supervision des employés',
             'director.my_tasks_title': 'Mes tâches',
             'director.my_tasks_description': 'Toutes les tâches que vous avez assignées, prêtes pour une lecture instantanée.',
             'director.search_filter_label': 'Recherche & Filtre',
@@ -3401,6 +3414,7 @@ if (typeof translations === 'undefined') {
             'nav.hr_manager': 'مدير الموارد البشرية',
             'nav.dashboard': 'لوحة التحكم',
             'nav.tasks_management': 'إدارة المهام',
+            'nav.task_management': 'إدارة المهام',
             'nav.employees': 'الموظفون',
             'nav.departments': 'الأقسام',
             'nav.tasks': 'المهام',
@@ -3425,6 +3439,10 @@ if (typeof translations === 'undefined') {
             'nav.exceptions': 'الاستثناءات',
             'nav.systems_space': 'مساحة الأنظمة',
 
+            // Complaints and Suggestions
+            'complaints.title': 'إدارة الشكاوي والاقتراحات',
+            'complaints.subtitle': 'متابعة ومعالجة شكاوي واقتراحات الموظفين',
+
             // Dashboard
             'dashboard.welcome': 'مرحباً بك في لوحة تحكم الموارد البشرية',
             'dashboard.loading': 'جاري التحميل...',
@@ -3437,6 +3455,7 @@ if (typeof translations === 'undefined') {
             'dashboard.department_overview': 'نظرة عامة على الأقسام',
             'dashboard.director_title': 'لوحة تحكم المدير',
             'dashboard.director_description': 'نظرة عامة على العمليات ومقاييس الأداء',
+            'dashboard.stats_subtitle': 'الإحصائيات وتحليلات الأداء',
             'dashboard.total_responsibles': 'إجمالي المسؤولين',
             'dashboard.task_management_description': 'إدارة المهام والتعليمات عبر الأقسام',
             'dashboard.total_tasks': 'إجمالي المهام',
@@ -3625,6 +3644,7 @@ if (typeof translations === 'undefined') {
             'director.auto_sync': 'مزامنة تلقائية',
             'director.refresh_data': 'تحديث البيانات',
             'director.creator_view_label': 'منظور المنشئ',
+            'director.subtitle': 'إدارة المهام والإشراف على الموظفين',
             'director.my_tasks_title': 'مهامي',
             'director.my_tasks_description': 'كل ما قمت بتكليفه شخصيًا، معروض بوضوح فوري.',
             'director.search_filter_label': 'بحث وتصفية',

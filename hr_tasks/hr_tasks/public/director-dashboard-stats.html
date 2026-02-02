@@ -1161,109 +1161,69 @@
                 max-height: calc(80vh - 140px);
             }
         }
+
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem 0;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0 0 0.75rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .page-title i {
+            color: #3b82f6;
+            font-size: 1.75rem;
+        }
+
+        .page-subtitle {
+            font-size: 1rem;
+            color: #64748b;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.5rem;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .page-title i {
+                font-size: 1.5rem;
+            }
+
+            .page-subtitle {
+                font-size: 0.875rem;
+            }
+        }
     </style>
 </head>
 
 <body class="bg-gray-50 min-h-screen">
-
     <!-- Main Content -->
     <main class="p-6" style="max-width: 100%;">
-        <!-- Page Hero -->
-        <section class="page-hero">
-            <div class="page-hero-content">
-                <div class="flex flex-wrap items-center justify-between gap-6">
-                    <!-- Left: User Profile -->
-                    <div class="header-user-section">
-                        <div class="header-avatar" id="userAvatar">
-                            <span id="userInitials">D</span>
-                        </div>
-                        <div class="header-user-info">
-                            <h2 class="header-user-name" id="userName">Director</h2>
-                            <span class="header-user-role" id="userRole">Director</span>
-                        </div>
-                    </div>
-
-                    <!-- Right: Actions -->
-                    <div class="header-actions">
-                        <!-- Notification Bell -->
-                        <div class="notification-bell" id="notificationBell" title="Notifications">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge" id="notificationCount">0</span>
-
-                            <!-- Notification Dropdown Panel -->
-                            <div id="notificationDropdown" class="notification-dropdown hidden">
-                                <div class="notification-dropdown-header">
-                                    <h3 class="notification-dropdown-title">
-                                        <i class="fas fa-bell"></i>
-                                        <span data-translate="notifications.title">Notifications</span>
-                                    </h3>
-                                    <button id="markAllReadBtn" class="mark-all-read-btn" title="Mark all as read">
-                                        <i class="fas fa-check-double"></i>
-                                    </button>
-                                </div>
-
-                                <div id="notificationList" class="notification-list">
-                                    <!-- Loading state -->
-                                    <div id="notificationLoading" class="notification-loading">
-                                        <div class="loading-spinner"></div>
-                                        <span data-translate="notifications.loading">Loading notifications...</span>
-                                    </div>
-
-                                    <!-- Empty state -->
-                                    <div id="notificationEmpty" class="notification-empty hidden">
-                                        <i class="fas fa-bell-slash"></i>
-                                        <p data-translate="notifications.empty">No notifications</p>
-                                    </div>
-
-                                    <!-- Notifications will be inserted here -->
-                                </div>
-
-                                <div class="notification-dropdown-footer">
-                                    <a href="priorities.html" class="view-all-link">
-                                        <span data-translate="notifications.view_all">View all notifications</span>
-                                        <i class="fas fa-arrow-right"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Language Switcher -->
-                        <select id="languageSelector" class="hero-select">
-                            <option value="en">English</option>
-                            <option value="fr">Français</option>
-                            <option value="ar">العربية</option>
-                        </select>
-
-                        <!-- Date Display -->
-                        <div class="header-date">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span id="currentDate"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-
-
-
-
-
-
-
         <!-- Page Title & Description -->
-        <!-- Page Title & Description -->
-        <div style="margin-bottom: 3.5rem; margin-top: 2rem; position: relative;">
-            <h1 class="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-900 mb-2"
-                data-translate="dashboard.director_title">
+        <div class="page-header">
+            <h1 class="page-title" data-translate="dashboard.director_title">
+                <i class="fas fa-chart-bar"></i>
                 Director Dashboard
             </h1>
-            <p class="text-lg text-gray-600 font-medium max-w-2xl leading-relaxed"
-                data-translate="dashboard.director_description">
-                Overview of operations and performance metrics
-            </p>
-            <div class="h-1.5 w-24 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mt-5 shadow-sm opacity-90">
-            </div>
+            <p class="page-subtitle" data-translate="dashboard.stats_subtitle">Statistics and Performance Analytics</p>
         </div>
 
         <!-- Two Column Layout -->

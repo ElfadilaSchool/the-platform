@@ -102,7 +102,7 @@
             z-index: 0;
         }
 
-        .director-panel> * {
+        .director-panel>* {
             position: relative;
             z-index: 1;
         }
@@ -455,7 +455,7 @@
             flex-direction: column;
             gap: 24px;
         }
-        
+
 
         .hero-chip {
             background: rgba(255, 255, 255, 0.18);
@@ -507,6 +507,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -672,22 +673,22 @@
         }
 
         /* Better spacing for Arabic */
-        [dir="rtl"] .space-y-3 > * + * {
+        [dir="rtl"] .space-y-3>*+* {
             margin-top: 0.75rem !important;
             margin-bottom: 0 !important;
         }
 
-        [dir="rtl"] .space-y-4 > * + * {
+        [dir="rtl"] .space-y-4>*+* {
             margin-top: 1rem !important;
             margin-bottom: 0 !important;
         }
 
         /* Specific fixes for filter layout */
-        [dir="rtl"] .director-panel > div > div:first-child {
+        [dir="rtl"] .director-panel>div>div:first-child {
             order: 2;
         }
 
-        [dir="rtl"] .director-panel > div > div:last-child {
+        [dir="rtl"] .director-panel>div>div:last-child {
             order: 1;
         }
 
@@ -1710,6 +1711,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -2064,6 +2066,56 @@
                 max-height: calc(80vh - 140px);
             }
         }
+
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem 0;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0 0 0.75rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .page-title i {
+            color: #3b82f6;
+            font-size: 1.75rem;
+        }
+
+        .page-subtitle {
+            font-size: 1rem;
+            color: #64748b;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.5rem;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .page-title i {
+                font-size: 1.5rem;
+            }
+
+            .page-subtitle {
+                font-size: 0.875rem;
+            }
+        }
     </style>
 </head>
 
@@ -2104,97 +2156,38 @@
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto p-6">
-        <!-- Page Hero -->
-        <section class="page-hero">
-            <div class="page-hero-content">
-                <div class="flex flex-wrap items-center justify-between gap-6">
-                    <!-- Left: User Profile -->
-                    <div class="header-user-section">
-                        <div class="header-avatar" id="userAvatar">
-                            <span id="userInitials">D</span>
-                        </div>
-                        <div class="header-user-info">
-                            <h2 class="header-user-name" id="userName">Director</h2>
-                            <span class="header-user-role" id="userRole">Director</span>
-                        </div>
-                    </div>
-
-                    <!-- Right: Actions -->
-                    <div class="header-actions">
-                        <!-- Notification Bell -->
-                        <div class="notification-bell" id="notificationBell" title="Notifications">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge" id="notificationCount">0</span>
-
-                            <!-- Notification Dropdown Panel -->
-                            <div id="notificationDropdown" class="notification-dropdown hidden">
-                                <div class="notification-dropdown-header">
-                                    <h3 class="notification-dropdown-title">
-                                        <i class="fas fa-bell"></i>
-                                        <span data-translate="notifications.title">Notifications</span>
-                                    </h3>
-                                    <button id="markAllReadBtn" class="mark-all-read-btn" title="Mark all as read">
-                                        <i class="fas fa-check-double"></i>
-                                    </button>
-                                </div>
-
-                                <div id="notificationList" class="notification-list">
-                                    <!-- Loading state -->
-                                    <div id="notificationLoading" class="notification-loading">
-                                        <div class="loading-spinner"></div>
-                                        <span data-translate="notifications.loading">Loading notifications...</span>
-                                    </div>
-
-                                    <!-- Empty state -->
-                                    <div id="notificationEmpty" class="notification-empty hidden">
-                                        <i class="fas fa-bell-slash"></i>
-                                        <p data-translate="notifications.empty">No notifications</p>
-                                    </div>
-
-                                    <!-- Notifications will be inserted here -->
-                                </div>
-
-                                <div class="notification-dropdown-footer">
-                                    <a href="priorities.html" class="view-all-link">
-                                        <span data-translate="notifications.view_all">View all notifications</span>
-                                        <i class="fas fa-arrow-right"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Language Switcher -->
-                        <select id="languageSelector" class="hero-select">
-                            <option value="en">English</option>
-                            <option value="fr">Français</option>
-                            <option value="ar">العربية</option>
-                        </select>
-
-                        <!-- Date Display -->
-                        <div class="header-date">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span id="currentDate"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <main class="w-full p-6">
+        <!-- Page Title & Description -->
+        <div class="page-header">
+            <h1 class="page-title" data-translate="report.title">
+                <i class="fas fa-file-alt"></i>
+                Interface Directeur - Rapports
+            </h1>
+            <p class="page-subtitle" data-translate="report.description">Gestion des rapports d'activité</p>
+        </div>
 
         <!-- Director Toolbar with Tabs -->
-        <div class="director-toolbar mt-8" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98)); border-radius: 20px; padding: 24px; border: 1px solid rgba(15, 23, 42, 0.08); box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); position: relative; overflow: hidden; margin-bottom: 2rem;">
-            <div style="position: absolute; inset: 0; background: linear-gradient(120deg, rgba(37, 99, 235, 0.05), rgba(124, 58, 237, 0.03), rgba(56, 189, 248, 0.03)); opacity: 0.5; pointer-events: none;"></div>
-            <div style="display: flex; align-items: center; justify-content: center; gap: 20px; position: relative; z-index: 1; flex-wrap: wrap;">
-                <nav class="director-tabs" aria-label="Report views" id="reportTabs" style="display: inline-flex; flex-wrap: wrap; gap: 8px; background: rgba(248, 250, 252, 0.6); padding: 6px; border-radius: 16px; border: 1px solid rgba(148, 163, 184, 0.15);">
-                    <button data-tab="rapport" id="tab-rapport" class="director-tab active" style="border-radius: 12px; padding: 12px 20px; border: none; background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); color: white; font-weight: 600; font-size: 0.875rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25); transform: translateY(-1px);">
+        <div class="director-toolbar mt-8"
+            style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98)); border-radius: 20px; padding: 24px; border: 1px solid rgba(15, 23, 42, 0.08); box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); position: relative; overflow: hidden; margin-bottom: 2rem;">
+            <div
+                style="position: absolute; inset: 0; background: linear-gradient(120deg, rgba(37, 99, 235, 0.05), rgba(124, 58, 237, 0.03), rgba(56, 189, 248, 0.03)); opacity: 0.5; pointer-events: none;">
+            </div>
+            <div
+                style="display: flex; align-items: center; justify-content: center; gap: 20px; position: relative; z-index: 1; flex-wrap: wrap;">
+                <nav class="director-tabs" aria-label="Report views" id="reportTabs"
+                    style="display: inline-flex; flex-wrap: wrap; gap: 8px; background: rgba(248, 250, 252, 0.6); padding: 6px; border-radius: 16px; border: 1px solid rgba(148, 163, 184, 0.15);">
+                    <button data-tab="rapport" id="tab-rapport" class="director-tab active"
+                        style="border-radius: 12px; padding: 12px 20px; border: none; background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); color: white; font-weight: 600; font-size: 0.875rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25); transform: translateY(-1px);">
                         <i class="fas fa-file-alt" style="font-size: 1rem; color: rgba(255, 255, 255, 0.9);"></i>
                         <span data-translate="report.tab_reports">Reports</span>
                     </button>
-                    <button data-tab="priority" id="tab-priority" class="director-tab" style="border-radius: 12px; padding: 12px 20px; border: none; background: transparent; color: #475569; font-weight: 500; font-size: 0.875rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+                    <button data-tab="priority" id="tab-priority" class="director-tab"
+                        style="border-radius: 12px; padding: 12px 20px; border: none; background: transparent; color: #475569; font-weight: 500; font-size: 0.875rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
                         <i class="fas fa-exclamation-triangle" style="font-size: 1rem; color: #64748b;"></i>
                         <span data-translate="report.tab_priorities">Priorities</span>
                     </button>
-                    <button data-tab="statistics" id="tab-statistics" class="director-tab" style="border-radius: 12px; padding: 12px 20px; border: none; background: transparent; color: #475569; font-weight: 500; font-size: 0.875rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+                    <button data-tab="statistics" id="tab-statistics" class="director-tab"
+                        style="border-radius: 12px; padding: 12px 20px; border: none; background: transparent; color: #475569; font-weight: 500; font-size: 0.875rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
                         <i class="fas fa-chart-bar" style="font-size: 1rem; color: #64748b;"></i>
                         <span data-translate="report.tab_statistics">Statistics</span>
                     </button>
@@ -2265,12 +2258,12 @@
                     <i class="fas fa-check-double"></i>
                     <span data-translate="report.acknowledge_all_pending">Acknowledge All Pending</span>
                 </button>
-                
+
                 <a href="priorities.html" class="quick-action-btn red">
                     <i class="fas fa-exclamation-triangle"></i>
                     <span data-translate="report.view_priorities">View Priorities</span>
                 </a>
-                
+
                 <button onclick="exportReports()" class="quick-action-btn blue">
                     <i class="fas fa-download"></i>
                     <span data-translate="report.export_reports">Export Reports</span>
@@ -2286,7 +2279,8 @@
                         </div>
                         <div>
                             <h3 class="text-lg font-semibold text-gray-900" data-translate="report.filters">Filtres</h3>
-                            <p class="text-xs text-gray-500 mt-0.5" data-translate="report.refine_view">Affinez la vue des rapports selon vos besoins</p>
+                            <p class="text-xs text-gray-500 mt-0.5" data-translate="report.refine_view">Affinez la vue
+                                des rapports selon vos besoins</p>
                         </div>
                     </div>
                     <span class="director-section-pill" data-translate="report.advanced_view">Vue avancée</span>
@@ -2300,15 +2294,18 @@
                         </div>
                         <div class="filter-section-content">
                             <div class="report-type-tabs">
-                                <button class="report-type-tab active" data-type="all" onclick="selectReportType('all')">
+                                <button class="report-type-tab active" data-type="all"
+                                    onclick="selectReportType('all')">
                                     <i class="fas fa-list"></i>
                                     <span data-translate="report.all_reports">Tous les rapports</span>
                                 </button>
-                                <button class="report-type-tab" data-type="employee" onclick="selectReportType('employee')">
+                                <button class="report-type-tab" data-type="employee"
+                                    onclick="selectReportType('employee')">
                                     <i class="fas fa-user"></i>
                                     <span data-translate="report.employee_reports">Rapports Employés</span>
                                 </button>
-                                <button class="report-type-tab" data-type="responsible" onclick="selectReportType('responsible')">
+                                <button class="report-type-tab" data-type="responsible"
+                                    onclick="selectReportType('responsible')">
                                     <i class="fas fa-user-tie"></i>
                                     <span data-translate="report.responsible_reports">Rapports Responsables</span>
                                 </button>
@@ -2319,7 +2316,8 @@
                     <!-- Dynamic Filters Section -->
                     <div class="filter-section">
                         <div class="filter-section-header">
-                            <h4 class="filter-section-title" data-translate="report.specific_filters">Filtres spécifiques</h4>
+                            <h4 class="filter-section-title" data-translate="report.specific_filters">Filtres
+                                spécifiques</h4>
                         </div>
                         <div class="filter-section-content">
                             <div id="filterContainer">
@@ -2327,20 +2325,24 @@
                                 <div id="allReportsFilters" class="filter-grid">
                                     <div class="filter-field-group">
                                         <label data-translate="report.department">Département</label>
-                                        <select class="filter-select" id="departmentFilter" onchange="loadDepartmentData()">
-                                            <option value="all" data-translate="report.all_departments">Tous les départements</option>
+                                        <select class="filter-select" id="departmentFilter"
+                                            onchange="loadDepartmentData()">
+                                            <option value="all" data-translate="report.all_departments">Tous les
+                                                départements</option>
                                         </select>
                                     </div>
                                     <div class="filter-field-group">
                                         <label data-translate="report.employee">Employé</label>
                                         <select class="filter-select" id="employeeFilter" onchange="applyFilters()">
-                                            <option value="all" data-translate="report.all_employees">Tous les employés</option>
+                                            <option value="all" data-translate="report.all_employees">Tous les employés
+                                            </option>
                                         </select>
                                     </div>
                                     <div class="filter-field-group">
                                         <label data-translate="report.responsible">Responsable</label>
                                         <select class="filter-select" id="responsibleFilter" onchange="applyFilters()">
-                                            <option value="all" data-translate="report.all_responsibles">Tous les responsables</option>
+                                            <option value="all" data-translate="report.all_responsibles">Tous les
+                                                responsables</option>
                                         </select>
                                     </div>
                                 </div>
@@ -2349,7 +2351,8 @@
                                 <div id="employeeReportsFilters" class="filter-grid" style="display: none;">
                                     <div class="filter-field-group">
                                         <label>Département</label>
-                                        <select class="filter-select" id="employeeDeptFilter" onchange="loadEmployeeDepartmentData()">
+                                        <select class="filter-select" id="employeeDeptFilter"
+                                            onchange="loadEmployeeDepartmentData()">
                                             <option value="all">Tous les départements</option>
                                         </select>
                                     </div>
@@ -2365,13 +2368,15 @@
                                 <div id="responsibleReportsFilters" class="filter-grid" style="display: none;">
                                     <div class="filter-field-group">
                                         <label>Département</label>
-                                        <select class="filter-select" id="responsibleDeptFilter" onchange="loadResponsibleDepartmentData()">
+                                        <select class="filter-select" id="responsibleDeptFilter"
+                                            onchange="loadResponsibleDepartmentData()">
                                             <option value="all">Tous les départements</option>
                                         </select>
                                     </div>
                                     <div class="filter-field-group">
                                         <label>Responsable</label>
-                                        <select class="filter-select" id="responsibleOnlyFilter" onchange="applyFilters()">
+                                        <select class="filter-select" id="responsibleOnlyFilter"
+                                            onchange="applyFilters()">
                                             <option value="all">Tous les responsables</option>
                                         </select>
                                     </div>
@@ -2389,9 +2394,15 @@
                             </div>
                             <div class="filter-section-content">
                                 <div class="filter-button-group">
-                                    <button class="filter-button active" data-status="all" onclick="selectFilter('status', 'all')" data-translate="report.all">Tous</button>
-                                    <button class="filter-button" data-status="pending" onclick="selectFilter('status', 'pending')" data-translate="report.pending">En Attente</button>
-                                    <button class="filter-button" data-status="acknowledged" onclick="selectFilter('status', 'acknowledged')" data-translate="report.acknowledged">Accusés</button>
+                                    <button class="filter-button active" data-status="all"
+                                        onclick="selectFilter('status', 'all')"
+                                        data-translate="report.all">Tous</button>
+                                    <button class="filter-button" data-status="pending"
+                                        onclick="selectFilter('status', 'pending')" data-translate="report.pending">En
+                                        Attente</button>
+                                    <button class="filter-button" data-status="acknowledged"
+                                        onclick="selectFilter('status', 'acknowledged')"
+                                        data-translate="report.acknowledged">Accusés</button>
                                 </div>
                             </div>
                         </div>
@@ -2399,14 +2410,23 @@
                         <!-- Period Filters -->
                         <div class="filter-section">
                             <div class="filter-section-header">
-                                <h4 class="filter-section-title" data-translate="report.quick_period">Période rapide</h4>
+                                <h4 class="filter-section-title" data-translate="report.quick_period">Période rapide
+                                </h4>
                             </div>
                             <div class="filter-section-content">
                                 <div class="filter-button-group">
-                                    <button class="filter-button active" data-period="all" onclick="selectFilter('period', 'all')" data-translate="report.all_periods">Toutes Périodes</button>
-                                    <button class="filter-button" data-period="today" onclick="selectFilter('period', 'today')" data-translate="report.today">Aujourd'hui</button>
-                                    <button class="filter-button" data-period="week" onclick="selectFilter('period', 'week')" data-translate="report.this_week">Cette Semaine</button>
-                                    <button class="filter-button" data-period="month" onclick="selectFilter('period', 'month')" data-translate="report.this_month">Ce Mois</button>
+                                    <button class="filter-button active" data-period="all"
+                                        onclick="selectFilter('period', 'all')"
+                                        data-translate="report.all_periods">Toutes Périodes</button>
+                                    <button class="filter-button" data-period="today"
+                                        onclick="selectFilter('period', 'today')"
+                                        data-translate="report.today">Aujourd'hui</button>
+                                    <button class="filter-button" data-period="week"
+                                        onclick="selectFilter('period', 'week')" data-translate="report.this_week">Cette
+                                        Semaine</button>
+                                    <button class="filter-button" data-period="month"
+                                        onclick="selectFilter('period', 'month')" data-translate="report.this_month">Ce
+                                        Mois</button>
                                 </div>
                             </div>
                         </div>
@@ -2417,14 +2437,16 @@
                         <!-- Custom Period -->
                         <div class="filter-section">
                             <div class="filter-section-header">
-                                <h4 class="filter-section-title" data-translate="report.custom_period">Période personnalisée</h4>
+                                <h4 class="filter-section-title" data-translate="report.custom_period">Période
+                                    personnalisée</h4>
                             </div>
                             <div class="filter-section-content">
                                 <div class="date-range-group">
                                     <input id="customStart" type="date" class="filter-date-input" />
                                     <span class="date-separator">→</span>
                                     <input id="customEnd" type="date" class="filter-date-input" />
-                                    <button class="filter-button" type="button" onclick="applyCustomDateRange()" data-translate="report.apply">Appliquer</button>
+                                    <button class="filter-button" type="button" onclick="applyCustomDateRange()"
+                                        data-translate="report.apply">Appliquer</button>
                                 </div>
                             </div>
                         </div>
@@ -2437,7 +2459,7 @@
                             <div class="filter-section-content">
                                 <div class="search-input-group">
                                     <i class="fas fa-search search-icon"></i>
-                                    <input id="textSearch" type="text" 
+                                    <input id="textSearch" type="text"
                                         data-translate-placeholder="report.search_placeholder"
                                         placeholder="Rechercher (titre, objet, destinataire, contenu, employé, département)"
                                         class="search-input" />
@@ -2453,22 +2475,30 @@
                 <div class="p-6 border-b">
                     <div class="flex items-center justify-between gap-4">
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-900" data-translate="report.reports">Rapports</h3>
-                            <p class="text-gray-600 text-sm" data-translate="report.manage_reports">Gérer et suivre tous les rapports</p>
+                            <h3 class="text-lg font-semibold text-gray-900" data-translate="report.reports">Rapports
+                            </h3>
+                            <p class="text-gray-600 text-sm" data-translate="report.manage_reports">Gérer et suivre tous
+                                les rapports</p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <div class="flex items-center space-x-2">
-                                <button id="reportsSortToggle" class="p-2 rounded-lg bg-gray-100 text-gray-600 transition-colors" title="Toggle Sort">
+                                <button id="reportsSortToggle"
+                                    class="p-2 rounded-lg bg-gray-100 text-gray-600 transition-colors"
+                                    title="Toggle Sort">
                                     <i class="fas fa-sort-alpha-down" id="reportsSortIcon"></i>
                                 </button>
-                                <button id="reportsViewModeCards" class="p-2 rounded-lg transition-colors bg-gray-100 text-gray-600" title="Cards View">
+                                <button id="reportsViewModeCards"
+                                    class="p-2 rounded-lg transition-colors bg-gray-100 text-gray-600"
+                                    title="Cards View">
                                     <i class="fas fa-border-all"></i>
                                 </button>
-                                <button id="reportsViewModeList" class="p-2 rounded-lg transition-colors" title="List View">
+                                <button id="reportsViewModeList" class="p-2 rounded-lg transition-colors"
+                                    title="List View">
                                     <i class="fas fa-list"></i>
                                 </button>
                             </div>
-                            <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full" id="reportsCount">0</span>
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                                id="reportsCount">0</span>
                         </div>
                     </div>
                 </div>
@@ -2479,60 +2509,68 @@
                         <p data-translate="report.no_reports">Aucun rapport trouvé</p>
                     </div>
                 </div>
-                
+
                 <!-- Pagination Controls -->
                 <div id="reportsPagination" class="flex justify-center items-center space-x-4 mt-6 px-6 pb-6">
-                    <button id="reportsPrevBtn" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" disabled>
+                    <button id="reportsPrevBtn"
+                        class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        disabled>
                         <i class="fas fa-chevron-left mr-2"></i>
                         <span data-translate="common.previous">Previous</span>
                     </button>
                     <span id="reportsPageInfo" class="text-sm text-gray-600">
                         Page <span id="reportsCurrentPage">1</span> of <span id="reportsTotalPages">1</span>
                     </span>
-                    <button id="reportsNextBtn" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    <button id="reportsNextBtn"
+                        class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                         <span data-translate="common.next">Next</span>
                         <i class="fas fa-chevron-right ml-2"></i>
                     </button>
                 </div>
-            </div>    
-                <!-- Pagination -->
-                <div id="paginationContainer" class="pagination-container" style="display: none;">
-                    <button id="prevPageBtn" onclick="previousPage()" class="pagination-btn bg-white text-gray-700">
-                        <i class="fas fa-chevron-left mr-2"></i><span data-translate="report.previous">Previous</span>
-                    </button>
-                    <div class="flex items-center gap-4">
-                        <span id="currentPageNum" class="pagination-info">Page 1 of 1</span>
-                        <span id="paginationInfo" class="pagination-info">Showing 1-10 of 0</span>
-                    </div>
-                    <button id="nextPageBtn" onclick="nextPage()" class="pagination-btn bg-white text-gray-700">
-                        <span data-translate="report.next">Next</span><i class="fas fa-chevron-right ml-2"></i>
-                    </button>
-                </div>
             </div>
+            <!-- Pagination -->
+            <div id="paginationContainer" class="pagination-container" style="display: none;">
+                <button id="prevPageBtn" onclick="previousPage()" class="pagination-btn bg-white text-gray-700">
+                    <i class="fas fa-chevron-left mr-2"></i><span data-translate="report.previous">Previous</span>
+                </button>
+                <div class="flex items-center gap-4">
+                    <span id="currentPageNum" class="pagination-info">Page 1 of 1</span>
+                    <span id="paginationInfo" class="pagination-info">Showing 1-10 of 0</span>
+                </div>
+                <button id="nextPageBtn" onclick="nextPage()" class="pagination-btn bg-white text-gray-700">
+                    <span data-translate="report.next">Next</span><i class="fas fa-chevron-right ml-2"></i>
+                </button>
+            </div>
+        </div>
         </div>
         </div>
 
         <!-- Priority Panel (iframe) -->
         <div id="panel-priority" class="hidden space-y-6 animate-fadeIn">
-            <iframe src="priorities.html" class="w-full rounded-lg border-0" style="overflow: hidden; display: block; background: transparent; height: auto; min-height: 2000px;"></iframe>
+            <iframe src="priorities.html" class="w-full rounded-lg border-0"
+                style="overflow: hidden; display: block; background: transparent; height: auto; min-height: 2000px;"></iframe>
         </div>
 
         <!-- Statistics Panel (iframe) -->
         <div id="panel-statistics" class="hidden space-y-6 animate-fadeIn">
-            <iframe src="statistics.html" class="w-full rounded-lg border-0" style="overflow: hidden; display: block; background: transparent; height: auto; min-height: 2000px;"></iframe>
+            <iframe src="statistics.html" class="w-full rounded-lg border-0"
+                style="overflow: hidden; display: block; background: transparent; height: auto; min-height: 2000px;"></iframe>
         </div>
     </main>
 
     <!-- Enhanced Modal de détails du rapport -->
     <div id="reportDetailsModal"
         class="hidden fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 p-4">
-        <div class="modal-shell max-w-4xl w-full transition-all" style="max-height:85vh; display: flex; flex-direction: column;">
+        <div class="modal-shell max-w-4xl w-full transition-all"
+            style="max-height:85vh; display: flex; flex-direction: column;">
             <div class="flex items-center justify-between p-6 bg-white border-b border-gray-200">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
                         <i class="fas fa-eye" style="color: white; font-size: 1rem;"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900" data-translate="report.report_details">Détails du Rapport</h3>
+                    <h3 class="text-xl font-bold text-gray-900" data-translate="report.report_details">Détails du
+                        Rapport</h3>
                 </div>
                 <button onclick="closeReportDetails()"
                     class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all">
@@ -2545,8 +2583,7 @@
                 </div>
             </div>
             <div class="flex justify-end gap-3 p-6 border-t border-slate-100 bg-slate-50">
-                <button id="modalAcknowledgeBtn"
-                    class="btn-primary hidden" style="display: none;">
+                <button id="modalAcknowledgeBtn" class="btn-primary hidden" style="display: none;">
                     <i class="fas fa-check mr-2"></i>
                     <span data-translate="report.acknowledge_receipt">Accuser Réception</span>
                 </button>
@@ -2554,7 +2591,7 @@
         </div>
     </div>
     <script src="auth.js"></script>
-    <script src="../../../frontend/assets/js/translations.js"></script>
+    <script src="translations.js"></script>
 
     <script>
         // Align API base with director workspace behavior (supports embed + main app config)
@@ -2603,7 +2640,7 @@
         function getAuthHeaders() {
             try {
                 console.log('🔑 Getting auth headers...');
-                
+
                 const authToken = (function () {
                     // First: parent window's authManager (when embedded in main app)
                     try {
@@ -2698,7 +2735,7 @@
         let departmentEmployees = new Map(); // Cache pour les employés par département
         let departmentResponsibles = new Map(); // Cache pour les responsables par département
         const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
-        
+
         // Pagination variables
         let currentPage = 1;
         let itemsPerPage = 10;
@@ -2719,7 +2756,7 @@
             // Refresh department dropdowns
             const allDeptText = typeof translate === 'function' ? translate('report.all_departments') : 'Tous les départements';
             const employeesText = typeof translate === 'function' ? translate('report.employees_count') : 'employés';
-            
+
             const departmentSelects = ['departmentFilter', 'employeeDeptFilter', 'responsibleDeptFilter'];
             departmentSelects.forEach(selectId => {
                 const select = document.getElementById(selectId);
@@ -2741,11 +2778,11 @@
         // Initialisation
         document.addEventListener('DOMContentLoaded', async function () {
             console.log('🎬 DOMContentLoaded fired in reportdir.html');
-            
+
             // Check if we're in an iframe to prevent parent window redirects
             const isInIframe = window.self !== window.top;
             console.log('📱 Is in iframe:', isInIframe);
-            
+
             // Respect authentication, but prevent redirects when embedded
             if (typeof requireAuth === 'function' && !isInIframe) {
                 console.log('🔐 Checking authentication (not in iframe)');
@@ -2767,7 +2804,7 @@
                 const isEmbed = params.get('embed') === '1' || (function () {
                     try { return window.self !== window.top; } catch (_) { return true; }
                 })();
-                
+
                 if (!isEmbed && headerEl) {
                     // Show header if not embedded
                     headerEl.classList.remove('hidden-header');
@@ -2785,19 +2822,19 @@
             if (languageSelector) {
                 const savedLang = localStorage.getItem('preferredLanguage') || 'en';
                 languageSelector.value = savedLang;
-                
+
                 // Update HTML lang and dir attributes
                 document.documentElement.lang = savedLang === 'ar' ? 'ar' : savedLang === 'fr' ? 'fr' : 'en';
                 document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
-                
+
                 languageSelector.addEventListener('change', (e) => {
                     const selectedLang = e.target.value;
                     localStorage.setItem('preferredLanguage', selectedLang);
-                    
+
                     // Update HTML lang and dir attributes
                     document.documentElement.lang = selectedLang === 'ar' ? 'ar' : selectedLang === 'fr' ? 'fr' : 'en';
                     document.documentElement.dir = selectedLang === 'ar' ? 'rtl' : 'ltr';
-                    
+
                     if (typeof setLanguage === 'function') {
                         setLanguage(selectedLang);
                     }
@@ -2824,7 +2861,7 @@
             } catch (error) {
                 console.warn('⚠️ Translation update failed:', error);
             }
-            
+
             // Update placeholders on load
             try {
                 updatePlaceholders();
@@ -2841,7 +2878,7 @@
             } catch (error) {
                 console.error('❌ loadInitialData failed:', error);
             }
-            
+
             // Setup event listeners with error isolation
             try {
                 console.log('🎯 Setting up event listeners...');
@@ -2868,7 +2905,7 @@
             } catch (error) {
                 console.error('❌ Notification system initialization failed:', error);
             }
-            
+
             // Load employees and responsibles with error isolation
             try {
                 console.log('👥 Loading employees and responsibles...');
@@ -2877,7 +2914,7 @@
             } catch (error) {
                 console.error('❌ loadAllEmployeesAndResponsibles failed:', error);
             }
-            
+
             // Load reports with error isolation
             try {
                 console.log('📊 Loading reports...');
@@ -2886,7 +2923,7 @@
             } catch (error) {
                 console.error('❌ loadReports failed:', error);
             }
-            
+
             console.log('🎉 Initialization sequence completed');
         });
 
@@ -2894,11 +2931,11 @@
         async function loadInitialData() {
             try {
                 console.log('🚀 Starting loadInitialData...');
-                
+
                 // Check if we're in an iframe
                 const isInIframe = window.self !== window.top;
                 console.log('📱 Running in iframe:', isInIframe);
-                
+
                 // Récupérer les paramètres depuis l'URL
                 const urlParams = new URLSearchParams(window.location.search);
                 const userId = urlParams.get('user_id');
@@ -2941,13 +2978,13 @@
                 if (currentUserEl) {
                     currentUserEl.textContent = `${currentUser.first_name} ${currentUser.last_name}`;
                 }
-                
+
                 // Update hero section
                 const heroUser = document.getElementById('heroUser');
                 if (heroUser) {
                     heroUser.textContent = `${currentUser.first_name} ${currentUser.last_name}`;
                 }
-                
+
                 const heroDate = document.getElementById('heroDate');
                 if (heroDate) {
                     const today = new Date();
@@ -2966,7 +3003,7 @@
                     console.error('❌ Department loading failed, but continuing:', deptError);
                     // Don't let department loading failure break the entire initialization
                 }
-                
+
                 console.log('🎉 loadInitialData completed');
             } catch (error) {
                 console.error('❌ Critical error in loadInitialData:', error);
@@ -2987,7 +3024,7 @@
                 console.log('🔑 Auth headers:', getAuthHeaders());
                 console.log('🌍 Current hostname:', window.location.hostname);
                 console.log('🌍 Current origin:', window.location.origin);
-                
+
                 const fetchOptions = {
                     method: 'GET',
                     headers: {
@@ -2997,26 +3034,26 @@
                     },
                     cache: 'no-store'
                 };
-                
+
                 console.log('⚙️ Fetch options:', fetchOptions);
-                
+
                 let response;
                 try {
                     response = await fetch(url, fetchOptions);
                 } catch (networkError) {
                     console.error('❌ Network error during fetch:', networkError);
-                    
+
                     // Check if this is a CORS/origin issue
                     const currentOrigin = window.location.origin;
                     const isFileProtocol = window.location.protocol === 'file:';
                     const isWrongOrigin = !currentOrigin.includes('localhost:3020') && !currentOrigin.includes('127.0.0.1:3020');
-                    
+
                     if (isFileProtocol || isWrongOrigin) {
                         console.warn('⚠️ CORS/Origin Issue Detected - continuing with limited functionality');
                         console.warn('📍 Current page origin:', currentOrigin);
                         console.warn('🎯 API target:', url);
                         console.warn('💡 Recommended: Access this page at http://localhost:3020/reportdir.html');
-                        
+
                         // Show user-friendly warning message (not error)
                         const warningDiv = document.createElement('div');
                         warningDiv.style.cssText = `
@@ -3046,19 +3083,19 @@
                             </div>
                         `;
                         document.body.appendChild(warningDiv);
-                        
+
                         // Auto-hide after 8 seconds
                         setTimeout(() => {
                             if (warningDiv.parentElement) {
                                 warningDiv.remove();
                             }
                         }, 8000);
-                        
+
                         // Don't throw error - just continue with empty departments
                         console.warn('⚠️ Continuing without departments data');
                         return; // Exit function early without throwing
                     }
-                    
+
                     // Try with a simpler request (no auth, minimal headers)
                     console.log('🔄 Retrying with minimal headers...');
                     try {
@@ -3077,11 +3114,11 @@
                 }
                 console.log('📡 Response status:', response.status);
                 console.log('📡 Response headers:', [...response.headers.entries()]);
-                
+
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.error('❌ Response error:', errorText);
-                    
+
                     // If authentication failed (401/403), try without auth
                     if (response.status === 401 || response.status === 403) {
                         console.log('🔄 Authentication failed, trying without auth headers...');
@@ -3094,20 +3131,20 @@
                             },
                             cache: 'no-store'
                         };
-                        
+
                         const noAuthResponse = await fetch(url, noAuthOptions);
                         console.log('📡 No-auth response status:', noAuthResponse.status);
-                        
+
                         if (noAuthResponse.ok) {
                             const noAuthData = await noAuthResponse.json();
                             console.log('✅ Success with no-auth request:', noAuthData);
-                            
+
                             if (noAuthData.success) {
                                 departments = noAuthData.departments;
                                 // Continue with the same logic as authenticated request
                                 const departmentSelects = [
                                     'departmentFilter',
-                                    'employeeDeptFilter', 
+                                    'employeeDeptFilter',
                                     'responsibleDeptFilter'
                                 ];
 
@@ -3127,10 +3164,10 @@
                             }
                         }
                     }
-                    
+
                     throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
                 }
-                
+
                 const data = await response.json();
                 console.log('📊 Departments data:', data);
 
@@ -3159,23 +3196,23 @@
                 }
             } catch (error) {
                 console.error('❌ Erreur chargement départements (attempt 1):', error);
-                
+
                 // Fallback: try with localhost if 127.0.0.1 failed, or vice versa
                 try {
                     const fallbackHost = API.includes('127.0.0.1') ? 'localhost' : '127.0.0.1';
                     const fallbackUrl = `http://${fallbackHost}:3020/api/rapportemp/director/departments?fallback=true&t=${Date.now()}`;
                     console.log('🔄 Trying fallback URL:', fallbackUrl);
-                    
+
                     const fallbackResponse = await fetch(fallbackUrl, {
                         method: 'GET',
                         headers: getAuthHeaders(),
                         cache: 'no-store'
                     });
-                    
+
                     if (fallbackResponse.ok) {
                         const fallbackData = await fallbackResponse.json();
                         console.log('✅ Fallback successful:', fallbackData);
-                        
+
                         if (fallbackData.success) {
                             departments = fallbackData.departments;
                             // Update selectors with fallback data
@@ -3196,14 +3233,14 @@
                 } catch (fallbackError) {
                     console.error('❌ Fallback also failed:', fallbackError);
                 }
-                
+
                 // If both attempts failed, initialize with empty departments and continue
                 console.error('❌ All attempts failed. Original error:', error);
                 console.warn('⚠️ Continuing with empty departments list. Services may be unavailable.');
-                
+
                 // Initialize empty departments to prevent further errors
                 departments = [];
-                
+
                 // Still populate selectors with default options
                 const departmentSelects = ['departmentFilter', 'employeeDeptFilter', 'responsibleDeptFilter'];
                 departmentSelects.forEach(selectId => {
@@ -3212,7 +3249,7 @@
                         select.innerHTML = '<option value="all">Tous les départements (Services indisponibles)</option>';
                     }
                 });
-                
+
                 // Show non-blocking notification instead of alert
                 showNotification('Services backend indisponibles. Fonctionnalités limitées.', 'warning');
             }
@@ -3231,19 +3268,19 @@
                 try {
                     let employeesResponse;
                     const authHeaders = getAuthHeaders();
-                    
+
                     // Try main employees endpoint first
                     try {
-                        employeesResponse = await fetch(`${API}/employees`, { 
+                        employeesResponse = await fetch(`${API}/employees`, {
                             headers: authHeaders,
-                            timeout: 5000 
+                            timeout: 5000
                         });
                     } catch (e) {
                         console.warn('Primary employees endpoint failed, trying fallback...');
                         // Fallback to user management service
-                        employeesResponse = await fetch(`${API}/api/users/employees`, { 
+                        employeesResponse = await fetch(`${API}/api/users/employees`, {
                             headers: authHeaders,
-                            timeout: 5000 
+                            timeout: 5000
                         });
                     }
 
@@ -3263,9 +3300,9 @@
                 // Try to load responsibles with error handling
                 try {
                     console.log('🔄 Chargement des responsables...');
-                    const responsiblesResponse = await fetch(`${API}/api/rapportemp/responsibles`, { 
+                    const responsiblesResponse = await fetch(`${API}/api/rapportemp/responsibles`, {
                         headers: getAuthHeaders(),
-                        timeout: 5000 
+                        timeout: 5000
                     });
                     console.log('📡 Réponse responsables:', responsiblesResponse.status);
 
@@ -3297,7 +3334,7 @@
 
                 // Always initialize selectors, even with empty arrays
                 populateAllEmployeesAndResponsibles();
-                
+
                 console.log('✅ Initialisation terminée - Employés:', employees.length, 'Responsables:', responsibles.length);
             } catch (error) {
                 console.error('❌ Erreur critique chargement employés et responsables:', error);
@@ -3322,14 +3359,14 @@
                     if (select) {
                         const allEmpText = typeof translate === 'function' ? translate('report.all_employees') : 'Tous les employés';
                         select.innerHTML = `<option value="all">${allEmpText}</option>`;
-                        
+
                         safeEmployees.forEach(emp => {
                             if (emp && emp.first_name && emp.last_name && emp.id) {
                                 const option = new Option(`${emp.first_name} ${emp.last_name}`, emp.id);
                                 select.add(option);
                             }
                         });
-                        
+
                         console.log(`✅ Populated ${selectId} with ${safeEmployees.length} employees`);
                     }
                 });
@@ -3342,7 +3379,7 @@
                         const allRespText = typeof translate === 'function' ? translate('report.all_responsibles') : 'Tous les responsables';
                         const deptText = typeof translate === 'function' ? translate('report.department') : 'Département';
                         select.innerHTML = `<option value="all">${allRespText}</option>`;
-                        
+
                         safeResponsibles.forEach(resp => {
                             if (resp && resp.first_name && resp.last_name && resp.id) {
                                 const displayName = `${resp.first_name} ${resp.last_name} (${resp.department_name || deptText})`;
@@ -3350,7 +3387,7 @@
                                 select.add(option);
                             }
                         });
-                        
+
                         console.log(`✅ Populated ${selectId} with ${safeResponsibles.length} responsibles`);
                     }
                 });
@@ -3688,7 +3725,7 @@
                     document.getElementById('pendingReports').textContent = data.stats.pending || 0;
                     document.getElementById('acknowledgedReports').textContent = data.stats.acknowledged || 0;
                     document.getElementById('todayReports').textContent = data.stats.today || 0;
-                    
+
                     // Update tab badges
                     const reportsTabBadge = document.getElementById('reportsTabBadge');
                     const prioritiesTabBadge = document.getElementById('prioritiesTabBadge');
@@ -3722,7 +3759,7 @@
         function updatePaginationControls(page, totalPages, totalItems) {
             const startItem = ((page - 1) * itemsPerPage) + 1;
             const endItem = Math.min(page * itemsPerPage, totalItems);
-            
+
             document.getElementById('paginationInfo').textContent = `Showing ${startItem}-${endItem} of ${totalItems}`;
             document.getElementById('prevPageBtn').disabled = page === 1;
             document.getElementById('nextPageBtn').disabled = page === totalPages;
@@ -3770,12 +3807,12 @@
                     window.open(pdfPath, '_blank');
                     return;
                 }
-                
+
                 // Just open the PDF URL directly in a new tab - let the browser handle it
                 const pdfUrl = `${API}/api/rapportemp/${reportId}/pdf`;
                 console.log('Opening PDF URL:', pdfUrl);
                 window.open(pdfUrl, '_blank');
-                
+
             } catch (error) {
                 console.error('Error downloading PDF:', error);
                 alert(`Unable to download PDF.\n\nMake sure the backend server is running on port 3020.\n\nTo start the server, run:\n./start-services.sh\n\nThen try again.`);
@@ -4366,7 +4403,7 @@
 
         // Tab switching functionality
         const TABS = ['rapport', 'priority', 'statistics'];
-        
+
         // Function to auto-resize iframes
         function resizeIframe(iframe) {
             try {
@@ -4379,13 +4416,13 @@
                 console.log('Cannot resize iframe due to cross-origin restrictions');
             }
         }
-        
+
         function bindTabs() {
             const buttons = document.querySelectorAll('#reportTabs [data-tab]');
             buttons.forEach(btn => btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 const tab = btn.getAttribute('data-tab');
-                
+
                 // Update button styles and inline styles
                 buttons.forEach(b => {
                     b.classList.remove('active');
@@ -4401,7 +4438,7 @@
                         icon.style.color = '#64748b';
                     }
                 });
-                
+
                 // Apply active styles to clicked button
                 btn.classList.add('active');
                 btn.style.background = 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)';
@@ -4414,7 +4451,7 @@
                 if (activeIcon) {
                     activeIcon.style.color = 'rgba(255, 255, 255, 0.9)';
                 }
-                
+
                 // Show/hide panels with animation
                 TABS.forEach(t => {
                     const panel = document.getElementById(`panel-${t}`);
@@ -4424,11 +4461,11 @@
                             panel.classList.add('animate-fadeIn');
                             // Remove animation class after animation completes
                             setTimeout(() => panel.classList.remove('animate-fadeIn'), 400);
-                            
+
                             // Auto-resize iframe if present
                             const iframe = panel.querySelector('iframe');
                             if (iframe) {
-                                iframe.onload = function() {
+                                iframe.onload = function () {
                                     resizeIframe(iframe);
                                     // Re-check size periodically for dynamic content
                                     setInterval(() => resizeIframe(iframe), 500);
@@ -4454,12 +4491,12 @@
         // =====================
         // User Data & Date Display
         // =====================
-        
+
         // Load user data from AuthManager
         function loadUserData() {
             try {
                 let user = null;
-                
+
                 // Try to get user from parent window's authManager
                 try {
                     if (window.parent && window.parent !== window && window.parent.authManager) {
@@ -4468,7 +4505,7 @@
                 } catch (e) {
                     console.warn('Could not access parent authManager:', e);
                 }
-                
+
                 // Try local authManager
                 if (!user && typeof authManager !== 'undefined' && authManager && authManager.getUser) {
                     try {
@@ -4477,7 +4514,7 @@
                         console.warn('Could not access local authManager:', e);
                     }
                 }
-                
+
                 // Fallback to currentUser if available
                 if (!user && typeof currentUser !== 'undefined' && currentUser) {
                     user = currentUser;
@@ -4653,7 +4690,7 @@
                     } else if (typeof authManager !== 'undefined' && authManager && authManager.getUser) {
                         user = authManager.getUser();
                     }
-                } catch (e) {}
+                } catch (e) { }
 
                 if (!user) return [];
 
@@ -4985,11 +5022,11 @@
             const languageSelector = document.getElementById('languageSelector');
             const body = document.body;
             const quickActionsContainer = document.getElementById('quickActionsContainer');
-            
+
             if (languageSelector && quickActionsContainer) {
                 const updateDirection = () => {
                     const selectedLang = languageSelector.value;
-                    
+
                     if (selectedLang === 'ar') {
                         body.setAttribute('dir', 'rtl');
                         quickActionsContainer.style.justifyContent = 'flex-start';
@@ -4997,14 +5034,14 @@
                         body.removeAttribute('dir');
                         quickActionsContainer.style.justifyContent = 'flex-end';
                     }
-                    
+
                     // Improve filter layout after direction change
                     setTimeout(improveFilterLayoutForArabic, 100);
                 };
-                
+
                 // Initial setup
                 updateDirection();
-                
+
                 // Update on language change
                 languageSelector.addEventListener('change', updateDirection);
             }
@@ -5017,47 +5054,47 @@
                 setTimeout(addMissingTranslations, 100);
                 return;
             }
-            
+
             // Ensure report object exists
             if (!translations.en.report) translations.en.report = {};
             if (!translations.fr.report) translations.fr.report = {};
             if (!translations.ar.report) translations.ar.report = {};
-            
+
             // English
             translations.en.report.view_priorities = 'View Priorities';
             translations.en.report.export_reports = 'Export Reports';
             translations.en.report.specific_filters = 'Specific Filters';
             translations.en.report.search = 'Search';
-            
+
             // French  
             translations.fr.report.view_priorities = 'Voir les priorités';
             translations.fr.report.export_reports = 'Exporter les rapports';
             translations.fr.report.specific_filters = 'Filtres spécifiques';
             translations.fr.report.search = 'Recherche';
-            
+
             // Arabic
             translations.ar.report.view_priorities = 'عرض الأولويات';
             translations.ar.report.export_reports = 'تصدير التقارير';
             translations.ar.report.specific_filters = 'فلاتر محددة';
             translations.ar.report.search = 'بحث';
-            
+
             // Force update the page with new translations
             if (typeof updateTranslations === 'function') {
                 updateTranslations();
             }
-            
+
             // Manual update for specific elements that might not update
             setTimeout(() => {
                 const specificFiltersElement = document.querySelector('[data-translate="report.specific_filters"]');
                 const searchElement = document.querySelector('[data-translate="report.search"]');
-                
+
                 if (specificFiltersElement && translations.ar.report.specific_filters) {
                     const currentLang = document.getElementById('languageSelector')?.value;
                     if (currentLang === 'ar') {
                         specificFiltersElement.textContent = translations.ar.report.specific_filters;
                     }
                 }
-                
+
                 if (searchElement && translations.ar.report.search) {
                     const currentLang = document.getElementById('languageSelector')?.value;
                     if (currentLang === 'ar') {
@@ -5071,10 +5108,10 @@
         function improveFilterLayoutForArabic() {
             const body = document.body;
             const isRTL = body.getAttribute('dir') === 'rtl';
-            
+
             if (isRTL) {
                 console.log('Applying RTL improvements for filters');
-                
+
                 // Fix main filter panel layout
                 const filterPanel = document.querySelector('.director-panel');
                 if (filterPanel) {
@@ -5183,11 +5220,11 @@
         function wireReportsViewModeButtons() {
             const btnCards = document.getElementById('reportsViewModeCards');
             const btnList = document.getElementById('reportsViewModeList');
-            
+
             if (btnCards && btnList) {
                 const updateViewMode = (mode) => {
                     reportsViewMode = mode;
-                    
+
                     // Update button styles
                     if (mode === 'cards') {
                         btnCards.classList.add('bg-gray-100', 'text-gray-600');
@@ -5200,13 +5237,13 @@
                         btnCards.classList.add('bg-white', 'text-gray-400');
                         btnCards.classList.remove('bg-gray-100', 'text-gray-600');
                     }
-                    
+
                     renderReportsList();
                 };
-                
+
                 btnCards.addEventListener('click', () => updateViewMode('cards'));
                 btnList.addEventListener('click', () => updateViewMode('list'));
-                
+
                 // Set initial state
                 updateViewMode(reportsViewMode);
             }
@@ -5215,12 +5252,12 @@
         // Wire sort button
         function wireReportsSortButton() {
             const sortBtn = document.getElementById('reportsSortToggle');
-            
+
             if (sortBtn) {
                 sortBtn.addEventListener('click', () => {
                     // Toggle sort direction
                     reportsSortOrder = reportsSortOrder === 'asc' ? 'desc' : 'asc';
-                    
+
                     // Update sort icon
                     const icon = document.getElementById('reportsSortIcon');
                     if (icon) {
@@ -5230,7 +5267,7 @@
                             icon.className = 'fas fa-sort-alpha-up';
                         }
                     }
-                    
+
                     // Re-render with sorted data
                     renderReportsList();
                 });
@@ -5241,7 +5278,7 @@
         function wireReportsPagination() {
             const prevBtn = document.getElementById('reportsPrevBtn');
             const nextBtn = document.getElementById('reportsNextBtn');
-            
+
             if (prevBtn) {
                 prevBtn.addEventListener('click', () => {
                     if (reportsCurrentPage > 1) {
@@ -5251,7 +5288,7 @@
                     }
                 });
             }
-            
+
             if (nextBtn) {
                 nextBtn.addEventListener('click', () => {
                     const totalPages = Math.ceil(allReports.length / reportsPerPage);
@@ -5267,13 +5304,13 @@
         // Sort reports by language
         function sortReportsByLanguage(items) {
             const currentLang = document.getElementById('languageSelector')?.value || 'en';
-            
+
             return [...items].sort((a, b) => {
                 const textA = a.title || '';
                 const textB = b.title || '';
-                
+
                 let comparison = 0;
-                
+
                 // Arabic sorting
                 if (currentLang === 'ar') {
                     comparison = textA.localeCompare(textB, 'ar', { sensitivity: 'base' });
@@ -5286,7 +5323,7 @@
                 else {
                     comparison = textA.localeCompare(textB, 'en', { sensitivity: 'base' });
                 }
-                
+
                 return reportsSortOrder === 'asc' ? comparison : -comparison;
             });
         }
@@ -5301,17 +5338,17 @@
         // Update pagination controls
         function updateReportsPagination() {
             const totalPages = Math.ceil(allReports.length / reportsPerPage);
-            
+
             // Update page info
             const currentPageEl = document.getElementById('reportsCurrentPage');
             const totalPagesEl = document.getElementById('reportsTotalPages');
             if (currentPageEl) currentPageEl.textContent = reportsCurrentPage;
             if (totalPagesEl) totalPagesEl.textContent = totalPages || 1;
-            
+
             // Update button states
             const prevBtn = document.getElementById('reportsPrevBtn');
             const nextBtn = document.getElementById('reportsNextBtn');
-            
+
             if (prevBtn) {
                 prevBtn.disabled = reportsCurrentPage === 1;
             }
@@ -5324,7 +5361,7 @@
         function renderReportsList() {
             const listEl = document.getElementById('reportsList');
             if (!listEl) return;
-            
+
             if (!allReports.length) {
                 listEl.innerHTML = `
                     <div class="text-center text-gray-500 py-8">
@@ -5334,17 +5371,17 @@
                 `;
                 return;
             }
-            
+
             // Sort and paginate
             const sortedReports = sortReportsByLanguage(allReports);
             const paginatedReports = getPaginatedReports(sortedReports);
-            
+
             if (reportsViewMode === 'list') {
                 renderReportsListView(paginatedReports, listEl);
             } else {
                 renderReportsCardsView(paginatedReports, listEl);
             }
-            
+
             updateReportsPagination();
         }
 
@@ -5363,16 +5400,16 @@
             container.innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     ${reports.map(report => {
-                        const isAcknowledged = report.status === 'acknowledged';
-                        const formattedDateTime = new Date(report.created_at).toLocaleString('fr-FR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        });
-                        
-                        return `
+                const isAcknowledged = report.status === 'acknowledged';
+                const formattedDateTime = new Date(report.created_at).toLocaleString('fr-FR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                return `
                         <div class="report-card">
                             <div class="report-card-header">
                                 <div style="flex: 1; min-width: 0;">
@@ -5449,7 +5486,8 @@
                                 `}
                             </div>
                         </div>
-                    `;}).join('')}
+                    `;
+            }).join('')}
                 </div>
             `;
         }
@@ -5480,16 +5518,16 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             ${reports.map(report => {
-                                const isAcknowledged = report.status === 'acknowledged';
-                                const formattedDateTime = new Date(report.created_at).toLocaleString('fr-FR', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                });
-                                
-                                return `
+                const isAcknowledged = report.status === 'acknowledged';
+                const formattedDateTime = new Date(report.created_at).toLocaleString('fr-FR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                return `
                                 <tr class="hover:bg-gray-50">
                                     <td>
                                         <div class="text-sm font-medium text-gray-900">${report.title || 'Rapport'}</div>
@@ -5526,7 +5564,8 @@
                                         </div>
                                     </td>
                                 </tr>
-                            `;}).join('')}
+                            `;
+            }).join('')}
                         </tbody>
                     </table>
                 </div>

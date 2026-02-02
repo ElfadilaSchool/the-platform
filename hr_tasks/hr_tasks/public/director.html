@@ -5656,6 +5656,56 @@
 				opacity: 0.5;
 			}
 		}
+
+		/* Page Header */
+		.page-header {
+			text-align: center;
+			margin-bottom: 2rem;
+			padding: 2rem 0;
+			background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+			border-radius: 16px;
+			border: 1px solid rgba(148, 163, 184, 0.1);
+			box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+		}
+
+		.page-title {
+			font-size: 2rem;
+			font-weight: 700;
+			color: #1e293b;
+			margin: 0 0 0.75rem 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 0.75rem;
+		}
+
+		.page-title i {
+			color: #3b82f6;
+			font-size: 1.75rem;
+		}
+
+		.page-subtitle {
+			font-size: 1rem;
+			color: #64748b;
+			margin: 0;
+			font-weight: 500;
+		}
+
+		@media (max-width: 768px) {
+			.page-title {
+				font-size: 1.5rem;
+				flex-direction: column;
+				gap: 0.5rem;
+			}
+
+			.page-title i {
+				font-size: 1.5rem;
+			}
+
+			.page-subtitle {
+				font-size: 0.875rem;
+			}
+		}
 	</style>
 </head>
 
@@ -5665,84 +5715,14 @@
 		<main class="flex-1 overflow-y-auto p-6">
 			<div>
 				<div id="toastRoot" class="toast-container" aria-live="polite" aria-atomic="true"></div>
-				<!-- Page Hero -->
-				<section class="page-hero">
-					<div class="page-hero-content">
-						<div class="flex flex-wrap items-center justify-between gap-6">
-							<!-- Left: User Profile -->
-							<div class="header-user-section">
-								<div class="header-avatar" id="userAvatar">
-									<span id="userInitials">D</span>
-								</div>
-								<div class="header-user-info">
-									<h2 class="header-user-name" id="userName">Director</h2>
-									<span class="header-user-role" id="userRole">Director</span>
-								</div>
-							</div>
-
-							<!-- Right: Actions -->
-							<div class="header-actions">
-								<!-- Notification Bell -->
-								<div class="notification-bell" id="notificationBell" title="Notifications">
-									<i class="fas fa-bell"></i>
-									<span class="notification-badge" id="notificationCount">0</span>
-
-									<!-- Notification Dropdown Panel -->
-									<div id="notificationDropdown" class="notification-dropdown hidden">
-										<div class="notification-dropdown-header">
-											<h3 class="notification-dropdown-title">
-												<i class="fas fa-bell"></i>
-												<span data-translate="notifications.title">Notifications</span>
-											</h3>
-											<button id="markAllReadBtn" class="mark-all-read-btn"
-												title="Mark all as read">
-												<i class="fas fa-check-double"></i>
-											</button>
-										</div>
-
-										<div id="notificationList" class="notification-list">
-											<!-- Loading state -->
-											<div id="notificationLoading" class="notification-loading">
-												<div class="loading-spinner"></div>
-												<span data-translate="notifications.loading">Loading
-													notifications...</span>
-											</div>
-
-											<!-- Empty state -->
-											<div id="notificationEmpty" class="notification-empty hidden">
-												<i class="fas fa-bell-slash"></i>
-												<p data-translate="notifications.empty">No notifications</p>
-											</div>
-
-											<!-- Notifications will be inserted here -->
-										</div>
-
-										<div class="notification-dropdown-footer">
-											<a href="priorities.html" class="view-all-link">
-												<span data-translate="notifications.view_all">View all
-													notifications</span>
-												<i class="fas fa-arrow-right"></i>
-											</a>
-										</div>
-									</div>
-								</div>
-
-								<!-- Language Switcher -->
-								<select id="languageSelector" class="hero-select">
-									<option value="en">English</option>
-									<option value="fr">Fran�ais</option>
-									<option value="ar">العربية</option>
-								</select>
-
-								<!-- Date Display -->
-								<div class="header-date">
-									<i class="fas fa-calendar-alt"></i>
-									<span id="currentDate"></span>
-								</div>
-							</div>
-						</div>
-					</div>
-				</section>
+			<!-- Page Title & Description -->
+			<div class="page-header">
+				<h1 class="page-title" data-translate="nav.task_management">
+					<i class="fas fa-tachometer-alt"></i>
+					Task Management
+				</h1>
+				<p class="page-subtitle" data-translate="director.subtitle">Task Management and Employee Oversight</p>
+			</div>
 
 				<!-- KPI Snapshot - Tasks & Instructions Focus -->
 				<div class="flex flex-wrap gap-4 justify-between mt-12 mb-12" dir="${currentLanguage === 'ar' ? 'rtl' : 'ltr'}">
@@ -6420,7 +6400,7 @@
 	<!-- <script src="genererR.js"></script> -->
 	<!-- <script src="sidebar.js"></script> -->
 	<!-- <script src="/socket.io/socket.io.js"></script> -->
-	<script src="../../../frontend/assets/js/translations.js"></script>
+	<script src="translations.js"></script>
 	<script>
 		const getCurrentLanguage = () => (typeof window !== 'undefined' && window.currentLanguage) ? window.currentLanguage : (localStorage.getItem('language') || localStorage.getItem('lang') || 'en');
 		const t = (key) => (typeof translate === 'function') ? translate(key) : key;
