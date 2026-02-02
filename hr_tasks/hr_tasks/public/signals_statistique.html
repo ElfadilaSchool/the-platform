@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إحصائيات الإشارات</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 25px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      color: #1e293b;
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #06b6d4, #0891b2);
+      color: white;
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+    }
+
+    .btn-secondary {
+      background: #64748b;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #475569;
+      transform: translateY(-2px);
+    }
+
+    /* Filters */
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #06b6d4;
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+    }
+
+    /* Stats Cards */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 4px;
+    }
+
+    .stat-card.total::before {
+      background: linear-gradient(90deg, #06b6d4, #0891b2);
+    }
+
+    .stat-card.treated::before {
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .stat-card.pending::before {
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+
+    .stat-card.time::before {
+      background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #64748b;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 42px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .stat-info {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 8px;
+    }
+
+    /* Card */
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 25px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-title {
+      font-size: 20px;
+      color: #1e293b;
+      margin-bottom: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: linear-gradient(135deg, #06b6d4, #0891b2);
+      border-radius: 2px;
+    }
+
+    /* Chart Container */
+    .chart-container {
+      position: relative;
+      height: 350px;
+      margin-bottom: 20px;
+    }
+
+    /* Grid Layout */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 25px;
+    }
+
+    /* Location List */
+    .location-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      background: #f8fafc;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+    }
+
+    .location-item:hover {
+      background: #f1f5f9;
+      transform: translateX(-5px);
+    }
+
+    .location-rank {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #06b6d4, #0891b2);
+      color: white;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .location-info {
+      flex-grow: 1;
+    }
+
+    .location-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+
+    .location-details {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .location-count {
+      font-size: 28px;
+      font-weight: 700;
+      color: #06b6d4;
+      text-align: center;
+    }
+
+    .location-label {
+      font-size: 11px;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead tr {
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    th {
+      text-align: right;
+      padding: 12px 16px;
+      font-weight: 700;
+      color: #475569;
+      font-size: 13px;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      background: #e0f2fe;
+      color: #0369a1;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pagination button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      background: #e2e8f0;
+      color: #475569;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      background: #cbd5f5;
+      color: #1e293b;
+    }
+
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination span {
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    /* Pending Card */
+    .pending-card {
+      border: 2px solid #fef3c7;
+      background: #fffbeb;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .pending-card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .pending-card-type {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+
+    .pending-card-location {
+      font-size: 13px;
+      color: #78716c;
+    }
+
+    .pending-card-date {
+      font-size: 12px;
+      color: #a8a29e;
+      margin-top: 8px;
+    }
+
+    /* Loading */
+    .loading-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+    }
+
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid #e2e8f0;
+      border-top-color: #06b6d4;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #94a3b8;
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .card {
+        page-break-inside: avoid;
+      }
+
+      .page-break {
+        page-break-after: always;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .header-top {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header no-print">
+      <div class="header-top">
+        <div>
+          <h1>📊 إحصائيات الإشارات</h1>
+          <p>تقرير شامل لأداء الصيانة</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-secondary" onclick="window.history.back()">← رجوع</button>
+          <button class="btn btn-primary" onclick="exportPDF()">📥 تصدير PDF</button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <div class="form-group">
+          <label>من تاريخ</label>
+          <input type="date" id="fromDate">
+        </div>
+        <div class="form-group">
+          <label>إلى تاريخ</label>
+          <input type="date" id="toDate">
+        </div>
+        <div class="form-group">
+          <label>نوع الإشارة</label>
+          <select id="typeFilter" onchange="handleTypeFilter()"
+            style="width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;">
+            <option value="">كل الأنواع</option>
+          </select>
+        </div>
+        <div class="form-group" style="display: flex; align-items: flex-end;">
+          <button class="btn btn-primary" onclick="applyFilter()" style="width: 100%;">تطبيق الفلتر</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loadingState" class="loading-container">
+      <div style="text-align: center;">
+        <div class="spinner" style="margin: 0 auto 20px;"></div>
+        <p style="color: #64748b; font-size: 18px;">جاري تحميل الإحصائيات...</p>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div id="content" style="display: none;">
+      <!-- Stats Cards -->
+      <div class="stats">
+        <div class="stat-card total">
+          <div class="stat-label">إجمالي الإشارات</div>
+          <div class="stat-value" id="statTotal">0</div>
+        </div>
+        <div class="stat-card treated">
+          <div class="stat-label">تمت المعالجة</div>
+          <div class="stat-value" id="statTreated">0</div>
+          <div class="stat-info" id="statTreatedPercent">0% نسبة الإنجاز</div>
+        </div>
+        <div class="stat-card pending">
+          <div class="stat-label">قيد المعالجة</div>
+          <div class="stat-value" id="statPending">0</div>
+        </div>
+        <div class="stat-card time">
+          <div class="stat-label">متوسط وقت المعالجة</div>
+          <div class="stat-value" id="statAvgTime">0</div>
+          <div class="stat-info">ساعة</div>
+        </div>
+      </div>
+
+      <!-- Charts Row 1 -->
+      <div class="grid-2">
+        <div class="card">
+          <h2 class="card-title">الإشارات حسب النوع</h2>
+          <div class="chart-container">
+            <canvas id="typeChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="card-title">توزيع الحالات</h2>
+          <div class="chart-container">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-break"></div>
+
+      <!-- Top Locations -->
+      <div class="card">
+        <h2 class="card-title">المواقع الأكثر إشارات</h2>
+        <div id="topLocations"></div>
+      </div>
+
+      <!-- Treated Signals -->
+      <div class="card">
+        <h2 class="card-title">الإشارات المعالجة مؤخراً</h2>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>العنوان</th>
+                <th>النوع</th>
+                <th>الموقع</th>
+                <th>تاريخ المعالجة</th>
+              </tr>
+            </thead>
+            <tbody id="treatedTable"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="treatedPagination"></div>
+      </div>
+
+      <!-- Pending Signals -->
+      <div class="card">
+        <h2 class="card-title">الإشارات المعلقة</h2>
+        <div id="pendingList"></div>
+        <div class="pagination" id="pendingPagination"></div>
+      </div>
+    </div>
+    <div id="exportContainer" style="display:none;"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+    let responsibleId = '';
+    let charts = {};
+    let currentStats = null;
+    let selectedTypeValue = '';
+    let treatedPage = 1;
+    let pendingPage = 1;
+    const PAGE_SIZE = 5;
+    const CORE_API = 'http://localhost:3020';
+
+    function getAuthHeaders() {
+      // Prefer authManager; fall back to URL token for embedded usage
+      const urlToken = (new URLSearchParams(window.location.search)).get('token') || (new URLSearchParams(window.location.search)).get('access_token');
+      const tokenFromAuth = (typeof authManager !== 'undefined' && authManager.getToken) ? authManager.getToken() : null;
+      const storedToken = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const token = urlToken || tokenFromAuth || storedToken;
+      return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
+
+    function isUuidLike(v) {
+      return typeof v === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(v);
+    }
+
+    async function resolveResponsibleId() {
+      const params = new URLSearchParams(window.location.search);
+      const user = (typeof authManager !== 'undefined' && authManager.getUser) ? authManager.getUser() : null;
+      const storedId = localStorage.getItem('signals.responsibleId');
+      const urlId = params.get('responsibleId') || params.get('responsible_id') || params.get('id');
+
+      // Priority: auth employee_id -> stored -> url param
+      let candidate = user?.employee_id || storedId || urlId;
+      if (candidate && isUuidLike(candidate)) return candidate;
+
+      const userId = user?.id || user?.user_id;
+      if (!userId) return urlId && isUuidLike(urlId) ? urlId : null;
+
+      try {
+        const res = await fetch(`${CORE_API}/employees/by-user/${userId}`, { headers: getAuthHeaders() });
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          const empId = data?.employee?.id || data?.id;
+          if (empId) {
+            localStorage.setItem('signals.responsibleId', empId);
+            return empId;
+          }
+        }
+      } catch (_) { /* ignore */ }
+
+      return urlId && isUuidLike(urlId) ? urlId : null;
+    }
+
+    async function loadStatistics(from = '', to = '') {
+      document.getElementById('loadingState').style.display = 'flex';
+      document.getElementById('content').style.display = 'none';
+
+      try {
+        const params = new URLSearchParams();
+        if (from) params.set('from', from);
+        if (to) params.set('to', to);
+
+        const response = await fetch(`http://localhost:3020/api/signals/responsible/${responsibleId}/statistics?${params}`, {
+          headers: getAuthHeaders()
+        });
+        if (!response.ok) throw new Error('خطأ في تحميل البيانات');
+
+        const data = await response.json();
+        renderStatistics(data);
+
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('loadingState').innerHTML = `
+          <div style="text-align: center;">
+            <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
+            <h2 style="color: #1e293b; margin-bottom: 10px;">خطأ في تحميل البيانات</h2>
+            <p style="color: #64748b;">${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderStatistics(data) {
+      currentStats = data;
+      const { overview, byType, topLocations } = data;
+      populateTypeFilter(byType);
+      updateOverviewCards();
+      treatedPage = 1;
+      pendingPage = 1;
+
+      // Type Chart
+      if (charts.typeChart) charts.typeChart.destroy();
+      const typeCtx = document.getElementById('typeChart').getContext('2d');
+      charts.typeChart = new Chart(typeCtx, {
+        type: 'bar',
+        data: {
+          labels: byType.map(t => t.name),
+          datasets: [{
+            label: 'عدد الإشارات',
+            data: byType.map(t => t.count),
+            backgroundColor: 'rgba(6, 182, 212, 0.8)',
+            borderColor: 'rgba(6, 182, 212, 1)',
+            borderWidth: 2,
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+
+      // Status Chart
+      if (charts.statusChart) charts.statusChart.destroy();
+      const statusCtx = document.getElementById('statusChart').getContext('2d');
+      charts.statusChart = new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['تمت المعالجة', 'قيد المعالجة'],
+          datasets: [{
+            data: [overview.treated, overview.pending],
+            backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(245, 158, 11, 0.8)'],
+            borderColor: ['rgba(16, 185, 129, 1)', 'rgba(245, 158, 11, 1)'],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+
+      // Top Locations
+      const locationsHtml = topLocations.length > 0
+        ? topLocations.map((loc, idx) => `
+            <div class="location-item">
+              <div class="location-rank">${idx + 1}</div>
+              <div class="location-info">
+                <div class="location-name">${loc.location}</div>
+                <div class="location-details">
+                  ${loc.batiment ? `مبنى ${loc.batiment}` : ''}
+                  ${loc.etage ? ` • طابق ${loc.etage}` : ''}
+                </div>
+              </div>
+              <div>
+                <div class="location-count">${loc.count}</div>
+                <div class="location-label">إشارة</div>
+              </div>
+            </div>
+          `).join('')
+        : '<div class="empty-state">لا توجد بيانات متاحة</div>';
+      document.getElementById('topLocations').innerHTML = locationsHtml;
+
+      // Treated Signals Table
+      renderTreatedSection();
+      renderPendingSection();
+    }
+
+    function applyFilter() {
+      const from = document.getElementById('fromDate').value;
+      const to = document.getElementById('toDate').value;
+      loadStatistics(from, to);
+    }
+
+    function exportPDF() {
+      if (!currentStats) return;
+      const exportDiv = document.getElementById('exportContainer');
+      exportDiv.innerHTML = buildExportHtml();
+      exportDiv.style.display = 'block';
+      const opt = {
+        margin: 0.5,
+        filename: 'signals-statistics.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(exportDiv).save().then(() => {
+        exportDiv.style.display = 'none';
+        exportDiv.innerHTML = '';
+      });
+    }
+
+    function buildExportHtml() {
+      const { overview, byType, topLocations } = currentStats;
+      const treatedSignals = getFilteredSignals(currentStats.treatedSignals || []);
+      const pendingSignals = getFilteredSignals(currentStats.pendingSignals || []);
+      const total = parseInt(document.getElementById('statTotal').textContent, 10) || 0;
+      const treated = parseInt(document.getElementById('statTreated').textContent, 10) || 0;
+      const pending = parseInt(document.getElementById('statPending').textContent, 10) || 0;
+      const avgTime = document.getElementById('statAvgTime').textContent || 0;
+      const treatedPercent = document.getElementById('statTreatedPercent').textContent || '';
+      const typeFilterLabel = selectedTypeValue ? `نوع الإشارة: ${selectedTypeValue}` : 'كل الأنواع';
+
+      return `
+        <div style="font-family:'Segoe UI',sans-serif; color:#1e293b;">
+          <h1 style="text-align:center;margin-bottom:10px;">📊 إحصائيات الإشارات</h1>
+          <p style="text-align:center;margin-bottom:20px;color:#64748b;">${typeFilterLabel}</p>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:20px;">
+            <div style="border:1px solid #e2e8f0;border-radius:12px;padding:16px;">
+              <div style="color:#64748b;font-size:12px;">إجمالي الإشارات</div>
+              <div style="font-size:28px;font-weight:700;">${total}</div>
+            </div>
+            <div style="border:1px solid #e2e8f0;border-radius:12px;padding:16px;">
+              <div style="color:#64748b;font-size:12px;">تمت المعالجة</div>
+              <div style="font-size:28px;font-weight:700;">${treated}</div>
+              <div style="font-size:12px;color:#94a3b8;">${treatedPercent}</div>
+            </div>
+            <div style="border:1px solid #e2e8f0;border-radius:12px;padding:16px;">
+              <div style="color:#64748b;font-size:12px;">قيد المعالجة</div>
+              <div style="font-size:28px;font-weight:700;">${pending}</div>
+            </div>
+            <div style="border:1px solid #e2e8f0;border-radius:12px;padding:16px;">
+              <div style="color:#64748b;font-size:12px;">متوسط وقت المعالجة</div>
+              <div style="font-size:28px;font-weight:700;">${avgTime}</div>
+            </div>
+          </div>
+          <h2 style="margin-top:20px;margin-bottom:8px;font-size:18px;">المواقع الأكثر إشارات</h2>
+          ${topLocations.length ? `
+            <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+              <thead>
+                <tr style="background:#f1f5f9;">
+                  <th style="padding:8px;border:1px solid #e2e8f0;">الترتيب</th>
+                  <th style="padding:8px;border:1px solid #e2e8f0;">الموقع</th>
+                  <th style="padding:8px;border:1px solid #e2e8f0;">التفاصيل</th>
+                  <th style="padding:8px;border:1px solid #e2e8f0;">الإشارات</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${topLocations.map((loc, idx) => `
+                  <tr>
+                    <td style="padding:8px;border:1px solid #e2e8f0;text-align:center;">${idx + 1}</td>
+                    <td style="padding:8px;border:1px solid #e2e8f0;">${loc.location}</td>
+                    <td style="padding:8px;border:1px solid #e2e8f0;">${loc.batiment || ''} ${loc.etage ? ' - طابق ' + loc.etage : ''}</td>
+                    <td style="padding:8px;border:1px solid #e2e8f0;text-align:center;">${loc.count}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>` : '<p style="color:#94a3b8;">لا توجد بيانات متاحة</p>'}
+          <h2 style="margin-top:20px;margin-bottom:8px;font-size:18px;">الإشارات المعالجة مؤخراً</h2>
+          ${treatedSignals.length ? `
+            <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+              <thead>
+                <tr style="background:#f1f5f9;">
+                  <th style="padding:8px;border:1px solid #e2e8f0;">العنوان</th>
+                  <th style="padding:8px;border:1px solid #e2e8f0;">النوع</th>
+                  <th style="padding:8px;border:1px solid #e2e8f0;">الموقع</th>
+                  <th style="padding:8px;border:1px solid #e2e8f0;">تاريخ المعالجة</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${treatedSignals.map(s => `
+                  <tr>
+                    <td style="padding:8px;border:1px solid #e2e8f0;">${s.title}</td>
+                    <td style="padding:8px;border:1px solid #e2e8f0;">${s.type_name}</td>
+                    <td style="padding:8px;border:1px solid #e2e8f0;">${s.location || '-'}</td>
+                    <td style="padding:8px;border:1px solid #e2e8f0;">${new Date(s.treated_at).toLocaleDateString('ar-DZ')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>` : '<p style="color:#94a3b8;">لا توجد إشارات معالجة</p>'}
+          <h2 style="margin-top:20px;margin-bottom:8px;font-size:18px;">الإشارات المعلقة</h2>
+          ${pendingSignals.length ? pendingSignals.map(s => `
+            <div style="border:1px solid #fef3c7;background:#fffbeb;border-radius:12px;padding:12px;margin-bottom:10px;">
+              <div style="font-weight:700;margin-bottom:4px;">${s.title}</div>
+              <div style="font-size:13px;color:#64748b;margin-bottom:4px;">${s.type_name}</div>
+              <div style="font-size:13px;color:#475569;">📍 ${s.location || 'غير محدد'}</div>
+              <div style="font-size:12px;color:#94a3b8;margin-top:4px;">🕒 ${new Date(s.created_at).toLocaleDateString('ar-DZ')}</div>
+            </div>
+          `).join('') : '<p style="color:#94a3b8;">لا توجد إشارات معلقة</p>'}
+        </div>
+      `;
+    }
+
+    function populateTypeFilter(byType = []) {
+      const select = document.getElementById('typeFilter');
+      if (!select) return;
+      const previous = selectedTypeValue || select.value;
+      const options = ['<option value="">كل الأنواع</option>']
+        .concat((byType || []).map(t => `<option value="${t.name}">${t.name}</option>`));
+      select.innerHTML = options.join('');
+      if (previous && byType.some(t => t.name === previous)) {
+        select.value = previous;
+        selectedTypeValue = previous;
+      } else {
+        select.value = '';
+        selectedTypeValue = '';
+      }
+    }
+
+    function updateOverviewCards() {
+      if (!currentStats) return;
+      const select = document.getElementById('typeFilter');
+      const filter = select ? select.value : '';
+      selectedTypeValue = filter;
+
+      const { overview, byType, treatedSignals, pendingSignals } = currentStats;
+      let total = overview.total || 0;
+      let treatedCount = overview.treated || 0;
+      let pendingCount = overview.pending || 0;
+      let avgTime = overview.avg_treatment_time || 0;
+
+      if (filter) {
+        const typeInfo = (byType || []).find(t => t.name === filter);
+        const treatedFiltered = (treatedSignals || []).filter(s => s.type_name === filter);
+        const pendingFiltered = (pendingSignals || []).filter(s => s.type_name === filter);
+        treatedCount = treatedFiltered.length;
+        pendingCount = pendingFiltered.length;
+        total = typeInfo ? (typeInfo.count || (treatedCount + pendingCount)) : (treatedCount + pendingCount);
+      }
+
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statTreated').textContent = treatedCount;
+      document.getElementById('statPending').textContent = pendingCount;
+      document.getElementById('statAvgTime').textContent = avgTime || 0;
+      const percent = total > 0 ? Math.round((treatedCount / total) * 100) : 0;
+      document.getElementById('statTreatedPercent').textContent = `${percent}% نسبة الإنجاز`;
+    }
+
+    function handleTypeFilter() {
+      updateOverviewCards();
+      treatedPage = 1;
+      pendingPage = 1;
+      renderTreatedSection();
+      renderPendingSection();
+    }
+
+    function getFilteredSignals(signals = []) {
+      if (!selectedTypeValue) return signals;
+      return signals.filter(s => s.type_name === selectedTypeValue);
+    }
+
+    function renderTreatedSection() {
+      if (!currentStats) return;
+      const treatedSignals = getFilteredSignals(currentStats.treatedSignals || []);
+      const totalPages = Math.max(1, Math.ceil(treatedSignals.length / PAGE_SIZE));
+      treatedPage = Math.min(Math.max(treatedPage, 1), totalPages);
+      const start = (treatedPage - 1) * PAGE_SIZE;
+      const pageItems = treatedSignals.slice(start, start + PAGE_SIZE);
+
+      const treatedHtml = treatedSignals.length > 0 && pageItems.length > 0
+        ? pageItems.map(s => `
+            <tr>
+              <td>${s.title}</td>
+              <td><span class="badge">${s.type_name}</span></td>
+              <td>${s.location || '-'}</td>
+              <td>${new Date(s.treated_at).toLocaleDateString('ar-DZ')}</td>
+            </tr>
+          `).join('')
+        : '<tr><td colspan="4" style="text-align: center; color: #94a3b8;">لا توجد إشارات معالجة</td></tr>';
+      document.getElementById('treatedTable').innerHTML = treatedHtml;
+      renderPagination('treatedPagination', treatedPage, totalPages, changeTreatedPage);
+    }
+
+    function renderPendingSection() {
+      if (!currentStats) return;
+      const pendingSignals = getFilteredSignals(currentStats.pendingSignals || []);
+      const totalPages = Math.max(1, Math.ceil(pendingSignals.length / PAGE_SIZE));
+      pendingPage = Math.min(Math.max(pendingPage, 1), totalPages);
+      const start = (pendingPage - 1) * PAGE_SIZE;
+      const pageItems = pendingSignals.slice(start, start + PAGE_SIZE);
+
+      const pendingHtml = pendingSignals.length > 0 && pageItems.length > 0
+        ? pageItems.map(s => `
+            <div class="pending-card">
+              <div class="pending-card-title">${s.title}</div>
+              <div class="pending-card-type">${s.type_name}</div>
+              <div class="pending-card-location">📍 ${s.location || 'غير محدد'}</div>
+              <div class="pending-card-date">🕒 ${new Date(s.created_at).toLocaleDateString('ar-DZ')}</div>
+            </div>
+          `).join('')
+        : '<div class="empty-state">✅ لا توجد إشارات معلقة</div>';
+      document.getElementById('pendingList').innerHTML = pendingHtml;
+      renderPagination('pendingPagination', pendingPage, totalPages, changePendingPage);
+    }
+
+    function renderPagination(containerId, currentPage, totalPages, changeFn) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = `
+        <button onclick="${changeFn.name}(-1)" ${currentPage === 1 ? 'disabled' : ''}>السابق</button>
+        <span>${currentPage} / ${totalPages}</span>
+        <button onclick="${changeFn.name}(1)" ${currentPage === totalPages ? 'disabled' : ''}>التالي</button>
+      `;
+    }
+
+    function changeTreatedPage(delta) {
+      treatedPage += delta;
+      renderTreatedSection();
+    }
+
+    function changePendingPage(delta) {
+      pendingPage += delta;
+      renderPendingSection();
+    }
+
+    // Initialize
+    (async function init() {
+      responsibleId = await resolveResponsibleId();
+      if (!responsibleId) {
+        document.getElementById('loadingState').innerHTML = `
+          <div style="text-align: center;">
+            <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
+            <h2 style="color: #1e293b; margin-bottom: 10px;">معرف المسؤول مفقود</h2>
+            <p style="color: #64748b;">الرجاء الرجوع والمحاولة مرة أخرى</p>
+          </div>
+        `;
+        return;
+      }
+      localStorage.setItem('signals.responsibleId', responsibleId);
+      await loadStatistics();
+    })();
+  </script>
+</body>
+
+</html>

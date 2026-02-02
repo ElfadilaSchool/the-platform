@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" id="htmlRoot">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Salary - HR Operations Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    
+    <style>
+        .rtl .ml-2 { margin-left: 0; margin-right: 0.5rem; }
+        .rtl .mr-2 { margin-right: 0; margin-left: 0.5rem; }
+        .tab-active { 
+            border-bottom: 2px solid #3b82f6; 
+            color: #3b82f6; 
+            font-weight: 600;
+        }
+        .tab-inactive {
+            border-bottom: 2px solid transparent;
+            color: #6b7280;
+        }
+        .tab-inactive:hover {
+            color: #374151;
+            border-bottom-color: #d1d5db;
+        }
+        .rtl .tab-active { border-bottom: 2px solid #3b82f6; }
+        .rtl .tab-inactive { border-bottom: 2px solid transparent; }
+    </style>
+    
+    <style>
+        .salary-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .salary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-color: #3B82F6;
+        }
+        .status-paid {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+        .status-not-paid {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            width: fit-content;
+            min-width: auto;
+        }
+        .status-uploaded { background-color: #d1fae5; color: #065f46; }
+        .status-not_uploaded { background-color: #fecaca; color: #991b1b; }
+        .status-unmatched { background-color: #fef3c7; color: #92400e; }
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+        .salary-breakdown {
+            background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+        }
+        .amount-positive {
+            color: #059669;
+        }
+        .amount-negative {
+            color: #DC2626;
+        }
+        .period-selector {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .da-currency {
+            color: #1e40af;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- The reusable navbar will be automatically inserted here -->
+    
+    <!-- Main Content -->
+    <div class="main-content flex-1 flex flex-col overflow-hidden">
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6">
+            <div class="max-w-7xl mx-auto">
+                <!-- Page Header -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900" data-translate="salary.my_salary">My Salary</h1>
+                            <p class="text-gray-600" data-translate="salary.salary_details">View your salary details and statistics (DA Currency)</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <!-- Language Selector -->
+                            <select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="en">English</option>
+                                <option value="fr">Français</option>
+                                <option value="ar">العربية</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs Container -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+                    <div class="border-b border-gray-200">
+                        <nav class="flex space-x-8 px-6" aria-label="Tabs" id="salaryTabs">
+                            <button data-tab="details" id="tab-details" class="tab-active py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                                <i class="fas fa-money-bill-wave mr-2"></i>
+                                <span data-translate="salary.salary_details">Salary Details</span>
+                            </button>
+                            <button data-tab="payslips" id="tab-payslips" class="tab-inactive py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                                <i class="fas fa-file-invoice-dollar mr-2"></i>
+                                <span data-translate="salary.payslips">Payslips</span>
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- Tab Panel: Salary Details -->
+                <div id="panel-details" class="tab-panel">
+                <!-- Year Selector -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="period-selector text-white px-4 py-2 rounded-lg">
+                            <div class="flex items-center space-x-4">
+                                <div>
+                                    <label class="block text-xs font-medium mb-1" data-translate="salary.year">Year</label>
+                                    <select id="yearSelect" class="bg-white text-gray-900 border-0 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500">
+                                        <!-- Years will be populated by JavaScript -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="loadYearlySalaries()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-sync mr-2"></i><span data-translate="common.loading">Load Data</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-100">
+                                <i class="fas fa-coins text-blue-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600" data-translate="salary.total_salary">Total Salary</p>
+                                <p id="totalSalary" class="text-2xl font-semibold da-currency">0 DA</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100">
+                                <i class="fas fa-calendar-check text-green-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600" data-translate="attendance.worked_days">Total Worked Days</p>
+                                <p id="totalWorkedDays" class="text-2xl font-semibold text-gray-900">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-purple-100">
+                                <i class="fas fa-money-check-alt text-purple-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <p class="text-sm font-medium text-gray-600 mb-2" data-translate="common.status">Payment Status</p>
+                                <div class="flex justify-between items-center">
+                                    <div class="text-center">
+                                        <p class="text-xs text-gray-500" data-translate="status.completed">Paid</p>
+                                        <p id="paidCount" class="text-lg font-semibold text-green-600">0</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <p class="text-xs text-gray-500" data-translate="status.pending">Pending</p>
+                                        <p id="pendingCount" class="text-lg font-semibold text-orange-600">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-emerald-100">
+                                <i class="fas fa-arrow-up text-emerald-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600" data-translate="attendance.hours_worked">Total Overtime</p>
+                                <p id="totalOvertime" class="text-2xl font-semibold text-emerald-600">0h</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-yellow-100">
+                                <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600" data-translate="salary.average_monthly">Average Monthly</p>
+                                <p id="averageMonthly" class="text-2xl font-semibold text-yellow-600">0 DA</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Salary Table -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900" data-translate="salary.payslips">Monthly Salary Breakdown</h3>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="salary.month">Month</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="attendance.worked_days">Worked Days</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="payment.overtime_rate">Overtime</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="salary.net_salary">Net Salary (DA)</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="common.status">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="common.actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salaryTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Salary rows will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Empty State -->
+                    <div id="emptyState" class="text-center py-12 hidden">
+                        <div class="mx-auto h-24 w-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-money-bill-wave text-gray-400 text-3xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2" data-translate="message.no_data">No salary data found</h3>
+                        <p class="text-gray-500" data-translate="common.filter">Try selecting a different year.</p>
+                    </div>
+                    
+                    <!-- Loading State -->
+                    <div id="loadingState" class="text-center py-12 hidden">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <p class="mt-2 text-gray-600" data-translate="common.loading">Loading salary data...</p>
+                    </div>
+                </div>
+                </div>
+
+                <!-- Tab Panel: Payslips -->
+                <div id="panel-payslips" class="tab-panel hidden">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+                        <div class="flex flex-wrap items-center gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="time.start_month">Start Month</label>
+                                <select id="payslipStartMonth" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">All time</option>
+                                    <option value="1">January</option>
+                                    <option value="2">February</option>
+                                    <option value="3">March</option>
+                                    <option value="4">April</option>
+                                    <option value="5">May</option>
+                                    <option value="6">June</option>
+                                    <option value="7">July</option>
+                                    <option value="8">August</option>
+                                    <option value="9">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="time.start_year">Start Year</label>
+                                <select id="payslipStartYear" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">All years</option>
+                                </select>
+                            </div>
+                            <div class="flex items-end">
+                                <button onclick="loadPayslips()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                    <i class="fas fa-search mr-2"></i>
+                                    <span data-translate="btn.load">Load</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payslips Table -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="time.month">Month</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="time.year">Year</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="common.status">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="common.file">File</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="payslipsTableBody" class="bg-white divide-y divide-gray-200">
+                                    <!-- Table rows will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div id="payslipsLoading" class="text-center py-12 hidden">
+                            <div class="loading-spinner rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                            <p class="text-gray-500" data-translate="common.loading">Loading payslips data...</p>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="payslipsEmpty" class="text-center py-12 hidden">
+                            <i class="fas fa-file-invoice-dollar text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500" data-translate="message.no_data">No payslips found</p>
+                            <p class="text-sm text-gray-400" data-translate="salary.no_payslips">No records for the selected period</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Salary Details Modal -->
+    <div id="salaryModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop modal-overlay hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-screen overflow-y-auto modal-content">
+                <div class="p-4 border-b border-gray-200 relative">
+                    <h2 id="salaryModalTitle" class="text-xl font-semibold text-gray-900" data-translate="salary.salary_details">Salary Details</h2>
+                    <button type="button" onclick="closeSalaryModal()" class="modal-close absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div id="salaryModalContent" class="p-4">
+                    <!-- Salary details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/translations.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../components/api.js"></script>
+    <script>
+        const API_BASE_URL = window.API_SERVICES?.salary || 'http://localhost:3010';
+        let currentYear = new Date().getFullYear();
+        let currentEmployeeId = null;
+        let yearlySalaries = [];
+        let currentPayslips = [];
+        let payslipsLoading = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tabs
+            initializeTabs();
+            
+            // Initialize language selector
+            const languageSelector = document.getElementById('languageSelector');
+            if (languageSelector) {
+                languageSelector.value = (typeof currentLanguage !== 'undefined' ? currentLanguage : (window.currentLanguage || 'en'));
+                languageSelector.addEventListener('change', (e) => {
+                    if (typeof setLanguage === 'function') {
+                        setLanguage(e.target.value);
+                    }
+                    if (typeof updatePageTranslations === 'function') {
+                        updatePageTranslations();
+                    }
+                });
+            }
+            
+            // Initialize translations
+            if (typeof updatePageTranslations === 'function') {
+                updatePageTranslations();
+            }
+            if (!authManager.isAuthenticated()) {
+                window.location.href = '../index.html';
+                return;
+            }
+
+            // Get current employee ID
+            const user = authManager.getUser();
+            if (user && user.employeeId) {
+                currentEmployeeId = user.employeeId;
+            } else {
+                // Try to get from API
+                getUserEmployeeId().then(id => {
+                    currentEmployeeId = id;
+                    initializePage();
+                }).catch(err => {
+                    console.error('Failed to get employee ID:', err);
+                    Utils.showNotification('Failed to load employee information', 'error');
+                });
+                return;
+            }
+
+            initializePage();
+        });
+
+        function initializeTabs() {
+            const buttons = document.querySelectorAll('#salaryTabs [data-tab]');
+            buttons.forEach(btn => btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tab = btn.getAttribute('data-tab');
+                
+                // Update tab buttons
+                buttons.forEach(b => {
+                    b.classList.remove('tab-active');
+                    b.classList.add('tab-inactive');
+                    b.classList.remove('text-blue-600');
+                    b.classList.add('text-gray-500');
+                });
+                btn.classList.remove('tab-inactive');
+                btn.classList.add('tab-active');
+                btn.classList.remove('text-gray-500');
+                btn.classList.add('text-blue-600');
+                
+                // Show/hide panels
+                document.getElementById('panel-details').classList.toggle('hidden', tab !== 'details');
+                document.getElementById('panel-payslips').classList.toggle('hidden', tab !== 'payslips');
+                
+                // Load payslips if switching to payslips tab
+                if (tab === 'payslips' && currentPayslips.length === 0) {
+                    // Ensure we have employee ID before loading
+                    if (!currentEmployeeId) {
+                        getUserEmployeeId().then(id => {
+                            if (id) {
+                                currentEmployeeId = id;
+                                loadPayslips();
+                            }
+                        });
+                    } else {
+                        loadPayslips();
+                    }
+                }
+            }));
+        }
+
+        async function getUserEmployeeId() {
+            try {
+                const user = authManager.getUser();
+                if (!user || !user.id) {
+                    throw new Error('User not found');
+                }
+
+                const response = await fetch(`${window.API_SERVICES?.users || 'http://localhost:3002'}/employees/by-user/${user.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authManager.getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to fetch employee');
+                const data = await response.json();
+                const employeeId = data.success && data.employee ? data.employee.id : null;
+                
+                // Validate employee exists in salary service
+                if (employeeId) {
+                    const salaryCheck = await fetch(`${API_BASE_URL}/salaries/${employeeId}?month=1&year=${new Date().getFullYear()}`, {
+                        headers: {
+                            'Authorization': `Bearer ${authManager.getToken()}`,
+                            'Content-Type': 'application/json'
+                        }
+                    }).catch(() => null);
+                    
+                    // If we get a specific "Employee not found" error, show helpful message
+                    if (salaryCheck && !salaryCheck.ok) {
+                        const errorData = await salaryCheck.json().catch(() => ({}));
+                        if (errorData.error && errorData.error.includes('Employee not found')) {
+                            Utils.showNotification('Your employee record is not found in the salary system. Please contact HR to set up your salary profile.', 'error', 'Employee Record Missing');
+                            return null;
+                        }
+                    }
+                }
+                
+                return employeeId;
+            } catch (error) {
+                console.error('Error getting employee ID:', error);
+                return null;
+            }
+        }
+
+        function initializePage() {
+            populateYearSelector();
+            populatePayslipYearSelector();
+            loadYearlySalaries();
+            
+            // Add event listeners for payslip filters
+            const payslipStartMonth = document.getElementById('payslipStartMonth');
+            const payslipStartYear = document.getElementById('payslipStartYear');
+            if (payslipStartMonth) {
+                payslipStartMonth.addEventListener('change', loadPayslips);
+            }
+            if (payslipStartYear) {
+                payslipStartYear.addEventListener('change', loadPayslips);
+            }
+        }
+
+        function populatePayslipYearSelector() {
+            const yearSelect = document.getElementById('payslipStartYear');
+            if (!yearSelect) return;
+            
+            const currentYear = new Date().getFullYear();
+            yearSelect.innerHTML = '<option value="">All years</option>';
+            for (let year = currentYear - 10; year <= currentYear; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            }
+            // Default to current year
+            yearSelect.value = String(currentYear);
+        }
+
+        function populateYearSelector() {
+            const yearSelect = document.getElementById('yearSelect');
+            const currentYear = new Date().getFullYear();
+            
+            // Generate years from current year down to 2020 (no future years)
+            for (let year = currentYear; year >= 2020; year--) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                if (year === currentYear) {
+                    option.selected = true;
+                }
+                yearSelect.appendChild(option);
+            }
+        }
+
+        async function loadYearlySalaries() {
+            if (!currentEmployeeId) {
+                const id = await getUserEmployeeId();
+                if (!id) {
+                    Utils.showNotification('Cannot identify employee. Please contact support.', 'error');
+                    return;
+                }
+                currentEmployeeId = id;
+            }
+
+            try {
+                showLoading(true);
+                const yearSelect = document.getElementById('yearSelect');
+                let year = yearSelect.value || currentYear;
+                
+                // Validate year - ensure it's not in the future
+                const currentDate = new Date();
+                const currentYearNum = currentDate.getFullYear();
+                const selectedYear = parseInt(year);
+                
+                // If selected year is in the future, default to current year
+                if (selectedYear > currentYearNum) {
+                    year = currentYearNum.toString();
+                    yearSelect.value = year;
+                }
+
+                // Load all months for the selected year - PARALLEL REQUESTS for better performance
+                const currentMonthNum = currentDate.getMonth() + 1;
+                
+                // Only try to load months up to the current month if selected year is current year
+                // For past years, try all 12 months
+                // NEVER load future months
+                const maxMonth = (selectedYear === currentYearNum) ? currentMonthNum : 
+                                (selectedYear < currentYearNum) ? 12 : 0;
+                
+                // If somehow we still have a future year or invalid month range, don't load anything
+                if (maxMonth <= 0 || selectedYear > currentYearNum) {
+                    showLoading(false);
+                    document.getElementById('emptyState').classList.remove('hidden');
+                    Utils.showNotification('Cannot load data for future dates. Please select a valid year.', 'info');
+                    return;
+                }
+                
+                // Create array of month promises (parallel loading)
+                const monthPromises = [];
+                for (let month = 1; month <= maxMonth; month++) {
+                    monthPromises.push(
+                        fetch(`${API_BASE_URL}/salaries/${currentEmployeeId}/compare?month=${month}&year=${year}`, {
+                            headers: {
+                                'Authorization': `Bearer ${authManager.getToken()}`,
+                                'Content-Type': 'application/json'
+                            }
+                        }).then(response => {
+                            if (response.ok) {
+                                return response.json().then(data => {
+                                    if (data && data.algerian_method) {
+                                        return {
+                                            ...data.algerian_method, // Spread first
+                                            month: month, // Override month to ensure correct value
+                                            year: parseInt(year), // Override year to ensure correct value
+                                            employee_name: data.employee_name || 'N/A',
+                                            position: data.position || 'N/A',
+                                            department_name: data.department_name || 'N/A',
+                                            payment_status: data.payment_status || 'Not Paid',
+                                            payment_record: data.payment_record
+                                        };
+                                    }
+                                    return null;
+                                }).catch(() => null);
+                            }
+                            return null; // Silently skip errors
+                        }).catch(() => null) // Silently skip network errors
+                    );
+                }
+                
+                // Wait for all requests in parallel
+                const results = await Promise.all(monthPromises);
+                const monthlyData = results.filter(item => item !== null);
+
+                yearlySalaries = monthlyData;
+                displayMonthlyTable(monthlyData);
+                updateSummaryCards(monthlyData);
+                showLoading(false);
+
+                if (monthlyData.length === 0) {
+                    document.getElementById('emptyState').classList.remove('hidden');
+                    // Show helpful message
+                    const emptyState = document.getElementById('emptyState');
+                    const messageEl = emptyState.querySelector('p');
+                    if (messageEl) {
+                        if (selectedYear === currentYearNum) {
+                            messageEl.textContent = `No salary data available for ${year}. This could mean your employee record is not set up in the salary system, or attendance hasn't been validated yet. Please contact HR if you believe this is an error.`;
+                        } else {
+                            messageEl.textContent = `No salary data available for ${year}. Try selecting a different year.`;
+                        }
+                    }
+                } else {
+                    document.getElementById('emptyState').classList.add('hidden');
+                }
+
+            } catch (error) {
+                console.error('Error loading yearly salaries:', error);
+                Utils.showNotification('Failed to load salary data', 'error');
+                showLoading(false);
+            }
+        }
+
+        function displayMonthlyTable(data) {
+            const tbody = document.getElementById('salaryTableBody');
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">No salary data available for this year</td></tr>';
+                return;
+            }
+
+            // Helper function to translate with fallback
+            const t = (key, fallback) => {
+                if (typeof translate === 'function') {
+                    const result = translate(key);
+                    return (result && result !== key) ? result : fallback;
+                }
+                return fallback;
+            };
+
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+
+            tbody.innerHTML = data.map(salary => {
+                // Ensure month is a valid number (1-12)
+                const monthNum = parseInt(salary.month) || 1;
+                const monthName = monthNames[monthNum - 1] || 'Unknown';
+                const statusClass = getStatusClass(salary.payment_status);
+                const canView = salary.validation_status === 'Validated' || salary.net_salary > 0;
+
+                return `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${monthName}</div>
+                            <div class="text-xs text-gray-500">${parseInt(salary.year) || ''}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="flex flex-col">
+                                <span class="font-medium">${salary.worked_days || 0}</span>
+                                ${salary.absent_days > 0 ? `<span class="text-xs text-gray-500">${t('attendance.absent', 'Absent')}: ${salary.absent_days || 0}</span>` : ''}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${(salary.overtime_hours || 0).toFixed(1)}h
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium da-currency">
+                                ${formatCurrency(salary.net_salary || 0)} DA
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full text-white ${statusClass}">
+                                ${salary.payment_status || t('status.not_paid', 'Not Paid')}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            ${canView ? `
+                                <button onclick="viewSalaryDetails(${monthNum}, ${parseInt(salary.year)})" 
+                                        class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-eye mr-1"></i>
+                                    ${t('common.view', 'View Details')}
+                                </button>
+                            ` : `
+                                <span class="text-gray-400 text-xs">${t('common.not_available', 'Not Available')}</span>
+                            `}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateSummaryCards(data) {
+            if (!data || data.length === 0) {
+                document.getElementById('totalSalary').textContent = '0 DA';
+                document.getElementById('totalWorkedDays').textContent = '0';
+                document.getElementById('paidCount').textContent = '0';
+                document.getElementById('pendingCount').textContent = '0';
+                document.getElementById('totalOvertime').textContent = '0h';
+                document.getElementById('averageMonthly').textContent = '0 DA';
+                return;
+            }
+
+            const totalSalary = data.reduce((sum, s) => sum + (s.net_salary || 0), 0);
+            const totalWorkedDays = data.reduce((sum, s) => sum + (s.worked_days || 0), 0);
+            const totalOvertime = data.reduce((sum, s) => sum + (s.overtime_hours || 0), 0);
+            const paidCount = data.filter(s => s.payment_status === 'Paid').length;
+            const pendingCount = data.length - paidCount;
+            const averageMonthly = totalSalary / data.length;
+
+            document.getElementById('totalSalary').textContent = `${formatCurrency(totalSalary)} DA`;
+            document.getElementById('totalWorkedDays').textContent = totalWorkedDays;
+            document.getElementById('paidCount').textContent = paidCount;
+            document.getElementById('pendingCount').textContent = pendingCount;
+            document.getElementById('totalOvertime').textContent = `${totalOvertime.toFixed(1)}h`;
+            document.getElementById('averageMonthly').textContent = `${formatCurrency(averageMonthly)} DA`;
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'Paid': return 'status-paid';
+                case 'Error': return 'status-error';
+                default: return 'status-not-paid';
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'decimal',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount || 0);
+        }
+
+        function formatTimeHours(hours) {
+            if (!hours || hours === 0) return '0m';
+            
+            const totalMinutes = Math.round(hours * 60);
+            
+            if (totalMinutes < 60) {
+                return `${totalMinutes}m`;
+            }
+            
+            const h = Math.floor(totalMinutes / 60);
+            const m = totalMinutes % 60;
+            
+            if (m === 0) {
+                return `${h}h`;
+            }
+            
+            return `${h}h ${m}m`;
+        }
+
+        function showLoading(show) {
+            const loadingState = document.getElementById('loadingState');
+            const tableBody = document.getElementById('salaryTableBody');
+            
+            if (show) {
+                loadingState.classList.remove('hidden');
+                tableBody.innerHTML = '';
+            } else {
+                loadingState.classList.add('hidden');
+            }
+        }
+
+        async function viewSalaryDetails(month, year) {
+            if (!currentEmployeeId) {
+                Utils.showNotification('Cannot identify employee', 'error');
+                return;
+            }
+
+            try {
+                const modal = document.getElementById('salaryModal');
+                const modalTitle = document.getElementById('salaryModalTitle');
+                const modalContent = document.getElementById('salaryModalContent');
+
+                if (!modal || !modalTitle || !modalContent) {
+                    Utils.showNotification('Modal elements not found', 'error');
+                    return;
+                }
+
+                // Show loading in modal
+                modalContent.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-blue-600"></i><p class="mt-2 text-gray-600">Loading salary details...</p></div>';
+                modal.classList.remove('hidden');
+
+                const response = await fetch(`${API_BASE_URL}/salaries/${currentEmployeeId}/compare?month=${month}&year=${year}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authManager.getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to load salary details');
+
+                const data = await response.json();
+                const algerianSalary = data.algerian_method;
+                const workedDaysSalary = data.worked_days_method;
+
+                // Helper function to translate with fallback
+                const t = (key, fallback) => {
+                    if (typeof translate === 'function') {
+                        const result = translate(key);
+                        return (result && result !== key) ? result : fallback;
+                    }
+                    return fallback;
+                };
+
+                const salaryDetailsText = t('salary.salary_details', 'Salary Details');
+                modalTitle.textContent = `${data.employee_name} - ${salaryDetailsText}`;
+
+                const paymentMethod = data.payment_record?.calculation_method || 'algerian';
+                const methodDisplayName = paymentMethod === 'worked_days' 
+                    ? t('salary.partial_month', 'Partial Month (Exception)')
+                    : t('salary.standard_method', 'Standard Method');
+                const hasZeroWorkedDays = (algerianSalary.worked_days === 0 || workedDaysSalary.worked_days === 0);
+
+                // Store globally for toggle
+                window.currentSalaryData = data;
+                window.currentAlgerianSalary = algerianSalary;
+                window.currentWorkedDaysSalary = workedDaysSalary;
+                window.currentSelectedCalculationMethod = 'algerian';
+
+                modalContent.innerHTML = `
+                    <!-- Employee Header Card -->
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-4 text-white mb-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-semibold">${data.employee_name}</h3>
+                                <p class="text-blue-100">${data.position || 'N/A'} • ${data.department_name || 'N/A'}</p>
+                                <p class="text-blue-200 text-sm">${getMonthName(month)} ${year}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-3xl font-bold ${hasZeroWorkedDays ? 'line-through text-gray-300' : ''}" id="displayNetSalary">${formatCurrency(algerianSalary.net_salary || 0)} DA</div>
+                                <div class="text-blue-100 text-sm" id="displayMethodLabel">${t('salary.standard_method', 'Standard Method')}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${hasZeroWorkedDays ? `
+                    <!-- Zero Worked Days Warning -->
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-r-lg">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <h3 class="text-sm font-semibold text-red-800">
+                                    ${t('salary.no_worked_days_title', 'No Worked Days - Salary Set to Zero')}
+                                </h3>
+                                <div class="mt-2 text-sm text-red-700">
+                                    <p>${t('salary.no_worked_days_message', 'You have <strong>0 worked days</strong> for this month. The salary has been automatically set to <strong>0 DA</strong>.')}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <!-- Main Content Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <!-- Left Column: Quick Stats -->
+                        <div>
+                            <h3 class="text-base font-semibold text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-chart-bar text-blue-600 mr-2"></i>
+                                ${t('salary.attendance_summary', 'Attendance Summary')}
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center flex-1">
+                                            <div class="p-2 bg-green-100 rounded-lg">
+                                                <i class="fas fa-calendar-check text-green-600"></i>
+                                            </div>
+                                            <div class="ml-3">
+                                                <p class="text-sm text-gray-600">${t('salary.worked_days', 'Worked Days')}</p>
+                                                <p class="text-lg font-semibold text-gray-900">
+                                                    ${parseInt(algerianSalary.worked_days || 0)} ${t('salary.worked_days_count', 'worked days')}
+                                                </p>
+                                                ${(algerianSalary.half_days && parseInt(algerianSalary.half_days) > 0) ? `
+                                                    <p class="text-xs text-gray-500 mt-1">
+                                                        (${parseInt(algerianSalary.full_days || (algerianSalary.worked_days - algerianSalary.half_days))} ${t('salary.full_days', 'full days')}, ${parseInt(algerianSalary.half_days)} ${t('salary.half_days', 'half days')})
+                                                    </p>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center flex-1">
+                                            <div class="p-2 bg-red-100 rounded-lg">
+                                                <i class="fas fa-calendar-times text-red-600"></i>
+                                            </div>
+                                            <div class="ml-3">
+                                                <p class="text-sm text-gray-600">${t('salary.absent_days', 'Absent Days')}</p>
+                                                <p class="text-lg font-semibold text-gray-900">
+                                                    ${parseInt(algerianSalary.absent_days || 0)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                    <div class="flex items-center">
+                                        <div class="p-2 bg-blue-100 rounded-lg">
+                                            <i class="fas fa-clock text-blue-600"></i>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-gray-600">${t('salary.overtime', 'Overtime')}</p>
+                                            <p class="text-lg font-semibold text-gray-900">${(algerianSalary.overtime_hours || 0).toFixed(1)}h</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                    <div class="flex items-center">
+                                        <div class="p-2 bg-orange-100 rounded-lg">
+                                            <i class="fas fa-clock text-orange-600"></i>
+                                        </div>
+                                        <div class="ml-3 flex-1">
+                                            <p class="text-sm text-gray-600">${t('salary.late_arrival', 'Late Arrival')}</p>
+                                            <p class="text-lg font-semibold text-gray-900">
+                                                ${formatTimeHours(algerianSalary.late_hours || 0)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                    <div class="flex items-center">
+                                        <div class="p-2 bg-orange-100 rounded-lg">
+                                            <i class="fas fa-sign-out-alt text-orange-600"></i>
+                                        </div>
+                                        <div class="ml-3 flex-1">
+                                            <p class="text-sm text-gray-600">${t('salary.early_departure', 'Early Departure')}</p>
+                                            <p class="text-lg font-semibold text-gray-900">
+                                                ${formatTimeHours(algerianSalary.early_departure_hours || 0)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column: Salary Breakdown -->
+                        <div>
+                            <h3 class="text-base font-semibold text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-calculator text-blue-600 mr-2"></i>
+                                ${t('salary.salary_breakdown', 'Salary Breakdown')}
+                            </h3>
+                            
+                            <!-- Standard Method Breakdown -->
+                            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden mb-4" id="algerianBreakdown">
+                                <div class="bg-blue-50 px-4 py-2 border-b border-gray-200">
+                                    <h4 class="text-sm font-semibold text-blue-900">${t('salary.standard_method', 'Standard Method')}</h4>
+                                </div>
+                                <div class="p-4">
+                                    <!-- Base Salary Section -->
+                                    <div class="mb-4">
+                                        <h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <i class="fas fa-coins text-yellow-600 mr-2"></i>
+                                            ${t('salary.base_salary', 'Base Salary')}
+                                        </h4>
+                                        <div class="bg-gray-50 rounded-lg p-4">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-gray-600">${t('salary.monthly_base_salary', 'Monthly Base Salary')}</span>
+                                                <span class="font-semibold text-lg">${formatCurrency(algerianSalary.base_salary || 0)} DA</span>
+                                            </div>
+                                            <div class="flex justify-between items-center mt-2">
+                                                <span class="text-sm text-gray-500">${t('salary.daily_rate', 'Daily Rate (Base ÷ 22)')}</span>
+                                                <span class="font-medium">${formatCurrency(algerianSalary.daily_rate || 0)} DA</span>
+                                            </div>
+                                            <div class="flex justify-between items-center mt-2">
+                                                <span class="text-sm text-gray-500">${t('salary.overtime_rate', 'Overtime Rate')}</span>
+                                                <span class="font-medium">${formatCurrency(algerianSalary.overtime_hour_rate || 0)} DA/hr</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Additions Section -->
+                                    <div class="mb-4">
+                                        <h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <i class="fas fa-plus-circle text-green-600 mr-2"></i>
+                                            ${t('salary.additions', 'Additions')}
+                                        </h4>
+                                        <div class="space-y-3">
+                                            ${(algerianSalary.overtime_amount || 0) > 0 ? `
+                                                <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                                                    <div>
+                                                        <span class="text-gray-700">${t('salary.overtime_pay', 'Overtime Pay')}</span>
+                                                        <p class="text-xs text-gray-500">${(algerianSalary.overtime_hours || 0).toFixed(2)}h × ${formatCurrency(algerianSalary.overtime_hour_rate || 0)} DA</p>
+                                                    </div>
+                                                    <span class="font-semibold text-green-600">+${formatCurrency(algerianSalary.overtime_amount || 0)} DA</span>
+                                                </div>
+                                            ` : `<div class="text-center py-4 text-gray-500 text-sm">${t('salary.no_additions', 'No additions this month')}</div>`}
+                                            ${(algerianSalary.wage_changes || 0) > 0 ? `
+                                                <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                                                    <div>
+                                                        <span class="text-gray-700">${t('salary.wage_adjustments', 'Wage Adjustments')}</span>
+                                                        <p class="text-xs text-gray-500">${t('salary.net_positive_adjustments', 'Net positive adjustments')}</p>
+                                                    </div>
+                                                    <span class="font-semibold text-green-600">+${formatCurrency(algerianSalary.wage_changes || 0)} DA</span>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+
+                                    <!-- Deductions Section -->
+                                    <div class="mb-4">
+                                        <h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <i class="fas fa-minus-circle text-red-600 mr-2"></i>
+                                            ${t('salary.deductions', 'Deductions')}
+                                        </h4>
+                                        <div class="space-y-3">
+                                            ${(algerianSalary.absence_deduction || 0) > 0 ? `
+                                                <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                                                    <div>
+                                                        <span class="text-gray-700">${t('salary.absence_deduction', 'Absence Deduction')}</span>
+                                                        <p class="text-xs text-gray-500">${algerianSalary.absent_days || 0} ${t('salary.days', 'days')} × ${formatCurrency(algerianSalary.daily_rate || 0)} DA</p>
+                                                    </div>
+                                                    <span class="font-semibold text-red-600">-${formatCurrency(algerianSalary.absence_deduction || 0)} DA</span>
+                                                </div>
+                                            ` : ''}
+                                            ${(algerianSalary.late_deduction || 0) > 0 ? `
+                                                <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                                                    <div>
+                                                        <span class="text-gray-700">${t('salary.late_arrival', 'Late Arrival')}</span>
+                                                        <p class="text-xs text-gray-500">${formatTimeHours(algerianSalary.late_hours || 0)} × ${formatCurrency(algerianSalary.overtime_hour_rate || 0)} DA/hr</p>
+                                                    </div>
+                                                    <span class="font-semibold text-red-600">-${formatCurrency(algerianSalary.late_deduction || 0)} DA</span>
+                                                </div>
+                                            ` : ''}
+                                            ${(algerianSalary.early_departure_deduction || 0) > 0 ? `
+                                                <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                                                    <div>
+                                                        <span class="text-gray-700">${t('salary.early_departure', 'Early Departure')}</span>
+                                                        <p class="text-xs text-gray-500">${formatTimeHours(algerianSalary.early_departure_hours || 0)} × ${formatCurrency(algerianSalary.overtime_hour_rate || 0)} DA/hr</p>
+                                                    </div>
+                                                    <span class="font-semibold text-red-600">-${formatCurrency(algerianSalary.early_departure_deduction || 0)} DA</span>
+                                                </div>
+                                            ` : ''}
+                                            ${((algerianSalary.absence_deduction || 0) === 0 && (algerianSalary.late_deduction || 0) === 0 && (algerianSalary.early_departure_deduction || 0) === 0) ? `
+                                                <div class="text-center py-4 text-gray-500 text-sm">
+                                                    <i class="fas fa-check-circle text-2xl mb-2 text-green-500"></i>
+                                                    <p>${t('salary.no_deductions', 'No deductions this month')}</p>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+
+                                    <!-- Summary Section -->
+                                    <div class="bg-blue-50 rounded-lg p-4">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-gray-700">${t('salary.gross_salary', 'Gross Salary')}</span>
+                                            <span class="font-semibold">${formatCurrency(algerianSalary.gross_salary || 0)} DA</span>
+                                        </div>
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-gray-700">${t('salary.total_deductions', 'Total Deductions')}</span>
+                                            <span class="font-semibold text-red-600">-${formatCurrency(algerianSalary.total_deductions || 0)} DA</span>
+                                        </div>
+                                        <hr class="border-gray-300 my-3">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-lg font-semibold text-gray-900">${t('salary.net_salary', 'Net Salary')}</span>
+                                            <span class="text-2xl font-bold text-blue-600">${formatCurrency(algerianSalary.net_salary || 0)} DA</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Partial Month (Exception) Method Breakdown -->
+                            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden mb-4 hidden" id="workedDaysBreakdown">
+                                <div class="bg-orange-50 px-4 py-2 border-b border-gray-200">
+                                    <h4 class="text-sm font-semibold text-orange-900">${t('salary.partial_month', 'Partial Month (Exception)')}</h4>
+                                </div>
+                                <div class="p-4">
+                                    <div class="mb-4">
+                                        <h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <i class="fas fa-calendar-check text-green-600 mr-2"></i>
+                                            ${t('salary.worked_days_salary', 'Worked Days Salary')}
+                                        </h4>
+                                        <div class="bg-gray-50 rounded-lg p-4">
+                                            <div class="flex justify-between items-center">
+                                                <div>
+                                                    <span class="text-gray-600">${t('salary.worked_days', 'Worked Days')}</span>
+                                                </div>
+                                                <span class="font-semibold text-lg">${workedDaysSalary.worked_days || 0} ${t('salary.days', 'days')}</span>
+                                            </div>
+                                            <div class="flex justify-between items-center mt-2">
+                                                <span class="text-sm text-gray-500">${t('salary.daily_rate', 'Daily Rate')}</span>
+                                                <span class="font-medium">${formatCurrency(workedDaysSalary.daily_rate || 0)} DA</span>
+                                            </div>
+                                            <div class="flex justify-between items-center mt-2 border-t pt-2">
+                                                <span class="text-gray-700 font-medium">${t('salary.worked_days_salary', 'Worked Days Salary')}</span>
+                                                <span class="font-semibold text-lg text-green-600">${formatCurrency(workedDaysSalary.worked_days_salary || 0)} DA</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Additions and Deductions similar to standard method -->
+                                    <div class="mb-4">
+                                        <h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <i class="fas fa-plus-circle text-green-600 mr-2"></i>
+                                            ${t('salary.additions', 'Additions')}
+                                        </h4>
+                                        <div class="space-y-3">
+                                            ${(workedDaysSalary.overtime_amount || 0) > 0 ? `
+                                                <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                                                    <div>
+                                                        <span class="text-gray-700">${t('salary.overtime_pay', 'Overtime Pay')}</span>
+                                                        <p class="text-xs text-gray-500">${(workedDaysSalary.overtime_hours || 0).toFixed(2)}h × ${formatCurrency(workedDaysSalary.overtime_hour_rate || 0)} DA</p>
+                                                    </div>
+                                                    <span class="font-semibold text-green-600">+${formatCurrency(workedDaysSalary.overtime_amount || 0)} DA</span>
+                                                </div>
+                                            ` : `<div class="text-center py-4 text-gray-500 text-sm">${t('salary.no_additions', 'No additions this month')}</div>`}
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <i class="fas fa-minus-circle text-red-600 mr-2"></i>
+                                            ${t('salary.deductions', 'Deductions')}
+                                        </h4>
+                                        <div class="space-y-3">
+                                            ${(workedDaysSalary.late_deduction || 0) > 0 ? `
+                                                <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                                                    <div>
+                                                        <span class="text-gray-700">${t('salary.late_arrival', 'Late Arrival')}</span>
+                                                        <p class="text-xs text-gray-500">${formatTimeHours(workedDaysSalary.late_hours || 0)} × ${formatCurrency(workedDaysSalary.overtime_hour_rate || 0)} DA/hr</p>
+                                                    </div>
+                                                    <span class="font-semibold text-red-600">-${formatCurrency(workedDaysSalary.late_deduction || 0)} DA</span>
+                                                </div>
+                                            ` : ''}
+                                            ${(workedDaysSalary.early_departure_deduction || 0) > 0 ? `
+                                                <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                                                    <div>
+                                                        <span class="text-gray-700">${t('salary.early_departure', 'Early Departure')}</span>
+                                                        <p class="text-xs text-gray-500">${formatTimeHours(workedDaysSalary.early_departure_hours || 0)} × ${formatCurrency(workedDaysSalary.overtime_hour_rate || 0)} DA/hr</p>
+                                                    </div>
+                                                    <span class="font-semibold text-red-600">-${formatCurrency(workedDaysSalary.early_departure_deduction || 0)} DA</span>
+                                                </div>
+                                            ` : ''}
+                                            ${((workedDaysSalary.late_deduction || 0) === 0 && (workedDaysSalary.early_departure_deduction || 0) === 0) ? `
+                                                <div class="text-center py-4 text-gray-500 text-sm">
+                                                    <i class="fas fa-check-circle text-2xl mb-2 text-green-500"></i>
+                                                    <p>${t('salary.no_deductions', 'No deductions this month')}</p>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-green-50 rounded-lg p-4">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-gray-700">${t('salary.gross_salary', 'Gross Salary')}</span>
+                                            <span class="font-semibold">${formatCurrency(workedDaysSalary.gross_salary || 0)} DA</span>
+                                        </div>
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-gray-700">${t('salary.total_deductions', 'Total Deductions')}</span>
+                                            <span class="font-semibold text-red-600">-${formatCurrency(workedDaysSalary.total_deductions || 0)} DA</span>
+                                        </div>
+                                        <hr class="border-gray-300 my-3">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-lg font-semibold text-gray-900">${t('salary.net_salary', 'Net Salary')}</span>
+                                            <span class="text-2xl font-bold text-green-600">${formatCurrency(workedDaysSalary.net_salary || 0)} DA</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Details Section -->
+                    ${data.payment_record && data.payment_status === 'Paid' ? `
+                    <div class="mt-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-2 border-green-200 p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center">
+                                <div class="p-3 bg-green-500 rounded-full mr-4">
+                                    <i class="fas fa-check-circle text-white text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold text-green-900">${t('salary.payment_details', 'Payment Details')}</h3>
+                                    <p class="text-sm text-green-700">${t('salary.marked_as_paid', 'This salary has been marked as paid')}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                            <div class="bg-white rounded-lg p-4 border border-green-200">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-calendar-check text-green-600 mr-2"></i>
+                                    <span class="text-sm font-medium text-gray-600">${t('salary.paid_date', 'Paid Date')}</span>
+                                </div>
+                                <p class="text-lg font-semibold text-gray-900">${data.payment_record.paid_at ? new Date(data.payment_record.paid_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</p>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-green-200">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-calculator text-blue-600 mr-2"></i>
+                                    <span class="text-sm font-medium text-gray-600">${t('salary.calculation_method', 'Calculation Method')}</span>
+                                </div>
+                                <p class="text-lg font-semibold text-gray-900">${data.payment_record.calculation_method === 'worked_days' ? t('salary.partial_month', 'Partial Month (Exception)') : t('salary.standard_method', 'Standard Method')}</p>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-green-200">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-money-bill-wave text-emerald-600 mr-2"></i>
+                                    <span class="text-sm font-medium text-gray-600">${t('salary.amount_paid', 'Amount Paid')}</span>
+                                </div>
+                                <p class="text-2xl font-bold text-green-600">${formatCurrency(data.payment_record.amount || 0)} DA</p>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                `;
+
+            } catch (error) {
+                console.error('Error viewing salary details:', error);
+                Utils.showNotification('Failed to load salary details. Please try again.', 'error');
+                modalContent.innerHTML = '<div class="text-center py-8 text-red-600"><i class="fas fa-exclamation-circle text-3xl mb-2"></i><p>Failed to load salary details</p></div>';
+            }
+        }
+
+        function toggleCalculationMethod() {
+            // Helper function to translate with fallback
+            const t = (key, fallback) => {
+                if (typeof translate === 'function') {
+                    const result = translate(key);
+                    return (result && result !== key) ? result : fallback;
+                }
+                return fallback;
+            };
+
+            const toggle = document.getElementById('calculationToggle');
+            const algerianBreakdown = document.getElementById('algerianBreakdown');
+            const workedDaysBreakdown = document.getElementById('workedDaysBreakdown');
+            const displayNetSalary = document.getElementById('displayNetSalary');
+            const displayMethodLabel = document.getElementById('displayMethodLabel');
+            
+            if (!toggle || !algerianBreakdown || !workedDaysBreakdown || !displayNetSalary || !displayMethodLabel) return;
+            
+            if (toggle.checked) {
+                algerianBreakdown.classList.add('hidden');
+                workedDaysBreakdown.classList.remove('hidden');
+                displayNetSalary.textContent = `${formatCurrency(window.currentWorkedDaysSalary.net_salary || 0)} DA`;
+                displayMethodLabel.textContent = t('salary.partial_month', 'Partial Month (Exception)');
+                window.currentSelectedCalculationMethod = 'worked_days';
+            } else {
+                algerianBreakdown.classList.remove('hidden');
+                workedDaysBreakdown.classList.add('hidden');
+                displayNetSalary.textContent = `${formatCurrency(window.currentAlgerianSalary.net_salary || 0)} DA`;
+                displayMethodLabel.textContent = t('salary.standard_method', 'Standard Method');
+                window.currentSelectedCalculationMethod = 'algerian';
+            }
+        }
+
+        function closeSalaryModal() {
+            const modal = document.getElementById('salaryModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function getMonthName(month) {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            return monthNames[month - 1] || 'Unknown';
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('salaryModal');
+            if (event.target === modal) {
+                closeSalaryModal();
+            }
+        });
+
+        // Payslips Functions
+        async function loadPayslips() {
+            if (payslipsLoading) return;
+            
+            if (!currentEmployeeId) {
+                const id = await getUserEmployeeId();
+                if (!id) {
+                    Utils.showNotification('Cannot identify employee. Please contact support.', 'error');
+                    return;
+                }
+                currentEmployeeId = id;
+            }
+            
+            try {
+                payslipsLoading = true;
+                showPayslipsLoading();
+                
+                const startMonth = document.getElementById('payslipStartMonth').value;
+                const startYear = document.getElementById('payslipStartYear').value;
+                
+                const params = {};
+                if (startMonth) params.month = startMonth;
+                if (startYear) params.year = startYear;
+                
+                const queryString = Object.keys(params).length > 0 ? '?' + new URLSearchParams(params).toString() : '';
+                
+                const response = await fetch(`${API_BASE_URL}/payslips/me${queryString}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authManager.getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load payslips');
+                }
+                
+                const data = await response.json();
+                currentPayslips = data.items || [];
+                
+                displayPayslips(currentPayslips);
+                
+            } catch (error) {
+                console.error('Load payslips error:', error);
+                Utils.showNotification(error.message || 'Failed to load payslips', 'error');
+                showPayslipsEmpty();
+            } finally {
+                payslipsLoading = false;
+                hidePayslipsLoading();
+            }
+        }
+        
+        function displayPayslips(payslips) {
+            const tableBody = document.getElementById('payslipsTableBody');
+            
+            if (!payslips || payslips.length === 0) {
+                showPayslipsEmpty();
+                return;
+            }
+            
+            // Sort by year and month descending (newest first)
+            payslips.sort((a, b) => {
+                if (a.year !== b.year) return b.year - a.year;
+                return b.month - a.month;
+            });
+            
+            // Helper function to translate with fallback
+            const t = (key, fallback) => {
+                if (typeof translate === 'function') {
+                    const result = translate(key);
+                    return (result && result !== key) ? result : fallback;
+                }
+                return fallback;
+            };
+            
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            tableBody.innerHTML = payslips.map(payslip => {
+                const statusClass = getPayslipStatusClass(payslip.status);
+                const monthName = monthNames[payslip.month - 1];
+                
+                return `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            ${monthName}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${payslip.year}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge ${statusClass}">
+                                ${getPayslipStatusText(payslip.status)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${payslip.payslip_id ? 
+                                `<a href="#" data-dl="${payslip.payslip_id}" class="text-blue-600 hover:text-blue-900 flex items-center">
+                                    <i class="fas fa-download mr-2"></i>
+                                    ${t('common.download', 'Download PDF')}
+                                </a>` : 
+                                `<span class="text-gray-400 italic">${t('salary.not_uploaded', 'Not uploaded')}</span>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Add download event listeners
+            addDownloadEventListeners();
+            hidePayslipsEmpty();
+        }
+        
+        function addDownloadEventListeners() {
+            const tableBody = document.getElementById('payslipsTableBody');
+            
+            tableBody.querySelectorAll('a[data-dl]').forEach(a => {
+                a.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    
+                    try {
+                        const payslipId = a.getAttribute('data-dl');
+                        await downloadPayslip(payslipId);
+                    } catch (error) {
+                        console.error('Download error:', error);
+                        Utils.showNotification('Failed to download payslip', 'error');
+                    }
+                });
+            });
+        }
+
+        async function downloadPayslip(payslipId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/payslips/download/${payslipId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authManager.getToken()}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to download payslip');
+                }
+                
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'payslip.pdf';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
+                
+                Utils.showNotification('Payslip downloaded successfully', 'success');
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        function getPayslipStatusClass(status) {
+            switch (status) {
+                case 'uploaded': return 'status-uploaded';
+                case 'unmatched': return 'status-unmatched';
+                default: return 'status-not_uploaded';
+            }
+        }
+
+        function getPayslipStatusText(status) {
+            // Helper function to translate with fallback
+            const t = (key, fallback) => {
+                if (typeof translate === 'function') {
+                    const result = translate(key);
+                    return (result && result !== key) ? result : fallback;
+                }
+                return fallback;
+            };
+            
+            switch (status) {
+                case 'uploaded': return t('salary.uploaded', 'Uploaded');
+                case 'unmatched': return t('salary.unmatched', 'Unmatched');
+                default: return t('salary.not_uploaded', 'Not Uploaded');
+            }
+        }
+        
+        function showPayslipsLoading() {
+            document.getElementById('payslipsLoading').classList.remove('hidden');
+            document.getElementById('payslipsEmpty').classList.add('hidden');
+            document.getElementById('payslipsTableBody').innerHTML = '';
+        }
+
+        function hidePayslipsLoading() {
+            document.getElementById('payslipsLoading').classList.add('hidden');
+        }
+
+        function showPayslipsEmpty() {
+            document.getElementById('payslipsEmpty').classList.remove('hidden');
+            document.getElementById('payslipsLoading').classList.add('hidden');
+            document.getElementById('payslipsTableBody').innerHTML = '';
+        }
+
+        function hidePayslipsEmpty() {
+            document.getElementById('payslipsEmpty').classList.add('hidden');
+        }
+    </script>
+    <script src="../assets/js/navbar.js"></script>
+</body>
+</html>
+

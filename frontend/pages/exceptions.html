@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="exceptions.title">Exceptions Management - HR Operations Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    
+    <style>
+        .tab-active {
+            border-bottom: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+        .exception-card {
+            transition: all 0.2s ease;
+        }
+        .exception-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .status-pending { background-color: #fef3c7; color: #92400e; }
+        .status-approved { background-color: #d1fae5; color: #065f46; }
+        .status-rejected { background-color: #fecaca; color: #991b1b; }
+        
+        /* Expandable table styles */
+        .expandable-row {
+            transition: all 0.2s ease;
+        }
+        .expandable-row:hover {
+            background-color: #f9fafb;
+        }
+        .expand-button {
+            transition: all 0.2s ease;
+        }
+        .expand-button:hover {
+            transform: scale(1.1);
+        }
+        .sub-table {
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .sub-table th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+        }
+        .sub-table tr:hover {
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- The reusable navbar will be automatically inserted here -->
+    
+    <!-- Main Content -->
+    <div class="main-content flex-1 overflow-y-auto">
+
+            <!-- Content -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <div class="max-w-7xl mx-auto">
+                    <!-- Page Header -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h1 class="text-2xl font-bold text-gray-900" data-translate="exceptions.title">Exceptions Management</h1>
+                                <p class="text-gray-600" data-translate="exceptions.description">Manage attendance exception requests and approvals</p>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <!-- Language Selector -->
+                                <select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="en">English</option>
+                                    <option value="fr">Français</option>
+                                    <option value="ar">العربية</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+        <!-- Tabs -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                    <button id="pendingTab" class="tab-active py-4 px-1 border-b-2 font-medium text-sm">
+                        <i class="fas fa-clock mr-2"></i>
+                        Pending Requests
+                        <span id="pendingCount" class="ml-2 bg-yellow-100 text-yellow-800 py-1 px-2 rounded-full text-xs">0</span>
+                    </button>
+                    <button id="historyTab" class="py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
+                        <i class="fas fa-history mr-2"></i>
+                        History
+                    </button>
+                    <button id="invitationsTab" class="py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Sent Invitations
+                        <span id="invitationsCount" class="ml-2 bg-blue-100 text-blue-800 py-1 px-2 rounded-full text-xs">0</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Pending Requests Tab -->
+            <div id="pendingContent" class="p-6">
+                <!-- Filters for Pending -->
+                <div class="mb-6 flex flex-wrap gap-4">
+                    <select id="pendingDepartmentFilter" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Departments</option>
+                    </select>
+                    <select id="pendingTypeFilter" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Types</option>
+                        <option value="MissingPunchFix">Missing Punch Fix</option>
+                        <option value="LeaveRequest">Leave Request</option>
+                        <option value="HolidayAssignment">Holiday Assignment</option>
+                        <option value="ExtraHours">Extra Hours (Overtime)</option>
+                    </select>
+                    <button onclick="loadPendingExceptions()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                        <i class="fas fa-filter mr-2"></i>
+                        Apply Filters
+                    </button>
+                </div>
+
+                <!-- Pending Exceptions List -->
+                <div id="pendingExceptions" class="space-y-4">
+                    <!-- Pending exceptions will be loaded here -->
+                </div>
+
+                <!-- Pending Loading State -->
+                <div id="pendingLoading" class="text-center py-12 hidden">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p class="text-gray-500">Loading pending requests...</p>
+                </div>
+
+                <!-- Pending Empty State -->
+                <div id="pendingEmpty" class="text-center py-12 hidden">
+                    <i class="fas fa-check-circle text-6xl text-green-300 mb-4"></i>
+                    <p class="text-gray-500">No pending exception requests</p>
+                    <p class="text-sm text-gray-400">All requests have been processed</p>
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div id="historyContent" class="p-6 hidden">
+                <!-- Filters for History -->
+                <div class="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                        <input type="date" id="historyStartDate" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                        <input type="date" id="historyEndDate" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                        <select id="historyDepartmentFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Departments</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                        <select id="historyTypeFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Types</option>
+                            <option value="MissingPunchFix">Missing Punch Fix</option>
+                            <option value="LeaveRequest">Leave Request</option>
+                            <option value="HolidayAssignment">Holiday Assignment</option>
+                            <option value="DayEdit">Day Edit</option>
+                            <option value="editday">Day Edit (legacy)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select id="historyStatusFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Status</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="loadExceptionHistory()" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                            <i class="fas fa-search mr-2"></i>
+                            Search
+                        </button>
+                    </div>
+                </div>
+
+                <!-- History Table -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attachment</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- History rows will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- History Loading State -->
+                <div id="historyLoading" class="text-center py-12 hidden">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p class="text-gray-500">Loading exception history...</p>
+                </div>
+
+                <!-- History Empty State -->
+                <div id="historyEmpty" class="text-center py-12 hidden">
+                    <i class="fas fa-history text-6xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500">No exception history found</p>
+                    <p class="text-sm text-gray-400">Try adjusting your search filters</p>
+                </div>
+
+                <!-- History Pagination -->
+                <div id="historyPagination" class="mt-6">
+                    <!-- Pagination will be populated here -->
+                </div>
+            </div>
+
+            <!-- Sent Invitations Tab -->
+            <div id="invitationsContent" class="p-6 hidden">
+                <!-- Header with filters -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 mb-6">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900">Sent Invitations Management</h3>
+                        <p class="text-sm text-gray-600">Manage all substitution invitations sent to teachers</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <!-- Status Filter -->
+                        <select id="invitationStatusFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="accepted">Accepted</option>
+                            <option value="taught">Taught</option>
+                            <option value="denied">Denied</option>
+                            <option value="dropped">Dropped</option>
+                        </select>
+                        <!-- Date Filter -->
+                        <input type="date" id="invitationDateFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Filter by date">
+                        <!-- Teacher Filter -->
+                        <select id="invitationTeacherFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Teachers</option>
+                        </select>
+                        <!-- Refresh Button -->
+                        <button id="refreshInvitations" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <i class="fas fa-sync-alt mr-1"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-clock text-blue-600 text-xl"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-blue-600">Pending</p>
+                                <p class="text-2xl font-bold text-blue-900" id="pendingCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-check text-green-600 text-xl"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-green-600">Accepted</p>
+                                <p class="text-2xl font-bold text-green-900" id="acceptedCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-graduation-cap text-gray-600 text-xl"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-600">Taught</p>
+                                <p class="text-2xl font-bold text-gray-900" id="taughtCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-times text-red-600 text-xl"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-red-600">Denied</p>
+                                <p class="text-2xl font-bold text-red-900" id="deniedCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invitations Table -->
+                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Absent Teacher</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level & Grade</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invited Teachers</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invitationsTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Table rows will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="invitationsTableEmpty" class="hidden text-center py-8 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-2"></i>
+                        <p>No invitations found</p>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div id="invitationsPagination" class="flex items-center justify-between mt-6">
+                    <div class="text-sm text-gray-700">
+                        Showing <span id="invitationsStart">0</span> to <span id="invitationsEnd">0</span> of <span id="invitationsTotal">0</span> invitations
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="prevPage" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-left mr-1"></i> Previous
+                        </button>
+                        <button id="nextPage" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Next <i class="fas fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Invitations Loading State -->
+                <div id="invitationsLoading" class="text-center py-12 hidden">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p class="text-gray-500">Loading invitations...</p>
+                </div>
+
+                <!-- Invitations Empty State -->
+                <div id="invitationsEmpty" class="text-center py-12 hidden">
+                    <i class="fas fa-paper-plane text-6xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500">No invitations found</p>
+                    <p class="text-sm text-gray-400">Substitution invitations will appear here when created</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exception Details Modal -->
+    <div id="detailsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900" id="modalTitle">Exception Details</h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="modalContent" class="p-6">
+                <!-- Modal content will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg max-w-md w-full mx-4">
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div id="confirmIcon" class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mr-4">
+                        <i id="confirmIconClass" class="text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 id="confirmTitle" class="text-lg font-medium text-gray-900"></h3>
+                        <p id="confirmMessage" class="text-sm text-gray-500"></p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button onclick="closeConfirmModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="confirmAction" class="px-4 py-2 rounded-lg text-white transition-colors">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg border-l-4 p-4 max-w-sm">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i id="toastIcon" class="text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <p id="toastMessage" class="text-sm font-medium text-gray-900"></p>
+                </div>
+                <div class="ml-auto pl-3">
+                    <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/auth.js"></script>
+    <script src="../components/api.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script>
+        // Use centralized AuthManager token
+        let currentTab = 'pending';
+        let currentPage = 1;
+        let currentFilters = {};
+
+        // Set up event delegation for pending exceptions buttons (one-time setup)
+        // Use document-level delegation so it works even when content is replaced
+        let pendingExceptionsDelegateSetup = false;
+        function setupPendingExceptionsEventDelegation() {
+            if (pendingExceptionsDelegateSetup) return; // Only set up once
+            
+            // Use document-level event delegation for the pending exceptions container
+            document.addEventListener('click', function(e) {
+                const container = document.getElementById('pendingExceptions');
+                if (!container || !container.contains(e.target)) return;
+                
+                const target = e.target.closest('button');
+                if (!target) return;
+                
+                if (target.classList.contains('btn-view-details')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const exceptionId = target.getAttribute('data-exception-id');
+                    const source = target.getAttribute('data-exception-source') || 'exception';
+                    if (typeof viewExceptionDetails === 'function') {
+                        viewExceptionDetails(exceptionId, source);
+                    } else {
+                        console.error('viewExceptionDetails function not found');
+                    }
+                } else if (target.classList.contains('btn-reject')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const exceptionId = target.getAttribute('data-exception-id');
+                    const employeeName = target.getAttribute('data-employee-name');
+                    const source = target.getAttribute('data-exception-source') || 'exception';
+                    if (typeof showConfirmation === 'function') {
+                        showConfirmation('reject', exceptionId, employeeName, source);
+                    } else {
+                        console.error('showConfirmation function not found');
+                    }
+                } else if (target.classList.contains('btn-approve')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const exceptionId = target.getAttribute('data-exception-id');
+                    const employeeName = target.getAttribute('data-employee-name');
+                    const source = target.getAttribute('data-exception-source') || 'exception';
+                    if (typeof showConfirmation === 'function') {
+                        showConfirmation('approve', exceptionId, employeeName, source);
+                    } else {
+                        console.error('showConfirmation function not found');
+                    }
+                } else if (target.classList.contains('btn-delete')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const exceptionId = target.getAttribute('data-exception-id');
+                    const employeeName = target.getAttribute('data-employee-name');
+                    if (typeof showConfirmation === 'function') {
+                        showConfirmation('deleteException', exceptionId, employeeName, 'exception');
+                    } else {
+                        console.error('showConfirmation function not found');
+                    }
+                }
+            });
+            
+            pendingExceptionsDelegateSetup = true;
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!requireAuth()) return;
+            initializePage();
+            
+            // Set up event delegation for pending exceptions buttons
+            setupPendingExceptionsEventDelegation();
+            
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+            
+            // Add tab click handlers
+            document.getElementById('pendingTab').addEventListener('click', () => switchTab('pending'));
+            document.getElementById('historyTab').addEventListener('click', () => switchTab('history'));
+            document.getElementById('invitationsTab').addEventListener('click', () => switchTab('invitations'));
+        });
+
+        async function initializePage() {
+            // Load departments for filters
+            await loadDepartments();
+            
+            // Set default date range for history (last 30 days)
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+            
+            document.getElementById('historyStartDate').value = startDate.toISOString().split('T')[0];
+            document.getElementById('historyEndDate').value = endDate.toISOString().split('T')[0];
+            
+            // Load initial data
+            await loadPendingExceptions();
+        }
+
+        async function loadDepartments() {
+            try {
+                const result = await API.getDepartments();
+
+                if (result.success) {
+                    const selects = [
+                        document.getElementById('pendingDepartmentFilter'),
+                        document.getElementById('historyDepartmentFilter')
+                    ];
+
+                    selects.forEach(select => {
+                        result.departments.forEach(dept => {
+                            const option = document.createElement('option');
+                            option.value = dept.id;
+                            option.textContent = dept.name;
+                            select.appendChild(option);
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Load departments error:', error);
+            }
+        }
+
+        async function loadPendingExceptions() {
+            try {
+                showPendingLoading();
+
+                const params = {
+                    page: 1,
+                    limit: 50
+                };
+
+                const departmentId = document.getElementById('pendingDepartmentFilter').value;
+                if (departmentId) {
+                    params.departmentId = departmentId;
+                }
+
+                const otParams = {};
+                if (departmentId) otParams.departmentId = departmentId;
+                if (params.employeeId) otParams.employeeId = params.employeeId;
+                if (params.year) otParams.year = params.year;
+                if (params.month) otParams.month = params.month;
+
+                const [excResult, otResult] = await Promise.all([
+                    API.getPendingExceptions(params),
+                    API.getPendingOvertime(otParams)
+                ]);
+
+                const excList = excResult && excResult.success ? (excResult.data || excResult.exceptions || []) : [];
+                const otList = otResult && otResult.success ? (otResult.data || []) : [];
+
+                const merged = [
+                    ...excList.map(e => ({ ...e, _source: 'exception' })),
+                    ...otList.map(o => ({
+                        ...o,
+                        _source: 'overtime',
+                        type: 'ExtraHours',
+                        description: o.description || `${o.requested_hours} hours requested`
+                    }))
+                ];
+
+                displayPendingExceptions(merged);
+                updatePendingCount(merged.length);
+            } catch (error) {
+                console.error('Load pending exceptions error:', error);
+                showToast('error', error.message);
+                showPendingEmpty();
+            } finally {
+                hidePendingLoading();
+            }
+        }
+
+        async function loadExceptionHistory() {
+            try {
+                showHistoryLoading();
+
+                const params = {
+                    page: currentPage,
+                    limit: 50,
+                    startDate: document.getElementById('historyStartDate').value,
+                    endDate: document.getElementById('historyEndDate').value
+                };
+
+                const departmentId = document.getElementById('historyDepartmentFilter').value;
+                if (departmentId) {
+                    params.departmentId = departmentId;
+                }
+
+                const status = document.getElementById('historyStatusFilter').value;
+                if (status) {
+                    params.status = status;
+                }
+
+                const type = document.getElementById('historyTypeFilter')?.value;
+                if (type) {
+                    params.type = type;
+                }
+
+                const result = await API.getExceptionHistory(params);
+
+                if (result.success) {
+                    displayExceptionHistory(result.exceptions);
+                    displayHistoryPagination(result.pagination);
+                } else {
+                    throw new Error(result.error || 'Failed to load exception history');
+                }
+            } catch (error) {
+                console.error('Load exception history error:', error);
+                showToast('error', error.message);
+                showHistoryEmpty();
+            } finally {
+                hideHistoryLoading();
+            }
+        }
+
+        let _lastLoadedPending = [];
+        function displayPendingExceptions(exceptions) {
+            const container = document.getElementById('pendingExceptions');
+            
+            if (exceptions.length === 0) {
+                showPendingEmpty();
+                return;
+            }
+
+            _lastLoadedPending = exceptions;
+            
+            // Helper function to escape strings for use in HTML attributes
+            const escapeHtml = (str) => {
+                if (!str) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/'/g, '&#39;')
+                    .replace(/"/g, '&quot;');
+            };
+            
+            container.innerHTML = exceptions.map((exception, index) => {
+                const escapedId = escapeHtml(exception.id);
+                const escapedName = escapeHtml(exception.employee_name);
+                const escapedSource = escapeHtml(exception._source || 'exception');
+                const dataIndex = index; // Use index for event delegation
+                
+                return `
+                <div class="exception-card bg-white border border-gray-200 rounded-lg p-6 shadow-sm" data-exception-index="${dataIndex}">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-2">
+                                <h4 class="text-lg font-medium text-gray-900">${exception.employee_name}</h4>
+                                <span class="ml-3 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                                    ${exception.employee_number || 'N/A'}
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-1">${exception.department_name || 'No Department'}</p>
+                            <p class="text-sm text-gray-500">Submitted ${formatDateTime(exception.created_at)} by ${exception.submitted_by || 'Unknown'}</p>
+                        </div>
+                        <span class="status-badge status-pending">${exception.status}</span>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="flex items-center mb-2">
+                            <span class="text-sm font-medium text-gray-700">Type:</span>
+                            <span class="ml-2 text-sm text-gray-900">${formatExceptionType(exception.type)}</span>
+                        </div>
+                        <div class="flex items-center mb-2">
+                            <span class="text-sm font-medium text-gray-700">Date:</span>
+                            <span class="ml-2 text-sm text-gray-900">${formatDate(exception.date)}</span>
+                            ${exception.end_date ? `<span class="ml-2 text-sm text-gray-500">to ${formatDate(exception.end_date)}</span>` : ''}
+                        </div>
+                        ${exception.override_type ? `
+                        <div class=\"flex items-center mb-2\">
+                            <span class=\"text-sm font-medium text-gray-700\">Override:</span>
+                            <span class=\"ml-2 text-sm text-gray-900\">${formatOverrideType(exception.override_type)}</span>
+                        </div>` : ''}
+                        <div class="mt-2">
+                            <span class="text-sm font-medium text-gray-700">Description:</span>
+                            <p class="text-sm text-gray-900 mt-1">${exception.description}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <button class="btn-view-details text-blue-600 hover:text-blue-800 text-sm font-medium" 
+                                data-exception-id="${escapedId}" 
+                                data-exception-source="${escapedSource}">
+                            <i class="fas fa-eye mr-1"></i>
+                            View Details
+                        </button>
+                        <div class="flex space-x-2">
+                            <button class="btn-reject bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm" 
+                                    data-exception-id="${escapedId}" 
+                                    data-employee-name="${escapedName}" 
+                                    data-exception-source="${escapedSource}">
+                                <i class="fas fa-times mr-2"></i>
+                                Reject
+                            </button>
+                            <button class="btn-approve bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm" 
+                                    data-exception-id="${escapedId}" 
+                                    data-employee-name="${escapedName}" 
+                                    data-exception-source="${escapedSource}">
+                                <i class="fas fa-check mr-2"></i>
+                                Approve
+                            </button>
+                            ${exception._source !== 'overtime' ? `
+                            <button class="btn-delete bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm" 
+                                    data-exception-id="${escapedId}" 
+                                    data-employee-name="${escapedName}">
+                                <i class=\"fas fa-trash mr-2\"></i>
+                                Delete
+                            </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+            
+            // Event delegation is handled by setupPendingExceptionsEventDelegation()
+            // which is called once on page load, so no need to add listeners here
+
+            hidePendingEmpty();
+        }
+
+        function displayExceptionHistory(exceptions) {
+            const tbody = document.getElementById('historyTableBody');
+            
+            if (exceptions.length === 0) {
+                showHistoryEmpty();
+                return;
+            }
+
+            tbody.innerHTML = exceptions.map(exception => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${exception.employee_name}</div>
+                        <div class="text-sm text-gray-500">${exception.position_name || exception.job_title || exception.position || 'N/A'}</div>
+                        <div class="text-sm text-gray-500">${exception.department_name || 'No Department'}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${formatExceptionType(exception.type)}</div>
+                        ${exception.override_type ? `<div class=\"text-xs text-gray-600\">${formatOverrideType(exception.override_type)}</div>` : ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${formatDate(exception.date)}</div>
+                        ${exception.end_date ? `<div class="text-sm text-gray-500">to ${formatDate(exception.end_date)}</div>` : ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${(() => { try { const p = typeof exception.payload === 'string' ? JSON.parse(exception.payload) : exception.payload; return p?.reason || p?.justification_reason || p?.absence_reason || ''; } catch (e) { return ''; } })()}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${exception.document_url ? `
+                        <button onclick=\"downloadAttachment('${exception.id}')\" class=\"text-blue-600 hover:text-blue-800 text-sm\">
+                            <i class=\"fas fa-paperclip mr-1\"></i> Attachment
+                        </button>
+                        ` : '<span class="text-gray-400">—</span>'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="status-badge ${getStatusClass(exception.status)}">${exception.status}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="viewExceptionDetails('${exception.id}')" class="text-blue-600 hover:text-blue-900">
+                            <i class="fas fa-eye mr-1"></i>
+                            View
+                        </button>
+                        <button onclick="showConfirmation('deleteException', '${exception.id}', '${exception.employee_name}', 'exception')" class="ml-3 text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-trash mr-1"></i>
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            hideHistoryEmpty();
+        }
+
+        function displayHistoryPagination(pagination) {
+            const container = document.getElementById('historyPagination');
+            
+            if (pagination.pages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const prevDisabled = pagination.page <= 1;
+            const nextDisabled = pagination.page >= pagination.pages;
+
+            container.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        Showing ${((pagination.page - 1) * pagination.limit) + 1} to ${Math.min(pagination.page * pagination.limit, pagination.total)} of ${pagination.total} results
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="changeHistoryPage(${pagination.page - 1})" 
+                                ${prevDisabled ? 'disabled' : ''} 
+                                class="px-3 py-1 border border-gray-300 rounded text-sm ${prevDisabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'}">
+                            Previous
+                        </button>
+                        
+                        <span class="px-3 py-1 text-sm text-gray-700">
+                            Page ${pagination.page} of ${pagination.pages}
+                        </span>
+                        
+                        <button onclick="changeHistoryPage(${pagination.page + 1})" 
+                                ${nextDisabled ? 'disabled' : ''} 
+                                class="px-3 py-1 border border-gray-300 rounded text-sm ${nextDisabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'}">
+                            Next
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function viewExceptionDetails(exceptionId, source = 'exception') {
+            try {
+                if (source === 'overtime') {
+                    const item = (_lastLoadedPending || []).find(x => x.id === exceptionId);
+                    if (!item) throw new Error('Overtime request not found');
+                    displayOvertimeDetails(item);
+                } else {
+                    const result = await API.getExceptionDetails(exceptionId);
+                    if (result.success) {
+                        displayExceptionDetails(result.exception);
+                    } else {
+                        throw new Error(result.error || 'Failed to load exception details');
+                    }
+                }
+            } catch (error) {
+                console.error('Load exception details error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        function displayOvertimeDetails(item) {
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
+            modalTitle.textContent = `Overtime Request - ${item.employee_name}`;
+            modalContent.innerHTML = `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 mb-3">Employee Information</h4>
+                            <div class="space-y-2 text-sm">
+                                <div><span class="text-gray-500">Name:</span> <span class="font-medium">${item.employee_name}</span></div>
+                                <div><span class="text-gray-500">Employee ID:</span> <span class="font-medium">${item.employee_number || 'N/A'}</span></div>
+                                <div><span class="text-gray-500">Department:</span> <span class="font-medium">${item.department_name || 'N/A'}</span></div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 mb-3">Overtime Information</h4>
+                            <div class="space-y-2 text-sm">
+                                <div><span class="text-gray-500">Date:</span> <span class="font-medium">${formatDate(item.date)}</span></div>
+                                <div><span class="text-gray-500">Requested Hours:</span> <span class="font-medium">${item.requested_hours}</span></div>
+                                <div><span class="text-gray-500">Status:</span> <span class="status-badge ${getStatusClass(item.status)}">${item.status}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">Description</h4>
+                        <p class="text-sm text-gray-700">${item.description || ''}</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailsModal').classList.remove('hidden');
+        }
+
+        function displayExceptionDetails(exception) {
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
+            
+            modalTitle.textContent = `Exception Details - ${exception.employee_name}`;
+            
+            const attachmentSection = exception.document_url ? `
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">Attachment</h4>
+                        <button onclick="downloadAttachment('${exception.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            <i class="fas fa-download mr-2"></i>Download attachment
+                        </button>
+                    </div>
+                ` : '';
+
+            modalContent.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Basic Information -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 mb-3">Employee Information</h4>
+                            <div class="space-y-2 text-sm">
+                                <div><span class="text-gray-500">Name:</span> <span class="font-medium">${exception.employee_name}</span></div>
+                                <div><span class="text-gray-500">Employee ID:</span> <span class="font-medium">${exception.employee_number || 'N/A'}</span></div>
+                                <div><span class="text-gray-500">Department:</span> <span class="font-medium">${exception.department_name || 'N/A'}</span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 mb-3">Exception Information</h4>
+                            <div class="space-y-2 text-sm">
+                                <div><span class="text-gray-500">Type:</span> <span class="font-medium">${formatExceptionType(exception.type)}</span></div>
+                                <div><span class="text-gray-500">Date:</span> <span class="font-medium">${formatDate(exception.date)}</span></div>
+                                ${exception.end_date ? `<div><span class="text-gray-500">End Date:</span> <span class="font-medium">${formatDate(exception.end_date)}</span></div>` : ''}
+                                <div><span class="text-gray-500">Status:</span> <span class="status-badge ${getStatusClass(exception.status)}">${exception.status}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">Description</h4>
+                        <p class="text-sm text-gray-700">${exception.description}</p>
+                    </div>
+                    
+                    <!-- Payload Details -->
+                    ${exception.payload ? `
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 mb-3">Additional Details</h4>
+                            <div class="space-y-2 text-sm">
+                                ${formatPayloadDetails(exception.payload)}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Submission Information -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">Submission Information</h4>
+                        <div class="space-y-2 text-sm">
+                            <div><span class="text-gray-500">Submitted by:</span> <span class="font-medium">${exception.submitted_by || 'Unknown'}</span></div>
+                            <div><span class="text-gray-500">Submitted at:</span> <span class="font-medium">${formatDateTime(exception.created_at)}</span></div>
+                            ${exception.reviewed_by ? `
+                                <div><span class="text-gray-500">Reviewed by:</span> <span class="font-medium">${exception.reviewed_by}</span></div>
+                                <div><span class="text-gray-500">Reviewed at:</span> <span class="font-medium">${formatDateTime(exception.reviewed_at)}</span></div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    ${attachmentSection}
+                </div>
+            `;
+            
+            document.getElementById('detailsModal').classList.remove('hidden');
+        }
+        
+        async function downloadAttachment(exceptionId) {
+            try {
+                const { blob, filename } = await API.downloadExceptionDocument(exceptionId);
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                showToast('error', `Failed to download: ${error.message}`);
+            }
+        }
+
+        function showConfirmation(action, exceptionId, employeeName, source = 'exception') {
+            const modal = document.getElementById('confirmModal');
+            const icon = document.getElementById('confirmIcon');
+            const iconClass = document.getElementById('confirmIconClass');
+            const title = document.getElementById('confirmTitle');
+            const message = document.getElementById('confirmMessage');
+            const actionBtn = document.getElementById('confirmAction');
+            
+            const contentContainer = modal.querySelector('.p-6');
+            let overrideControls = contentContainer.querySelector('#overrideControls');
+            if (!overrideControls) {
+                overrideControls = document.createElement('div');
+                overrideControls.id = 'overrideControls';
+                overrideControls.className = 'mt-4';
+                contentContainer.insertBefore(overrideControls, contentContainer.querySelector('.flex.justify-end'));
+            }
+            
+            if (action === 'approve') {
+                icon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-4';
+                iconClass.className = 'fas fa-check text-xl text-green-600';
+                title.textContent = source === 'overtime' ? 'Approve Overtime' : 'Approve Exception';
+                message.textContent = `Are you sure you want to approve this ${source === 'overtime' ? 'overtime' : 'exception'} request for ${employeeName}?`;
+                actionBtn.className = 'px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white transition-colors';
+                actionBtn.textContent = 'Approve';
+                overrideControls.innerHTML = `
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Override Type</label>
+                    <select id="overrideTypeSelect" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="full">Full Override</option>
+                        <option value="half">Half Day Override</option>
+                    </select>
+                `;
+                actionBtn.onclick = () => {
+                    const overrideType = document.getElementById('overrideTypeSelect')?.value || 'full';
+                    processException(exceptionId, 'approve', source, { override_type: overrideType });
+                };
+            } else if (action === 'deleteException') {
+                icon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-4';
+                iconClass.className = 'fas fa-trash text-xl text-red-600';
+                title.textContent = 'Delete Exception';
+                message.textContent = `Are you sure you want to delete this exception for ${employeeName}? This will also remove any linked overrides.`;
+                actionBtn.className = 'px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white transition-colors';
+                actionBtn.textContent = 'Delete';
+                overrideControls.innerHTML = '';
+                actionBtn.onclick = async () => {
+                    try {
+                        closeConfirmModal();
+                        const result = await API.deleteException(exceptionId);
+                        if (result.success) {
+                            showToast('success', 'Exception deleted successfully');
+                            await loadPendingExceptions();
+                            if (currentTab === 'history') await loadExceptionHistory();
+                        } else {
+                            throw new Error(result.error || 'Failed to delete exception');
+                        }
+                    } catch (error) {
+                        showToast('error', error.message);
+                    }
+                };
+            } else {
+                icon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-4';
+                iconClass.className = 'fas fa-times text-xl text-red-600';
+                title.textContent = source === 'overtime' ? 'Reject Overtime' : 'Reject Exception';
+                message.textContent = `Are you sure you want to reject this ${source === 'overtime' ? 'overtime' : 'exception'} request for ${employeeName}?`;
+                actionBtn.className = 'px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white transition-colors';
+                actionBtn.textContent = 'Reject';
+                overrideControls.innerHTML = `
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Decline Type</label>
+                    <select id="declineTypeSelect" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="partial_decline">Decline Partial Case</option>
+                        <option value="full_decline">Decline Full Case</option>
+                    </select>
+                `;
+                actionBtn.onclick = () => {
+                    const declineType = document.getElementById('declineTypeSelect')?.value || 'full_decline';
+                    processException(exceptionId, 'reject', source, { override_type: declineType });
+                };
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        async function processException(exceptionId, action, source = 'exception', extra = {}) {
+            try {
+                closeConfirmModal();
+
+                let result;
+                if (source === 'overtime') {
+                    result = action === 'approve'
+                        ? await API.approveOvertimeRequest(exceptionId)
+                        : await API.declineOvertimeRequest(exceptionId);
+                } else {
+                    result = action === 'approve'
+                        ? await API.approveException(exceptionId, extra)
+                        : await API.rejectException(exceptionId, extra);
+                }
+
+                if (result.success) {
+                    const label = source === 'overtime' ? 'Overtime' : 'Exception';
+                    showToast('success', `${label} ${action}d successfully`);
+                    await loadPendingExceptions();
+                } else {
+                    const label = source === 'overtime' ? 'overtime' : 'exception';
+                    throw new Error(result.error || `Failed to ${action} ${label}`);
+                }
+            } catch (error) {
+                console.error(`${action} exception error:`, error);
+                showToast('error', error.message);
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab styles
+            document.getElementById('pendingTab').className = tab === 'pending' 
+                ? 'tab-active py-4 px-1 border-b-2 font-medium text-sm'
+                : 'py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm';
+                
+            document.getElementById('historyTab').className = tab === 'history' 
+                ? 'tab-active py-4 px-1 border-b-2 font-medium text-sm'
+                : 'py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm';
+                
+            document.getElementById('invitationsTab').className = tab === 'invitations' 
+                ? 'tab-active py-4 px-1 border-b-2 font-medium text-sm'
+                : 'py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm';
+            
+            // Show/hide content
+            document.getElementById('pendingContent').classList.toggle('hidden', tab !== 'pending');
+            document.getElementById('historyContent').classList.toggle('hidden', tab !== 'history');
+            document.getElementById('invitationsContent').classList.toggle('hidden', tab !== 'invitations');
+            
+            // Load data for the active tab
+            if (tab === 'pending') {
+                loadPendingExceptions();
+            } else if (tab === 'history') {
+                loadExceptionHistory();
+            } else if (tab === 'invitations') {
+                loadAllInvitations();
+            }
+        }
+
+        function changeHistoryPage(page) {
+            currentPage = page;
+            loadExceptionHistory();
+        }
+
+        function updatePendingCount(count) {
+            document.getElementById('pendingCount').textContent = count;
+        }
+
+        function closeModal() {
+            document.getElementById('detailsModal').classList.add('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+        }
+
+        // Loading and empty state functions
+        function showPendingLoading() {
+            document.getElementById('pendingLoading').classList.remove('hidden');
+            document.getElementById('pendingExceptions').innerHTML = '';
+        }
+
+        function hidePendingLoading() {
+            document.getElementById('pendingLoading').classList.add('hidden');
+        }
+
+        function showPendingEmpty() {
+            document.getElementById('pendingEmpty').classList.remove('hidden');
+            document.getElementById('pendingExceptions').innerHTML = '';
+        }
+
+        function hidePendingEmpty() {
+            document.getElementById('pendingEmpty').classList.add('hidden');
+        }
+
+        function showHistoryLoading() {
+            document.getElementById('historyLoading').classList.remove('hidden');
+            document.getElementById('historyTableBody').innerHTML = '';
+        }
+
+        function hideHistoryLoading() {
+            document.getElementById('historyLoading').classList.add('hidden');
+        }
+
+        function showHistoryEmpty() {
+            document.getElementById('historyEmpty').classList.remove('hidden');
+            document.getElementById('historyTableBody').innerHTML = '';
+        }
+
+        function hideHistoryEmpty() {
+            document.getElementById('historyEmpty').classList.add('hidden');
+        }
+
+        // Utility functions
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+                const [y, m, d] = dateString.split('-').map(Number);
+                const local = new Date(y, m - 1, d);
+                return local.toLocaleDateString();
+            }
+            return new Date(dateString).toLocaleDateString();
+        }
+
+        function formatDateTime(dateTimeString) {
+            return new Date(dateTimeString).toLocaleString();
+        }
+
+        function formatExceptionType(type) {
+            switch (type) {
+                case 'MissingPunchFix': return 'Missing Punch Fix';
+                case 'LeaveRequest': return 'Leave Request';
+                case 'HolidayAssignment': return 'Holiday Assignment';
+                case 'ExtraHours': return 'Extra Hours (Overtime)';
+                default: return type;
+            }
+        }
+        function formatOverrideType(value) {
+            if (!value) return '';
+            switch (String(value)) {
+                case 'full': return 'Full Override';
+                case 'half': return 'Half Day Override';
+                case 'partial_decline': return 'Decline Partial Case';
+                case 'full_decline': return 'Decline Full Case';
+                default: return value;
+            }
+        }
+
+        function getStatusClass(status) {
+            switch (status.toLowerCase()) {
+                case 'approved': return 'status-approved';
+                case 'rejected': return 'status-rejected';
+                default: return 'status-pending';
+            }
+        }
+
+        function formatPayloadDetails(payload) {
+            try {
+                const data = typeof payload === 'string' ? JSON.parse(payload) : payload;
+                const entries = Object.entries(data);
+
+                return entries.map(([key, value]) => {
+                    const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    const formattedValue = typeof value === 'string' && value.match(/^\d{2}:\d{2}$/)
+                        ? formatTime(value)
+                        : value;
+
+                    return `<div><span class="text-gray-500">${formattedKey}:</span> <span class="font-medium">${formattedValue}</span></div>`;
+                }).join('');
+            } catch (error) {
+                return `<div class="text-gray-500">Unable to format payload data</div>`;
+            }
+        }
+
+        function formatTime(timeString) {
+            // Convert 24-hour format to 12-hour format
+            const [hours, minutes] = timeString.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        }
+
+        function showToast(type, message) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const messageEl = document.getElementById('toastMessage');
+            
+            if (type === 'success') {
+                toast.className = 'fixed top-4 right-4 z-50';
+                toast.firstElementChild.className = 'bg-white rounded-lg shadow-lg border-l-4 border-green-500 p-4 max-w-sm';
+                icon.className = 'fas fa-check-circle text-xl text-green-500';
+            } else {
+                toast.className = 'fixed top-4 right-4 z-50';
+                toast.firstElementChild.className = 'bg-white rounded-lg shadow-lg border-l-4 border-red-500 p-4 max-w-sm';
+                icon.className = 'fas fa-exclamation-circle text-xl text-red-500';
+            }
+            
+            messageEl.textContent = message;
+            toast.classList.remove('hidden');
+            
+            setTimeout(hideToast, 5000);
+        }
+
+        function hideToast() {
+            document.getElementById('toast').classList.add('hidden');
+        }
+
+        // Close modals when clicking outside
+        document.getElementById('detailsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        document.getElementById('confirmModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeConfirmModal();
+            }
+        });
+
+        // Invitations functionality
+        let allInvitations = [];
+        let filteredInvitations = [];
+        let invitationsCurrentPage = 1;
+        const itemsPerPage = 10;
+
+        async function loadAllInvitations() {
+            try {
+                showInvitationsLoading();
+                const data = await API.getAllInvitations();
+                allInvitations = Array.isArray(data) ? data : (data.data || []);
+                
+                
+                // Load teachers for filter
+                await loadTeachersForFilter();
+                
+                // Apply current filters
+                applyInvitationFilters();
+                
+                // Update statistics
+                updateInvitationStatistics();
+                
+            } catch (error) {
+                console.error('Error loading invitations:', error);
+                showInvitationsEmpty();
+            }
+        }
+
+        async function loadTeachersForFilter() {
+            try {
+                const data = await API.getEmployees();
+                const employees = Array.isArray(data) ? data : (data.data || []);
+                
+                const teacherFilter = document.getElementById('invitationTeacherFilter');
+                teacherFilter.innerHTML = '<option value="">All Teachers</option>';
+                
+                employees.forEach(emp => {
+                    if (emp.position_name && emp.position_name.toLowerCase().includes('teacher')) {
+                        const option = document.createElement('option');
+                        option.value = emp.id;
+                        option.textContent = `${emp.first_name} ${emp.last_name}`;
+                        teacherFilter.appendChild(option);
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading teachers:', error);
+            }
+        }
+
+        function applyInvitationFilters() {
+            const statusFilter = document.getElementById('invitationStatusFilter').value;
+            const dateFilter = document.getElementById('invitationDateFilter').value;
+            const teacherFilter = document.getElementById('invitationTeacherFilter').value;
+
+            filteredInvitations = allInvitations.filter(invitation => {
+                const statusMatch = !statusFilter || invitation.status === statusFilter;
+                const dateMatch = !dateFilter || invitation.date === dateFilter;
+                const teacherMatch = !teacherFilter || invitation.candidate_employee_id === teacherFilter;
+                
+                return statusMatch && dateMatch && teacherMatch;
+            });
+
+            invitationsCurrentPage = 1;
+            renderInvitationsTable(filteredInvitations);
+            updatePagination();
+        }
+
+        function updateInvitationStatistics() {
+            const stats = {
+                pending: 0,
+                accepted: 0,
+                taught: 0,
+                denied: 0,
+                dropped: 0
+            };
+
+            allInvitations.forEach(invitation => {
+                const status = invitation.status || 'pending';
+                if (stats.hasOwnProperty(status)) {
+                    stats[status]++;
+                }
+            });
+
+            document.getElementById('pendingCount').textContent = stats.pending;
+            document.getElementById('acceptedCount').textContent = stats.accepted;
+            document.getElementById('taughtCount').textContent = stats.taught;
+            document.getElementById('deniedCount').textContent = stats.denied;
+        }
+
+        function updatePagination() {
+            // Group invitations to get the actual number of groups
+            const groupedInvitations = groupInvitationsBySlot(filteredInvitations);
+            const totalGroups = Object.keys(groupedInvitations).length;
+            const totalPages = Math.ceil(totalGroups / itemsPerPage);
+            const start = (invitationsCurrentPage - 1) * itemsPerPage + 1;
+            const end = Math.min(invitationsCurrentPage * itemsPerPage, totalGroups);
+
+            document.getElementById('invitationsStart').textContent = start;
+            document.getElementById('invitationsEnd').textContent = end;
+            document.getElementById('invitationsTotal').textContent = totalGroups;
+
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+
+            prevBtn.disabled = invitationsCurrentPage === 1;
+            nextBtn.disabled = invitationsCurrentPage === totalPages;
+        }
+
+        function showInvitationsLoading() {
+            document.getElementById('invitationsLoading').classList.remove('hidden');
+            document.getElementById('invitationsEmpty').classList.add('hidden');
+            document.getElementById('invitationsTableBody').innerHTML = '';
+        }
+
+        function showInvitationsEmpty() {
+            document.getElementById('invitationsEmpty').classList.remove('hidden');
+            document.getElementById('invitationsLoading').classList.add('hidden');
+            document.getElementById('invitationsTableBody').innerHTML = '';
+        }
+
+        // Helper function to group invitations by date, time, and absent teacher
+        function groupInvitationsBySlot(invitations) {
+            const groups = {};
+            
+            invitations.forEach(invitation => {
+                const key = `${invitation.date}-${invitation.start_time}-${invitation.end_time}-${invitation.absent_teacher_id || invitation.absent_employee_id}`;
+                
+                if (!groups[key]) {
+                    groups[key] = {
+                        date: invitation.date,
+                        start_time: invitation.start_time,
+                        end_time: invitation.end_time,
+                        absent_teacher_name: invitation.absent_teacher_name,
+                        absent_teacher_id: invitation.absent_teacher_id || invitation.absent_employee_id,
+                        total_minutes: invitation.total_minutes || invitation.minutes || 0,
+                        grade_level: invitation.grade_level,
+                        education_level: invitation.education_level,
+                        invitations: []
+                    };
+                }
+                
+                groups[key].invitations.push(invitation);
+            });
+            
+            return groups;
+        }
+        
+        // Helper function to determine overall status for a group
+        function getOverallStatus(statusCounts) {
+            if (statusCounts.accepted > 0) return 'accepted';
+            if (statusCounts.taught > 0) return 'taught';
+            if (statusCounts.denied > 0 && statusCounts.pending === 0) return 'denied';
+            if (statusCounts.dropped > 0 && statusCounts.pending === 0) return 'dropped';
+            if (statusCounts.pending > 0) return 'pending';
+            return 'unknown';
+        }
+        
+        // Function to toggle invitation group expansion
+        function toggleInvitationGroup(subId, btn) {
+            const row = document.getElementById(subId);
+            const icon = btn.querySelector('i');
+            const nowHidden = row.classList.contains('hidden');
+            row.classList.toggle('hidden');
+            if (icon) icon.className = `fas ${nowHidden ? 'fa-chevron-down' : 'fa-chevron-right'}`;
+        }
+        
+        // Function to view invitation group details
+        function viewInvitationGroupDetails(groupId) {
+            // This could open a modal with all invitations in the group
+            console.log('View group details:', groupId);
+        }
+        
+        // Function to delete an invitation
+        async function deleteInvitation(invitationId) {
+            if (!confirm('Are you sure you want to delete this invitation? This will remove it from the teacher\'s view.')) {
+                return;
+            }
+            
+            try {
+                await API.deleteInvitation(invitationId);
+                
+                // Remove from local data
+                allInvitations = allInvitations.filter(inv => inv.id !== invitationId);
+                filteredInvitations = filteredInvitations.filter(inv => inv.id !== invitationId);
+                
+                // Re-render
+                renderInvitationsTable(filteredInvitations);
+                updatePagination();
+                updateInvitationStatistics();
+                
+                showToast('success', 'Invitation deleted successfully');
+                
+            } catch (error) {
+                console.error('Error deleting invitation:', error);
+                showToast('error', 'Failed to delete invitation: ' + error.message);
+            }
+        }
+
+        function renderInvitationsTable(invitations) {
+            const tbody = document.getElementById('invitationsTableBody');
+            const empty = document.getElementById('invitationsTableEmpty');
+            
+            tbody.innerHTML = '';
+            
+            if (!invitations || invitations.length === 0) {
+                empty.classList.remove('hidden');
+                tbody.innerHTML = '';
+                return;
+            }
+
+            empty.classList.add('hidden');
+            document.getElementById('invitationsLoading').classList.add('hidden');
+            document.getElementById('invitationsEmpty').classList.add('hidden');
+            
+            // Group invitations by date, time, and absent teacher
+            const groupedInvitations = groupInvitationsBySlot(invitations);
+            
+            const startIndex = (invitationsCurrentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageGroups = Object.values(groupedInvitations).slice(startIndex, endIndex);
+            
+            pageGroups.forEach((group, groupIndex) => {
+                const groupId = `invitation-group-${groupIndex}`;
+                const subId = `invitation-sub-${groupIndex}`;
+                
+                // Calculate overall status for the group
+                const statusCounts = group.invitations.reduce((acc, inv) => {
+                    acc[inv.status] = (acc[inv.status] || 0) + 1;
+                    return acc;
+                }, {});
+                
+                const overallStatus = getOverallStatus(statusCounts);
+                const statusBadge = getStatusBadge(overallStatus);
+                const timeRange = `${group.start_time} - ${group.end_time}`;
+                const duration = `${(group.total_minutes / 60).toFixed(1)}h (${group.total_minutes}m)`;
+                
+                // Main group row
+                const mainRow = document.createElement('tr');
+                mainRow.className = 'expandable-row hover:bg-gray-50';
+                mainRow.innerHTML = `
+                    <td class="px-6 py-3">
+                        <button class="expand-button text-gray-600 hover:text-blue-600 mr-2" title="Expand" onclick="toggleInvitationGroup('${subId}', this)">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </td>
+                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900">
+                        <div class="font-medium">${group.date}</div>
+                        <div class="text-gray-500 text-xs">${timeRange}</div>
+                    </td>
+                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900">
+                        <div class="flex items-center">
+                            <i class="fas fa-user-circle text-blue-600 mr-2"></i>
+                            <span class="font-medium">${group.absent_teacher_name || 'N/A'}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900">
+                        <div class="flex flex-wrap gap-1">
+                            ${group.grade_level ? `<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Grade ${group.grade_level}</span>` : ''}
+                            ${group.education_level ? `<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">${group.education_level}</span>` : ''}
+                            ${!group.grade_level && !group.education_level ? '<span class="text-gray-400 text-xs">No level info</span>' : ''}
+                        </div>
+                    </td>
+                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900">
+                        <div class="flex items-center">
+                            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full mr-2">
+                                ${group.invitations.length}
+                            </span>
+                            <span>teacher${group.invitations.length !== 1 ? 's' : ''} invited</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900">
+                        ${duration}
+                    </td>
+                    <td class="px-6 py-3 whitespace-nowrap">
+                        ${statusBadge}
+                    </td>
+                    <td class="px-6 py-3 whitespace-nowrap text-sm font-medium">
+                        <button onclick="viewInvitationGroupDetails('${groupId}')" 
+                                class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-eye"></i> View All
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(mainRow);
+                
+                // Expandable sub-row
+                const subRow = document.createElement('tr');
+                subRow.id = subId;
+                subRow.className = 'hidden';
+                subRow.innerHTML = `
+                    <td colspan="7" class="px-6 py-4">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-medium text-gray-900">Invited Teachers</h3>
+                                <div class="text-sm text-gray-500">${group.date} - ${timeRange}</div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200 sub-table">
+                                    <thead class="bg-gray-100">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teacher</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Response Date</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="${subId}-tbody" class="bg-white divide-y divide-gray-200">
+                                        ${group.invitations.map(invitation => {
+                                            const invStatusBadge = getStatusBadge(invitation.status);
+                                            const responseDate = invitation.responded_at ? 
+                                                new Date(invitation.responded_at).toLocaleDateString() : '-';
+                                            
+                                            return `
+                                                <tr class="hover:bg-gray-50">
+                                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                                        <div class="flex items-center">
+                                                            <i class="fas fa-user text-gray-400 mr-2"></i>
+                                                            <span>${invitation.candidate_teacher_name || 'N/A'}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="px-4 py-2 whitespace-nowrap">
+                                                        ${invStatusBadge}
+                                                    </td>
+                                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                                        ${responseDate}
+                                                    </td>
+                                                    <td class="px-4 py-2 whitespace-nowrap text-sm font-medium">
+                                                        <button onclick="viewInvitationDetails('${invitation.id}')" 
+                                                                class="text-blue-600 hover:text-blue-900 mr-2">
+                                                            <i class="fas fa-eye"></i> View
+                                                        </button>
+                                                        <button onclick="deleteInvitation('${invitation.id}')" 
+                                                                class="text-red-600 hover:text-red-900">
+                                                            <i class="fas fa-trash"></i> Delete
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(subRow);
+            });
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'pending': return 'bg-yellow-100 text-yellow-800';
+                case 'accepted': return 'bg-green-100 text-green-800';
+                case 'denied': return 'bg-red-100 text-red-800';
+                case 'taught': return 'bg-blue-100 text-blue-800';
+                case 'dropped': return 'bg-orange-100 text-orange-800';
+                case 'disabled': return 'bg-gray-100 text-gray-600';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                pending: '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>',
+                accepted: '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Accepted</span>',
+                taught: '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Taught</span>',
+                denied: '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Denied</span>',
+                dropped: '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800"><i class="fas fa-ban mr-1"></i>Dropped</span>',
+                disabled: '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600"><i class="fas fa-lock mr-1"></i>Slot Taken</span>'
+            };
+            return badges[status] || badges.pending;
+        }
+
+        function updateInvitationsCount() {
+            const count = allInvitations.length;
+            document.getElementById('invitationsCount').textContent = count;
+        }
+
+        function viewInvitationDetails(invitationId) {
+            const invitation = allInvitations.find(inv => inv.id === invitationId);
+            if (!invitation) return;
+
+            // Create a simple modal to show invitation details
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg max-w-md w-full mx-4">
+                    <div class="p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Invitation Details</h3>
+                        <div class="space-y-3">
+                            <div><strong>Date:</strong> ${invitation.date}</div>
+                            <div><strong>Time:</strong> ${invitation.start_time} - ${invitation.end_time}</div>
+                            <div><strong>Absent Teacher:</strong> ${invitation.absent_teacher_name || 'N/A'}</div>
+                            <div><strong>Invited Teacher:</strong> ${invitation.candidate_teacher_name || 'N/A'}</div>
+                            <div><strong>Status:</strong> <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusClass(invitation.status)}">${invitation.status}</span></div>
+                            <div><strong>Duration:</strong> ${invitation.total_minutes} minutes</div>
+                        </div>
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="this.closest('.fixed').remove()" 
+                                    class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Event listeners for invitations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Filter event listeners
+            document.getElementById('invitationStatusFilter').addEventListener('change', applyInvitationFilters);
+            document.getElementById('invitationDateFilter').addEventListener('change', applyInvitationFilters);
+            document.getElementById('invitationTeacherFilter').addEventListener('change', applyInvitationFilters);
+            
+            // Refresh button
+            document.getElementById('refreshInvitations').addEventListener('click', loadAllInvitations);
+            
+            // Pagination
+            document.getElementById('prevPage').addEventListener('click', function() {
+                if (invitationsCurrentPage > 1) {
+                    invitationsCurrentPage--;
+                    renderInvitationsTable(filteredInvitations);
+                    updatePagination();
+                }
+            });
+            
+            document.getElementById('nextPage').addEventListener('click', function() {
+                const totalPages = Math.ceil(filteredInvitations.length / itemsPerPage);
+                if (invitationsCurrentPage < totalPages) {
+                    invitationsCurrentPage++;
+                    renderInvitationsTable(filteredInvitations);
+                    updatePagination();
+                }
+            });
+            
+            // Language selector
+            const languageSelector = document.getElementById('languageSelector');
+            if (languageSelector) {
+                languageSelector.value = currentLanguage || 'en';
+                languageSelector.addEventListener('change', (e) => {
+                    if (typeof setLanguage === 'function') {
+                        setLanguage(e.target.value);
+                    }
+                });
+            }
+            
+            // Initialize translations
+            if (typeof updatePageTranslations === 'function') {
+                updatePageTranslations();
+            }
+        });
+    </script>
+    
+    <!-- Scripts -->
+    <script src="../assets/js/translations.js"></script>
+    <script src="../assets/js/navbar.js"></script>
+</body>
+</html>
+

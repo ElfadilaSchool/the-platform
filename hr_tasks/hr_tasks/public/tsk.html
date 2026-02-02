@@ -1,0 +1,3060 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+
+    <title>Tasks - HR Operations Platform</title>
+    
+    <link rel="stylesheet" href="tailwind.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    
+</head>
+
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="bg-white w-64 shadow-lg">
+            <div class="p-6 border-b">
+                <div class="flex items-center">
+                    <div class="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-school text-white"></i>
+                    </div>
+                    <div class="ml-3">
+                          <p class="text-sm text-gray-500" id="userRoleDisplay">Employee</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="mt-6" id="sidebarNav">
+                <!-- Navigation will be populated based on user role -->
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div class="flex items-center">
+                        <h2 class="text-xl font-semibold text-gray-900" data-translate="tasks.title">Tasks</h2>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="en">English</option>
+                            <option value="fr">Français</option>
+                            <option value="ar">العربية</option>
+                        </select>
+                      <!-- Notifications bell - Version corrigée -->
+<!-- Notifications bell - Version corrigée et améliorée -->
+<div class="relative">
+  <button id="empNotifBell" class="relative w-10 h-10 rounded-full bg-white hover:bg-gray-50 border border-gray-200 flex items-center justify-center transition-all shadow-sm hover:shadow-md">
+      <i class="fas fa-bell text-gray-700 text-base"></i>
+      <span id="empNotifBadge" class="hidden absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white"></span>
+  </button>
+  <div id="empNotifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-50 border border-gray-200 transform transition-all duration-200 ease-out opacity-0 translate-y-2">
+      <div class="flex items-center justify-between p-3 border-b border-gray-100 bg-white">
+          <span class="text-sm font-semibold text-gray-800">Notifications</span>
+          <div class="flex items-center gap-3">
+              <button id="empNotifMarkAll" class="text-xs text-indigo-600 hover:text-indigo-700 font-medium px-3 py-1.5 rounded-md hover:bg-indigo-50 transition-colors border border-indigo-100">
+                  Tout lire
+              </button>
+              <button id="empNotifClearAll" class="text-xs text-gray-600 hover:text-gray-800 font-medium px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors border border-gray-200">
+                  Effacer
+              </button>
+          </div>
+      </div>
+      <div id="empNotifList" class="max-h-80 overflow-y-auto">
+          <div class="p-4 text-center text-sm text-gray-500">
+              <i class="fas fa-bell text-gray-300 text-lg mb-2 block"></i>
+              <span>Aucune notification</span>
+          </div>
+      </div>
+  </div>
+</div>
+                        <div class="flex items-center space-x-2">
+                            <img class="h-8 w-8 rounded-full object-cover" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='100%25' height='100%25' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23737486' font-size='16' font-family='Arial'%3EJD%3C/text%3E%3C/svg%3E" alt="Profile">
+                            <span class="text-sm text-gray-700" id="userDisplayName">User</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <div class="max-w-7xl mx-auto">
+                    <!-- Page Header -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h1 class="text-2xl font-bold text-gray-900" data-translate="tasks.header">Task Management</h1>
+                                <p class="text-gray-600" data-translate="tasks.description">Manage and track tasks</p>
+                            </div>
+                            <div id="taskActions" class="flex space-x-2">
+                                <!-- Task actions will be populated based on user role -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task Statistics -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <div class="flex items-center">
+                                <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-tasks text-blue-600 text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-600">Total Tasks</p>
+                                    <p class="text-2xl font-bold text-gray-900" id="totalTasks">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <div class="flex items-center">
+                                <div class="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-600">Completed</p>
+                                    <p class="text-2xl font-bold text-gray-900" id="completedTasks">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <div class="flex items-center">
+                                <div class="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-600">In Progress</p>
+                                    <p class="text-2xl font-bold text-gray-900" id="inProgressTasks">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <div class="flex items-center">
+                                <div class="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-exclamation-circle text-red-600 text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-600">Overdue</p>
+                                    <p class="text-2xl font-bold text-gray-900" id="overdueTasks">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:bg-gray-50 transition-all" onclick="openReports()">
+    <div class="flex items-center">
+        <div class="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+            <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+        </div>
+        <div class="ml-4">
+            <p class="text-sm text-gray-600">View Reports</p>
+            <p class="text-lg font-bold text-gray-900">Analytics</p>
+        </div>
+    </div>
+</div>
+                        
+                    </div>
+
+                    <!-- Filters and Search -->
+                    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+                            <div class="flex-1 max-w-md">
+                                <div class="relative">
+                                    <input type="text" id="searchInput" placeholder="Search tasks..." 
+                                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <select id="statusFilter" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">All Status</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Overdue">Overdue</option>
+                                </select>
+                                <select id="typeFilter" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">All Types</option>
+                                    <option value="Daily">Daily </option>
+                                    <option value="Special">Special </option>
+                                </select>
+                                <select id="priorityFilter" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">All Priorities</option>
+                                    <option value="High">High</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                               <select id="assignedByFilter" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <option value="">Assigned By (All)</option>
+    <option value="Director">Directeur</option>
+    <option value="Others">Autres</option>
+</select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tasks List -->
+                    <div class="bg-white rounded-lg shadow-sm">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-medium text-gray-900">Tasks</h3>
+                                <div class="flex gap-2">
+                                    <button id="tasksToggleBtn" class="px-3 py-1 text-xs rounded bg-blue-600 text-white">Tâches</button>
+                                    <button id="instrToggleBtn" class="px-3 py-1 text-xs rounded bg-gray-200 text-gray-800">Instructions</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="tasksList" class="divide-y divide-gray-200">
+                            <!-- Tasks will be loaded here -->
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <div id="loadingState" class="text-center py-8">
+                            <i class="fas fa-spinner fa-spin text-blue-600 text-2xl"></i>
+                            <p class="text-gray-600 mt-2">Loading tasks...</p>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div id="emptyState" class="text-center py-12 hidden">
+                            <i class="fas fa-tasks text-gray-400 text-4xl mb-4"></i>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">No tasks found</h3>
+                            <p class="text-gray-600">Tasks will appear here once assigned</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <div id="reportsContainer" class="hidden flex-1 overflow-y-auto p-6"></div>
+
+        </div>
+    </div>
+
+    <!-- Add/Edit Task Modal -->
+    <div id="taskModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-lg mx-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 id="modalTitle" class="text-lg font-semibold">Add Task</h3>
+            <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form id="taskForm">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Task Title</label>
+                    <input type="text" id="taskTitle" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea id="taskDescription" rows="3" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                        <select id="taskType" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="Daily">Daily </option>
+                            <option value="Special">Special </option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                        <select id="taskPriority" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                    <input type="date" id="taskDueDate" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div id="assigneeSection">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Assign To</label>
+                    
+                    <!-- Barre de recherche -->
+                    <div class="search-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="employeeSearch" placeholder="Search employees..." 
+                               class="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <!-- Liste des employés avec cases à cocher -->
+                    <div class="employee-list-container" id="employeeList">
+                        <!-- Les employés seront chargés ici dynamiquement -->
+                    </div>
+                    
+                    <!-- Employés sélectionnés -->
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Selected Employees</label>
+                        <div class="selected-employees-container" id="selectedEmployees">
+                            <!-- Les employés sélectionnés apparaîtront ici -->
+                            <p class="text-gray-500 text-sm p-2" id="noSelectionText">No employees selected</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-2 mt-6">
+                <button type="button" id="cancelBtn" class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Save Task
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+  <!-- Task Details Modal -->
+<div id="taskDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-2xl mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="detailsTitle" class="text-lg font-semibold">Task Details</h3>
+                <button id="closeDetailsModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="taskDetailsContent">
+                <!-- Task details will be populated here -->
+            </div>
+            
+            <div class="mt-6">
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Comments</h4>
+                <div id="taskComments" class="space-y-3 max-h-40 overflow-y-auto mb-4">
+                    <!-- Comments will be loaded here -->
+                </div>
+                
+                <div class="flex space-x-2">
+                    <input type="text" id="newComment" placeholder="Add a comment..." 
+                           class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button id="addCommentBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Popup d'édition -->
+<div id="editModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+  <div class="bg-white rounded-lg shadow-lg w-96 p-4">
+    <h2 class="text-lg font-semibold mb-3">Modifier votre commentaire</h2>
+    <textarea id="editCommentInput" 
+              class="w-full border border-gray-300 rounded-lg p-2 text-sm"
+              rows="3"></textarea>
+    <div class="flex justify-end space-x-3 mt-4">
+      <button onclick="closeEditModal()" 
+              class="px-3 py-1 text-gray-600 font-medium hover:underline">
+        Annuler
+      </button>
+      <button id="saveEditBtn" 
+              class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+    
+    <script src="auth.js"></script>
+    <!-- Socket.IO will be loaded dynamically by the fallback mechanism -->
+    <!-- <script src="/socket.io/socket.io.js"></script> -->
+    <script>
+      // Define safe globals before main.js to prevent ReferenceError from early bindings
+      (function(){
+        // Define API_BASE to support file:// usage
+        try{
+          if (!window.API_BASE){
+            const origin = (window.location && window.location.origin) || '';
+            window.API_BASE = (origin && /^https?:\/\//i.test(origin)) ? origin : 'http://localhost:3020';
+          }
+        }catch(_){ window.API_BASE = 'http://localhost:3020'; }
+        if (typeof window.editComment !== 'function') {
+          window.editComment = function(commentId, currentText) {
+            if (typeof openEditModal === 'function') {
+              openEditModal(commentId, currentText || '');
+            }
+          };
+        }
+        if (typeof window.deleteComment !== 'function') {
+          window.deleteComment = function(commentId) {
+            if (typeof window.closeEditModal === 'function') {
+              // no-op fallback; main will override with real delete
+            }
+          };
+        }
+        if (typeof window.openEditModal !== 'function') {
+          window.openEditModal = function(){ /* stub until main defines it */ };
+        }
+      })();
+    </script>
+    <script src="./main.js"></script>
+    <script src="./repports.js"></script>
+    <script src="genererR.js"></script>
+
+    <script>
+        let tasks = [];
+        let employees = [];
+        let currentUser = null;
+        let currentTaskId = null;
+        let currentEditId = null;
+let currentOriginalText = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Dev mode: allow bypassing auth with URL params (e.g., ?dev=1&role=Department_Responsible&first=Dev&last=User)
+            const urlParams = new URLSearchParams(window.location.search);
+            const isDevMode = urlParams.get('dev') === '1';
+            if (isDevMode) {
+                // Récupération complète des infos depuis l'URL pour le mode dev
+                const employeeIdFromUrl = urlParams.get('employee_id') || urlParams.get('user_id');
+                currentUser = {
+                    first_name: urlParams.get('first') || 'Dev',
+                    last_name: urlParams.get('last') || 'User',
+                    role: urlParams.get('role') || 'Department_Responsible',
+                    // Important: fournir un id utilisable par les filtres backend
+                    id: employeeIdFromUrl || null,
+                    employee_id: employeeIdFromUrl || null,
+                    username: urlParams.get('username') || 'dev.user'
+                };
+            }
+
+            // Check authentication
+            if (!authManager.isAuthenticated() && !isDevMode) {
+                // Only redirect to login if not already on login page
+                if (!window.location.pathname.includes("index.html")) {
+                    if (window.location.pathname.includes("/pages/")) {
+                        window.location.href = "../index.html";
+                    } else {
+                        window.location.href = "index.html";
+                    }
+                }
+                return;
+            }
+
+            // Ensure correct role for this page
+            const userRole = isDevMode ? currentUser.role : authManager.getUserRole();
+            if (userRole !== 'HR_Manager' && userRole !== 'Employee' && userRole !== 'Department_Responsible') {
+                Utils.showNotification('Access denied. Insufficient permissions.', 'error');
+                if (!isDevMode) authManager.redirectToDashboard();
+                return;
+            }
+
+            // Initialize page
+            if (!isDevMode) {
+                currentUser = authManager.getUser();
+                // Allow URL role override without requiring dev=1
+                try {
+                    const roleFromUrl = new URLSearchParams(window.location.search).get('role');
+                    if (roleFromUrl) {
+                        currentUser.role = roleFromUrl;
+                    }
+                } catch(_) {}
+            }
+            initializePage();
+            
+            // CORRECTION: Charger les données dans le bon ordre pour éviter les race conditions
+            initializeDataSequentially().catch(error => {
+                console.error('❌ Error in data initialization:', error);
+            });
+            
+            // Initialiser les notifications depuis le localStorage
+            initializeNotificationsFromStorage();
+            setupEmpNotificationsUI();
+            
+            // Délayer la connexion Socket.IO jusqu'à ce que les données soient prêtes
+            setTimeout(() => {
+                setupSocketNotifications();
+            }, 1000); // Attendre 1 seconde pour que les données soient chargées
+
+            // Event listeners
+            document.getElementById('closeModal').addEventListener('click', closeModal);
+            document.getElementById('cancelBtn').addEventListener('click', closeModal);
+            document.getElementById('taskForm').addEventListener('submit', handleSubmit);
+            document.getElementById('closeDetailsModal').addEventListener('click', closeDetailsModal);
+            document.getElementById('addCommentBtn').addEventListener('click', addComment);
+            document.getElementById('searchInput').addEventListener('input', filterTasks);
+            document.getElementById('statusFilter').addEventListener('change', filterTasks);
+            document.getElementById('typeFilter').addEventListener('change', filterTasks);
+            document.getElementById('priorityFilter').addEventListener('change', filterTasks);
+            const assignedByFilter = document.getElementById('assignedByFilter');
+            if (assignedByFilter) assignedByFilter.addEventListener('change', filterTasks);
+
+            // Language selector
+            const languageSelector = document.getElementById('languageSelector');
+            languageSelector.value = currentLanguage;
+            languageSelector.addEventListener('change', (e) => {
+                setLanguage(e.target.value);
+                applyTranslations();
+            });
+            applyTranslations();
+
+            // View toggles wiring (header of list)
+            (function(){
+              const btnA = document.getElementById('tasksToggleBtn');
+              const btnB = document.getElementById('instrToggleBtn');
+              if (btnA && btnB) {
+                const setMode = (mode) => {
+                  window.__tasksViewMode = mode;
+                  if (mode === 'tasks') {
+                    btnA.classList.add('bg-blue-600','text-white');
+                    btnB.classList.remove('bg-blue-600','text-white');
+                    btnB.classList.add('bg-gray-200','text-gray-800');
+                  } else {
+                    btnB.classList.add('bg-blue-600','text-white');
+                    btnA.classList.remove('bg-blue-600','text-white');
+                    btnA.classList.add('bg-gray-200','text-gray-800');
+                  }
+                  renderTasks();
+                  updateTaskStatistics();
+                };
+                btnA.addEventListener('click', () => setMode('tasks'));
+                btnB.addEventListener('click', () => setMode('instructions'));
+              }
+            })();
+        });
+        
+        // Notifications temps réel via Socket.IO (sans polling)
+        window.__empNotifications = window.__empNotifications || [];
+        // Protection contre les clics multiples rapides
+        window.__notificationClickInProgress = false;
+        // Local storage helpers to persist across refresh (no polling; socket is source of truth)
+        function loadEmpNotifsFromStorage(){ 
+            try{ 
+                const raw=localStorage.getItem('emp_notifications'); 
+                const data=raw?JSON.parse(raw):[]; 
+                return Array.isArray(data)?data:[]; 
+            }catch(_){ return []; } 
+        }
+        
+        function saveEmpNotifsToStorage(list){ 
+            try{ 
+                localStorage.setItem('emp_notifications', JSON.stringify(Array.isArray(list)?list:[])); 
+            }catch(_){ /* noop */ } 
+        }
+        
+        // Charger les notifications depuis le localStorage au démarrage (seulement si Socket.IO pas encore connecté)
+        function initializeNotificationsFromStorage() {
+            try {
+                // Ne charger depuis le localStorage que si Socket.IO n'est pas encore connecté
+                if (window.__empSocket && window.__empSocket.connected) {
+                    console.log('🔌 Socket.IO already connected, skipping localStorage load');
+                    return;
+                }
+                
+                const stored = loadEmpNotifsFromStorage();
+                if (stored.length > 0) {
+                    window.__empNotifications = stored;
+                    updateEmpNotifBadge();
+                    console.log('💾 Loaded', stored.length, 'notifications from storage (fallback)');
+                    
+                    // Appliquer le statut lu depuis le localStorage
+                    window.__empNotifications = applyReadStatusFromStorage(window.__empNotifications);
+                } else {
+                    console.log('📭 No notifications in localStorage');
+                }
+            } catch(e) {
+                console.error('❌ Error loading notifications from storage:', e);
+            }
+        }
+        
+        // Sauvegarder le statut lu des notifications (désactivé, géré par le serveur)
+        function saveNotificationReadStatus(notificationId, isRead) { /* no-op: persisted in DB */ }
+        
+        // Charger le statut lu des notifications
+        function loadNotificationReadStatus(notificationId) {
+            try {
+                const readStatus = JSON.parse(localStorage.getItem('notification_read_status') || '{}');
+                return readStatus[notificationId] || false;
+            } catch(_) { return false; }
+        }
+        
+        // Appliquer le statut lu depuis le localStorage (désactivé)
+        function applyReadStatusFromStorage(notifications) { return notifications; }
+        function setupSocketNotifications(){
+            try{
+                console.log('🔌 Setting up Socket.IO connection...');
+                
+                // Éviter les connexions multiples
+                if (window.__empSocket && window.__empSocket.connected) {
+                    console.log('[WS] Socket already connected, skipping setup');
+                    return;
+                }
+                
+                // Nettoyer les anciennes connexions
+                if (window.__empSocket) {
+                    try {
+                        window.__empSocket.disconnect();
+                    } catch(_) {}
+                    window.__empSocket = null;
+                }
+                
+                // ensure io is available even on file:// by loading from API_BASE
+                if (typeof io === 'undefined'){
+                    console.log('📦 Loading Socket.IO library...');
+                    const s = document.createElement('script');
+                    s.src = (window.API_BASE||'http://localhost:3020') + '/socket.io/socket.io.js';
+                    s.async = false;
+                    s.onload = () => { 
+                        console.log('✅ Socket.IO library loaded, retrying setup...');
+                        try { setupSocketNotifications(); } catch(e){
+                            console.error('❌ Error in socket setup retry:', e);
+                        }
+                    };
+                    document.head.appendChild(s);
+                    return;
+                }
+                
+                console.log('🔗 Creating Socket.IO connection...');
+                const socket = io(window.API_BASE || undefined, {
+                    transports: ['websocket', 'polling'],
+                    timeout: 20000,
+                    forceNew: true
+                });
+                
+                window.__empSocket = socket;
+                
+                socket.on('connect', ()=>{
+                    try{
+                        console.log('✅ [WS] Connected to server');
+                        
+                        // Attendre un peu pour s'assurer que getCurrentEmployeeId fonctionne
+                        setTimeout(() => {
+                            const url = new URLSearchParams(window.location.search);
+                            const uidEmp = getCurrentEmployeeId();
+                            const uidAlt = url.get('user_id');
+                            
+                            console.log('👤 [WS] Resolved IDs - uidEmp:', uidEmp, 'uidAlt:', uidAlt);
+                            
+                            // Ne s'enregistrer que si on a un ID valide
+                            const toRegister = Array.from(new Set([uidEmp, uidAlt].filter(Boolean)));
+                            
+                            if (toRegister.length === 0) {
+                                console.warn('⚠️ [WS] No valid user ID found, skipping registration');
+                                return;
+                            }
+                            
+                            toRegister.forEach(id => { 
+                                try{ 
+                                    socket.emit('register', id); 
+                                    console.log('✅ [WS] Registered user:', id);
+                                }catch(e){
+                                    console.error('❌ [WS] Error registering user:', id, e);
+                                } 
+                            });
+                            
+                            // Ask server to send current notifications snapshot via socket
+                            toRegister.forEach(id => { 
+                                try{ 
+                                    socket.emit('notifications:list', { user_id: id }); 
+                                    console.log('📋 [WS] Requested notifications for user:', id);
+                                }catch(e){
+                                    console.error('❌ [WS] Error requesting notifications:', id, e);
+                                } 
+                            });
+                        }, 500); // Attendre 500ms pour que les données soient prêtes
+                        
+                    }catch(e){
+                        console.error('❌ [WS] Error in connect handler:', e);
+                    }
+                });
+                
+                socket.on('disconnect', ()=>{
+                    console.log('[WS] Disconnected from server');
+                });
+                
+                socket.on('notification:new', (n)=>{
+                    try{
+                        if (n && n.id){
+                            // Vérifier si la notification existe déjà pour éviter les doublons
+                            const exists = window.__empNotifications.some(notif => notif.id === n.id);
+                            if (!exists) {
+                                window.__empNotifications = [n].concat(window.__empNotifications||[]);
+                                saveEmpNotifsToStorage(window.__empNotifications);
+                                // SUPPRIMÉ: Toast automatique - on garde seulement le modal au clic
+                                // Toujours mettre à jour badge + liste ouverte
+                                updateEmpNotifBadge();
+                                const dd = document.getElementById('empNotifDropdown');
+                                if (dd && !dd.classList.contains('hidden')) renderEmpNotificationsList(window.__empNotifications);
+                            } else {
+                                console.log('Notification duplicate prevented:', n.id);
+                            }
+                        }
+                    }catch(_){/* noop */}
+                });
+                
+                socket.on('notifications:list', (payload)=>{
+                    try{
+                        const list = Array.isArray(payload) ? payload : Array.isArray(payload?.notifications) ? payload.notifications : [];
+                        console.log('📋 [WS] Received notifications from server:', list.length);
+                        
+                        // CORRECTION: Remplacer complètement les notifications du serveur
+                        // Le serveur est la source de vérité, pas le localStorage
+                        if (list.length > 0) {
+                            console.log('🔄 [WS] Replacing notifications with server data');
+                            window.__empNotifications = list;
+                            saveEmpNotifsToStorage(window.__empNotifications);
+                            updateEmpNotifBadge();
+                            
+                            const dd = document.getElementById('empNotifDropdown');
+                            if (dd && !dd.classList.contains('hidden')) {
+                                renderEmpNotificationsList(window.__empNotifications);
+                            }
+                        } else {
+                            console.log('📭 [WS] No notifications from server, keeping current state');
+                        }
+                    }catch(e){
+                        console.error('❌ [WS] Error handling notifications:list:', e);
+                    }
+                });
+                
+                // Accept instruction events as notifications for responsables
+                socket.on('instruction:new', (n)=>{
+                    try{
+                        if (n && n.id){
+                            // Vérifier si la notification existe déjà pour éviter les doublons
+                            const exists = window.__empNotifications.some(notif => notif.id === n.id);
+                            if (!exists) {
+                                window.__empNotifications = [n].concat(window.__empNotifications||[]);
+                                saveEmpNotifsToStorage(window.__empNotifications);
+                                updateEmpNotifBadge();
+                                const dd = document.getElementById('empNotifDropdown');
+                                if (dd && !dd.classList.contains('hidden')) renderEmpNotificationsList(window.__empNotifications);
+                            }
+                        }
+                    }catch(_){/* noop */}
+                });
+            }catch(e){
+                console.error('[WS] Setup error:', e);
+            }
+        }
+
+        // Socket-only hydration: server should emit 'notifications:list'
+
+        function setupEmpNotificationsUI(){
+    try{
+        const bell = document.getElementById('empNotifBell');
+        const dd = document.getElementById('empNotifDropdown');
+        const markAll = document.getElementById('empNotifMarkAll');
+        const clearAll = document.getElementById('empNotifClearAll');
+        
+        if (bell && dd){
+            bell.addEventListener('click', (e)=>{
+                e.stopPropagation();
+                
+                // Fermer d'autres dropdowns ouverts si nécessaire
+                const allDropdowns = document.querySelectorAll('.notification-dropdown');
+                allDropdowns.forEach(dropdown => {
+                    if (dropdown !== dd && !dropdown.classList.contains('hidden')) {
+                        dropdown.classList.add('hidden');
+                        dropdown.classList.remove('opacity-100', 'translate-y-0');
+                        dropdown.classList.add('translate-y-2');
+                    }
+                });
+                
+                // Basculer l'affichage de la dropdown actuelle
+                if (dd.classList.contains('hidden')) {
+                    // Ouvrir la dropdown
+                    dd.classList.remove('hidden');
+                    // Forcer le reflow pour l'animation
+                    void dd.offsetWidth;
+                    setTimeout(() => {
+                        dd.classList.remove('opacity-0', 'translate-y-2');
+                        dd.classList.add('opacity-100', 'translate-y-0');
+                    }, 10);
+                    
+                    renderEmpNotificationsList(window.__empNotifications||[]);
+                } else {
+                    // Fermer la dropdown
+                    dd.classList.remove('opacity-100', 'translate-y-0');
+                    dd.classList.add('translate-y-2');
+                    setTimeout(() => {
+                        dd.classList.add('hidden');
+                    }, 200);
+                }
+            });
+            
+            document.addEventListener('click', (e)=>{
+                if (!dd.contains(e.target) && e.target !== bell && !bell.contains(e.target)){ 
+                    dd.classList.remove('opacity-100', 'translate-y-0');
+                    dd.classList.add('translate-y-2');
+                    setTimeout(() => {
+                        dd.classList.add('hidden');
+                    }, 200);
+                }
+            });
+        }
+        
+        if (markAll){
+            markAll.addEventListener('click', async ()=>{
+                const uid = getCurrentEmployeeId(); 
+                if (!uid) return;
+                
+                try{ 
+                    await fetch(`${window.API_BASE||''}/notifications/mark-all-read?user_id=${encodeURIComponent(uid)}`, { 
+                        method:'PUT' 
+                    }); 
+                } catch(_){ }
+                
+                window.__empNotifications = (window.__empNotifications||[]).map(n => ({ 
+                    ...n, 
+                    is_read: true 
+                }));
+                updateEmpNotifBadge();
+                renderEmpNotificationsList(window.__empNotifications);
+            });
+        }
+        
+        if (clearAll){
+            clearAll.addEventListener('click', async ()=>{
+                const uid = getCurrentEmployeeId(); 
+                if (!uid) return;
+                
+                try{ 
+                    const response = await fetch(`${window.API_BASE||''}/notifications?user_id=${encodeURIComponent(uid)}`, { 
+                        method:'DELETE' 
+                    }); 
+                    console.log('Clear all notifications response:', response.status);
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error('Clear all notifications failed:', errorData);
+                        alert('Erreur lors de la suppression des notifications');
+                        return;
+                    }
+                    
+                    const result = await response.json();
+                    console.log('All notifications cleared successfully:', result);
+                } catch(e){ 
+                    console.error('Error clearing notifications:', e);
+                    alert('Erreur lors de la suppression des notifications');
+                }
+                
+                // Vider complètement le localStorage des notifications seulement si la suppression a réussi
+                try {
+                    localStorage.removeItem('emp_notifications');
+                    localStorage.removeItem('notification_read_status');
+                } catch(_) {}
+                
+                // Mettre à jour l'interface seulement si la suppression a réussi
+                window.__empNotifications = [];
+                updateEmpNotifBadge();
+                renderEmpNotificationsList(window.__empNotifications);
+            });
+        }
+    } catch(error){
+        console.error('Error setting up notification UI:', error);
+    }
+}
+
+function updateEmpNotifBadge() {
+    const badge = document.getElementById('empNotifBadge');
+    if (!badge) return;
+    
+    const cnt = (window.__empNotifications || []).filter(n => !n.is_read).length;
+    if (cnt > 0) {
+        badge.textContent = cnt > 99 ? '99+' : String(cnt);
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+        function renderEmpNotificationsList(list) {
+    const wrap = document.getElementById('empNotifList');
+    if (!wrap) return;
+    
+    const items = Array.isArray(list) ? list : [];
+    
+    if (items.length === 0) {
+        wrap.innerHTML = `
+            <div class="p-4 text-center text-sm text-gray-500">
+                <i class="fas fa-bell text-gray-300 text-lg mb-2 block"></i>
+                <span>Aucune notification</span>
+            </div>
+        `;
+        return;
+    }
+    
+    // Générer le HTML
+    const html = items.map(n => {
+        const isUnread = !n.is_read;
+        const timeAgo = formatEmpTimeAgo(n.created_at);
+        
+        return `
+            <div class="w-full p-3 mb-2 ${isUnread ? 'bg-gray-50 border-l-2 border-indigo-200' : 'bg-white'} hover:bg-gray-50 transition-colors rounded-lg border border-gray-200 shadow-sm">
+                <div class="flex items-start gap-3">
+                    <div class="relative flex-shrink-0 mt-0.5">
+                        <div class="w-8 h-8 rounded-lg bg-gray-700 flex items-center justify-center">
+                            <i class="fas ${empNotifTypeIcon(n.type)} text-white text-xs"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 min-w-0">
+                        <button class="group w-full text-left" data-open-emp-notif data-notif-id="${n.id}" data-notif-type="${n.type||''}" data-ref-type="${n.ref_type||''}" data-ref-id="${n.ref_id||''}" data-notif-title="${(n.title||'').replace(/\"/g,'&quot;')}" data-notif-body="${(n.body||'').replace(/\"/g,'&quot;')}">
+                            <div class="flex justify-between items-start mb-1">
+                                <div class="text-sm font-bold text-gray-900 group-hover:text-gray-700 truncate pr-2">${n.title||''}</div>
+                                <span class="text-xs text-gray-400 whitespace-nowrap flex-shrink-0">${timeAgo}</span>
+                            </div>
+                            
+                            ${n.body ? `<div class="text-xs text-gray-600 mb-1 line-clamp-2">${n.body}</div>` : ''}
+                        </button>
+                    </div>
+                    
+                    <button class="opacity-80 hover:opacity-100 text-gray-400 hover:text-gray-600 p-1 rounded self-start flex-shrink-0 transition-colors" 
+                            title="Supprimer" data-del-emp-notif="${n.id}">
+                        <i class="fas fa-trash text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Remplacer le contenu en une seule fois
+    wrap.innerHTML = html;
+    
+    // Wire open events - UNE SEULE FOIS
+    Array.from(wrap.querySelectorAll('[data-open-emp-notif]')).forEach(item => {
+        item.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Protection contre les clics multiples rapides
+            if (window.__notificationClickInProgress) {
+                console.log('Notification click already in progress, ignoring...');
+                return;
+            }
+            window.__notificationClickInProgress = true;
+            
+            try {
+            const id = item.getAttribute('data-notif-id');
+            const refType = item.getAttribute('data-ref-type');
+            const refId = item.getAttribute('data-ref-id');
+            const type = item.getAttribute('data-notif-type');
+            const title = item.getAttribute('data-notif-title') || '';
+            const body = item.getAttribute('data-notif-body') || '';
+            
+                console.log('Notification clicked:', { id, refType, refId, type });
+                
+                // Fermer la dropdown immédiatement
+                const dd = document.getElementById('empNotifDropdown');
+                if (dd) {
+                    dd.classList.add('hidden');
+                    dd.classList.remove('opacity-100', 'translate-y-0');
+                    dd.classList.add('opacity-0', 'translate-y-2');
+                }
+                
+                // Marquer comme lu
+            if (id) { 
+                try { 
+                    await fetch(`${window.API_BASE||''}/notifications/${id}/read`, { method: 'PUT' }); 
+                } catch(_) { }
+                
+                // Sauvegarder le statut lu dans le localStorage
+                saveNotificationReadStatus(id, true);
+                
+                window.__empNotifications = (window.__empNotifications||[]).map(x => 
+                    x.id === id ? {...x, is_read: true} : x
+                );
+                updateEmpNotifBadge();
+            }
+                
+                // Ouvrir les détails de la tâche
+                console.log('Debug notification data:', { refType, refId, type, title, body });
+                
+                if ((refType === 'task' || type === 'task_created' || type === 'comment_added') && refId) {
+                    console.log('Opening task details for ID:', refId);
+                    await openTaskFromNotification(refId);
+                } else {
+                    // Fallback pour autres types de notifications - SUPPRIMÉ le toast
+                    console.log('Fallback notification - no action taken');
+                }
+            } finally {
+                // Réinitialiser le flag après un délai
+                setTimeout(() => {
+                    window.__notificationClickInProgress = false;
+                }, 1000);
+            }
+        });
+    });
+    
+    // Wire delete events
+    Array.from(wrap.querySelectorAll('[data-del-emp-notif]')).forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const id = btn.getAttribute('data-del-emp-notif');
+            if (!id) return;
+            
+            try { 
+                const response = await fetch(`${window.API_BASE||''}/notifications/${id}`, { method: 'DELETE' }); 
+                console.log('Delete notification response:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Delete notification failed:', errorData);
+                    Utils.showNotification('Erreur lors de la suppression de la notification', 'error');
+                    return;
+                }
+                
+                // Supprimer du localStorage
+            try {
+                const readStatus = JSON.parse(localStorage.getItem('notification_read_status') || '{}');
+                delete readStatus[id];
+                localStorage.setItem('notification_read_status', JSON.stringify(readStatus));
+            } catch(_) {}
+            
+                // Mettre à jour l'interface
+            window.__empNotifications = (window.__empNotifications||[]).filter(x => x.id !== id);
+            saveEmpNotifsToStorage(window.__empNotifications);
+            updateEmpNotifBadge();
+            renderEmpNotificationsList(window.__empNotifications);
+                
+                Utils.showNotification('Notification supprimée', 'success');
+                
+            } catch(e) { 
+                console.error('Error deleting notification:', e);
+                Utils.showNotification('Erreur lors de la suppression de la notification', 'error');
+            }
+        });
+    });
+}
+
+function getEmpNotificationColor(type) {
+    switch(type) {
+        case 'task_created': return 'bg-indigo-500';
+        case 'comment_added': return 'bg-green-500';
+        case 'task_completed': return 'bg-emerald-500';
+        case 'urgent': return 'bg-red-500';
+        default: return 'bg-gray-500';
+    }
+}
+
+function empNotifTypeIcon(t) {
+    switch(t) {
+        case 'task_created': return 'fa-clipboard-list';
+        case 'comment_added': return 'fa-comment';
+        case 'task_completed': return 'fa-check-circle';
+        case 'urgent': return 'fa-exclamation';
+        default: return 'fa-bell';
+    }
+}
+        function formatEmpTimeAgo(d){
+            try{ const now=new Date(); const dt=new Date(d); const diff=(now-dt)/1000;
+                if (diff<60) return 'à l'instant'; if (diff<3600) return `${Math.floor(diff/60)} min`; if (diff<86400) return `${Math.floor(diff/3600)} h`; return dt.toLocaleDateString('fr-FR');
+            }catch(_){ return ''; }
+        }
+        // Fonction simplifiée pour ouvrir les détails de tâche depuis une notification
+        async function openTaskFromNotification(taskId) {
+            try {
+                console.log('openTaskFromNotification called with taskId:', taskId);
+                
+                        // S'assurer que les tâches sont chargées
+                        if (!tasks || tasks.length === 0) {
+                            console.log('Loading tasks first...');
+                            await loadTasks();
+                        }
+                        
+                        // Vérifier si la tâche existe dans le tableau
+                const task = tasks.find(t => t.id == taskId);
+                console.log('Task found in local array:', !!task);
+                
+                        if (task) {
+                    console.log('Opening task details for existing task:', taskId);
+                    await showTaskDetails(taskId);
+                        } else {
+                            console.log('Task not found in local array, fetching from server...');
+                    const response = await fetch(`${window.API_BASE||''}/tasks/${taskId}`);
+                            if (response.ok) {
+                                const taskData = await response.json();
+                                tasks.push(taskData);
+                        console.log('Task fetched from server, opening details:', taskId);
+                        await showTaskDetails(taskId);
+                            } else {
+                        throw new Error('Task not found on server');
+                    }
+                }
+            } catch (error) {
+                console.error('Error opening task details:', error);
+                Utils.showNotification(`Erreur lors de l'ouverture de la tâche: ${error.message}`, 'error');
+            }
+        }
+function openReports() {
+  // Cacher le contenu principal
+  document.querySelector("main").classList.add("hidden");
+
+  // Afficher les rapports
+  const container = document.getElementById("reportsContainer");
+  container.innerHTML = createReportsHTML();
+  container.classList.remove("hidden");
+
+  // Initialiser les rapports dans ce conteneur
+  initializeReports(window);
+}
+function closeReports() {
+  // Cacher la section rapports
+  document.getElementById("reportsContainer").classList.add("hidden");
+
+  // Ré-afficher le dashboard
+  document.querySelector("main").classList.remove("hidden");
+}
+
+
+        function initializePage() {
+            if (currentUser) {
+                document.getElementById('userDisplayName').textContent = currentUser.first_name + ' ' + currentUser.last_name;
+                document.getElementById('userRoleDisplay').textContent = currentUser.role?.replace('_', ' ') || 'Employee';
+            }
+
+            setupNavigation();
+            setupTaskActions();
+            
+            // Set default due date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('taskDueDate').value = tomorrow.toISOString().split('T')[0];
+        }
+
+        // NOUVELLE FONCTION: Initialisation séquentielle pour éviter les race conditions
+        async function initializeDataSequentially() {
+            try {
+                console.log('🔄 Starting sequential data initialization...');
+                
+                // 1. Charger les employés en premier (nécessaire pour getCurrentEmployeeId)
+                console.log('📋 Loading employees...');
+                await loadEmployees();
+                console.log('✅ Employees loaded:', employees.length);
+                
+                // 2. Vérifier que getCurrentEmployeeId fonctionne maintenant
+                const employeeId = getCurrentEmployeeId();
+                console.log('👤 Current employee ID resolved:', employeeId);
+                
+                // 3. Charger les tâches (dépend des employés pour le filtrage)
+                console.log('📝 Loading tasks...');
+                await loadTasks();
+                console.log('✅ Tasks loaded:', tasks.length);
+                
+                // 4. Afficher la notice de département (dépend de getCurrentEmployeeId)
+                console.log('🏢 Showing department notice...');
+                await showResponsibleDepartmentNotice();
+                
+                console.log('🎉 Sequential initialization completed successfully');
+                
+            } catch (error) {
+                console.error('❌ Error during sequential initialization:', error);
+                // En cas d'erreur, essayer quand même de charger les tâches
+                try {
+                    await loadTasks();
+                } catch (e) {
+                    console.error('❌ Failed to load tasks as fallback:', e);
+                }
+            }
+        }
+        // Fonction pour afficher la liste des employés avec cases à cocher
+function renderEmployeeList(employees, selectedIds = []) {
+    const container = document.getElementById('employeeList');
+    
+    if (!employees || employees.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 p-2">No employees available</p>';
+        return;
+    }
+    
+    container.innerHTML = employees.map(employee => `
+        <div class="employee-item flex items-center ${selectedIds.includes(employee.id) ? 'selected' : ''}">
+            <input type="checkbox" value="${employee.id}" 
+                   class="employee-checkbox mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                   ${selectedIds.includes(employee.id) ? 'checked' : ''}>
+            <div>
+                <p class="font-medium">${employee.first_name} ${employee.last_name}</p>
+                <p class="text-xs text-gray-500">${employee.department || 'No department'}</p>
+            </div>
+        </div>
+    `).join('');
+    
+    // Ajouter les écouteurs d'événements
+    const checkboxes = container.querySelectorAll('.employee-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', handleEmployeeSelection);
+    });
+}
+
+// Gérer la sélection/désélection d'un employé
+function handleEmployeeSelection(event) {
+    const employeeId = event.target.value;
+    const isChecked = event.target.checked;
+    
+    if (isChecked) {
+        addToSelection(employeeId);
+    } else {
+        removeFromSelection(employeeId);
+    }
+}
+
+// Ajouter un employé à la sélection
+function addToSelection(employeeId) {
+    const employee = employees.find(emp => emp.id == employeeId);
+    if (!employee) return;
+    
+    // Créer l'élément pour l'employé sélectionné
+    const selectedElem = document.createElement('div');
+    selectedElem.className = 'selected-employee';
+    selectedElem.dataset.id = employeeId;
+    selectedElem.innerHTML = `
+        <span>${employee.first_name} ${employee.last_name}</span>
+        <button type="button" class="text-red-500 hover:text-red-700" onclick="removeSelectedEmployee('${employeeId}')">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    // Cacher le message "no selection" s'il est visible
+    document.getElementById('noSelectionText').style.display = 'none';
+    
+    // Ajouter à la liste des sélectionnés
+    document.getElementById('selectedEmployees').appendChild(selectedElem);
+}
+
+// Supprimer un employé de la sélection
+function removeFromSelection(employeeId) {
+    // Retirer de l'affichage
+    const selectedElem = document.querySelector(`.selected-employee[data-id="${employeeId}"]`);
+    if (selectedElem) {
+        selectedElem.remove();
+    }
+    
+    // Décocher la checkbox correspondante
+    const checkbox = document.querySelector(`.employee-checkbox[value="${employeeId}"]`);
+    if (checkbox) {
+        checkbox.checked = false;
+        checkbox.closest('.employee-item').classList.remove('selected');
+    }
+    
+    // Afficher le message "no selection" si plus aucun employé n'est sélectionné
+    const selectedCount = document.querySelectorAll('.selected-employee').length;
+    if (selectedCount === 0) {
+        document.getElementById('noSelectionText').style.display = 'block';
+    }
+}
+
+// Fonction pour supprimer un employé sélectionné (appelée depuis le bouton)
+function removeSelectedEmployee(employeeId) {
+    removeFromSelection(employeeId);
+}
+
+// Filtrer la liste des employés
+function filterEmployeeList() {
+    const searchTerm = document.getElementById('employeeSearch').value.toLowerCase();
+    const employeeItems = document.querySelectorAll('.employee-item');
+    
+    employeeItems.forEach(item => {
+        const employeeName = item.querySelector('p').textContent.toLowerCase();
+        if (employeeName.includes(searchTerm)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+    // Fonction pour filtrer les options du select
+function filterAssigneeOptions(searchTerm) {
+    const select = document.getElementById('taskAssignee');
+    const options = select.options;
+    
+    for (let i = 0; i < options.length; i++) {
+        const option = options[i];
+        if (option.value === "") continue; // Garder l'option par défaut
+        
+        const text = option.textContent.toLowerCase();
+        if (text.includes(searchTerm.toLowerCase())) {
+            option.style.display = '';
+        } else {
+            option.style.display = 'none';
+        }
+    }
+}
+
+// Écouteur d'événement pour la recherche en temps réel
+
+        function setupNavigation() {
+            const nav = document.getElementById('sidebarNav');
+            const role = currentUser?.role;
+            
+            let navItems = [];
+            
+            if (role === 'HR_Manager') {
+                navItems = [
+                    { href: 'hr-dashboard.html', icon: 'fa-tachometer-alt', text: 'Dashboard' },
+                    { href: 'employees.html', icon: 'fa-users', text: 'Employees' },
+                    { href: 'departments.html', icon: 'fa-building', text: 'Departments' },
+                    { href: 'payments.html', icon: 'fa-money-bill-wave', text: 'Payments' },
+                    { href: 'meetings.html', icon: 'fa-calendar-alt', text: 'Meetings' },
+                    { href: 'profile.html', icon: 'fa-user', text: 'Profile' }
+                ];
+            } else if (role === 'Department_Responsible') {
+                navItems = [
+                    { href: 'responsible-dashboard.html', icon: 'fa-tachometer-alt', text: 'Dashboard' },
+                    { href: 'tasks.html', icon: 'fa-tasks', text: 'Tasks', active: true },
+                    { href: 'meetings.html', icon: 'fa-calendar-alt', text: 'Meetings' },
+                    { href: 'permissions.html', icon: 'fa-clipboard-check', text: 'Permissions' },
+                    { href: 'attendance-overview.html', icon: 'fa-clock', text: 'Attendance Overview' },
+                    { href: 'profile.html', icon: 'fa-user', text: 'Profile' }
+                ];
+            } else {
+                navItems = [
+                    { href: 'employee-dashboard.html', icon: 'fa-tachometer-alt', text: 'Dashboard' },
+                    { href: 'tasks.html', icon: 'fa-tasks', text: 'Tasks', active: true },
+                    { href: 'meetings.html', icon: 'fa-calendar-alt', text: 'Meetings' },
+                    { href: 'payments.html', icon: 'fa-money-bill-wave', text: 'Payments' },
+                    { href: 'requests.html', icon: 'fa-paper-plane', text: 'Requests' },
+                    { href: 'profile.html', icon: 'fa-user', text: 'Profile' }
+                ];
+            }
+
+            nav.innerHTML = navItems.map(item => `
+                <a href="${item.href}" class="sidebar-item flex items-center px-6 py-3 ${item.active ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}">
+                    <i class="fas ${item.icon} mr-3"></i>
+                    <span data-translate="nav.${item.text.toLowerCase()}">${item.text}</span>
+                </a>
+            `).join('') + `
+                <a href="#" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:text-red-600" data-action="logout">
+                    <i class="fas fa-sign-out-alt mr-3"></i>
+                    <span data-translate="nav.logout">Logout</span>
+                </a>
+            `;
+        }
+
+        async function showResponsibleDepartmentNotice() {
+            try {
+                if (currentUser?.role !== 'Department_Responsible') return;
+                const responsibleId = getCurrentEmployeeId();
+                if (!responsibleId) return;
+                {
+                    const url = `/responsibles/${encodeURIComponent(responsibleId)}/departments`;
+                    const res = (typeof authManager !== 'undefined' && authManager?.makeAuthenticatedRequest)
+                        ? await authManager.makeAuthenticatedRequest(url)
+                        : await fetch(url, {
+                            headers: (typeof authManager !== 'undefined' && authManager?.getToken?.()) ? { 'Authorization': `Bearer ${authManager.getToken()}` } : {}
+                        });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    const names = (data.departments || []).map(d => d.name);
+                    const deptText = names.length ? names.join(', ') : 'Aucun département';
+                    const sidebar = document.querySelector('.bg-white.w-64.shadow-lg .p-6');
+                    if (sidebar && !sidebar.querySelector('.responsible-dept-notice')) {
+                        const div = document.createElement('div');
+                        div.className = 'responsible-dept-notice mt-3 text-xs text-gray-600';
+                        div.textContent = `Votre département est "${deptText}"`;
+                        sidebar.appendChild(div);
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to show department notice', e);
+            }
+        }
+
+        function setupTaskActions() {
+            const actions = document.getElementById('taskActions');
+            const rawRole = (currentUser?.role || '').toString();
+            const normalizedRole = rawRole.trim().toLowerCase().replace(/\s+/g, '_');
+            const isDepartmentResponsible = (
+                normalizedRole === 'department_responsible' ||
+                normalizedRole === 'responsible' ||
+                normalizedRole === 'responsable' ||
+                normalizedRole === 'dept_responsible' ||
+                normalizedRole === 'departmentresponsible'
+            );
+
+            if (isDepartmentResponsible) {
+                actions.innerHTML = `
+                    <button id=\"addTaskBtn\" class=\"bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors\">\n                        <i class=\"fas fa-plus mr-2\"></i>\n                        <span data-translate=\"tasks.add_task\">Add Task</span>\n                    </button>
+                `;
+                document.getElementById('addTaskBtn').addEventListener('click', openAddModal);
+            } else {
+                const assigneeSectionEl = document.getElementById('assigneeSection');
+                if (assigneeSectionEl) assigneeSectionEl.style.display = 'none';
+            }
+        }
+    async function loadEmployees() {
+    try {
+        // Récupérer la liste des employés, filtrée si responsable de département
+        let list = [];
+        const role = currentUser?.role;
+        if (role === 'Department_Responsible') {
+            const responsibleId = getCurrentEmployeeId();
+            if (responsibleId) {
+                const url = `/employees?responsible_id=${encodeURIComponent(responsibleId)}`;
+                const res = (typeof authManager !== 'undefined' && authManager?.makeAuthenticatedRequest)
+                    ? await authManager.makeAuthenticatedRequest(url)
+                    : await fetch(url, {
+                        headers: (typeof authManager !== 'undefined' && authManager?.getToken?.()) ? { 'Authorization': `Bearer ${authManager.getToken()}` } : {}
+                    });
+                if (res.ok) {
+                    list = await res.json();
+                    // IMPORTANT: ne pas fallback sur la liste complète pour un responsable
+                } else {
+                    console.warn('Employee filter by responsible failed (HTTP), no fallback for DR');
+                }
+            } else {
+                console.warn('No responsibleId resolved for DR; no fallback to full list');
+            }
+        } else {
+            // Non-responsable roles → liste complète
+            try {
+                list = await APIService.getEmployees();
+            } catch (_) {
+                // ignore, will default to []
+            }
+        }
+        if (Array.isArray(list) && list.length) {
+            employees = list;
+        } else {
+            employees = []; // Aucun employé trouvé
+        }
+
+        populateAssigneeOptions();
+    } catch (error) {
+        console.error('Error loading employees:', error);
+        employees = []; // En cas d'erreur, garder la liste vide
+        populateAssigneeOptions();
+    }
+}
+async function loadTasks() {
+    try {
+        document.getElementById('loadingState').style.display = 'block';
+        document.getElementById('tasksList').innerHTML = '';
+
+        // Charger les tâches ET les instructions en parallèle
+         const [tasksResponse, instructionsResponse] = await Promise.all([
+             APIService.getTasks(),
+             loadInstructions() // Nouvelle fonction pour charger les instructions
+         ]);
+        
+        // Traiter les tâches
+        let tasksList = Array.isArray(tasksResponse) ? tasksResponse : [];
+        if (!Array.isArray(tasksResponse) && tasksResponse && tasksResponse.tasks) {
+            tasksList = Array.isArray(tasksResponse.tasks) ? tasksResponse.tasks : [];
+        }
+
+        // Traiter les instructions et les convertir au format tâche
+        let instructionsList = [];
+         if (instructionsResponse && instructionsResponse.success) {
+             instructionsList = (instructionsResponse.instructions || [])
+               .sort((a,b)=>{
+                 const ad = a.due_at || a.created_at || '';
+                 const bd = b.due_at || b.created_at || '';
+                 return new Date(bd) - new Date(ad); // Newest first
+               })
+               .map(instruction => ({
+                 id: instruction.id,
+                 title: `Instruction: ${instruction.body.substring(0, 50)}${instruction.body.length > 50 ? '...' : ''}`,
+                 description: instruction.body,
+                 type: 'Instruction',
+                 priority: instruction.priority ? instruction.priority.charAt(0).toUpperCase() + instruction.priority.slice(1) : 'Normal',
+                 status: instruction.status === 'active' ? 'Pending' : instruction.status,
+                 due_date: instruction.due_at,
+                 created_at: instruction.created_at,
+                 updated_at: instruction.updated_at,
+                 assigned_by: instruction.created_by_employee_id,
+                 assigned_by_first_name: instruction.created_by_first_name || 'Direction',
+                 assigned_by_last_name: instruction.created_by_last_name || '',
+                 assignees: Array.isArray(instruction.recipients) ? instruction.recipients.map(r=>({ id: r.employee_id, first_name: r.first_name, last_name: r.last_name })) : [],
+                 isInstruction: true
+               }));
+         }
+
+        // Combiner tâches et instructions
+        tasks = [...tasksList, ...instructionsList];
+
+        // Filtrer selon le rôle utilisateur
+        if (currentUser?.role === 'Employee') {
+            const employeeId = getCurrentEmployeeId();
+            
+            // Pour les tâches normales
+            const filteredTasks = tasksList.filter(task => {
+                if (!task.assignees || !Array.isArray(task.assignees)) return false;
+                return task.assignees.some(assignee => 
+                    assignee.id === employeeId || 
+                    assignee.id === currentUser.id ||
+                    `${assignee.first_name} ${assignee.last_name}` === `${currentUser.first_name} ${currentUser.last_name}`
+                );
+            });
+
+            // Pour les instructions, vérifier si l'employé est destinataire
+            const filteredInstructions = instructionsList.filter(instruction => {
+                // Cette vérification sera faite côté serveur
+                return true; // Temporairement accepter toutes les instructions
+            });
+
+            tasks = [...filteredTasks, ...filteredInstructions];
+        }
+
+        renderTasks();
+        updateTaskStatistics();
+    } catch (error) {
+        console.error('Error loading tasks and instructions:', error);
+        tasks = [];
+        renderTasks();
+        updateTaskStatistics();
+        Utils.showNotification('Error loading tasks and instructions: ' + error.message, 'error');
+    } finally {
+        document.getElementById('loadingState').style.display = 'none';
+    }
+}
+
+// Nouvelle fonction pour charger les instructions pour l'employé courant
+async function loadInstructions() {
+    try {
+        const employeeId = getCurrentEmployeeId();
+        if (!employeeId) {
+            console.warn('No employee ID available for loading instructions');
+            return { success: true, instructions: [] };
+        }
+
+        const response = await fetch(`${window.API_BASE || ''}/api/instructions/employee/${employeeId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error loading instructions:', error);
+        return { success: true, instructions: [] };
+    }
+}
+   
+function getEmployeeNameById(id) {
+    if (!id) return 'Unassigned';
+    const emp = employees.find(e => e.id === id);
+    return emp ? `${emp.first_name} ${emp.last_name}` : 'Unknown';
+}
+
+
+ function populateAssigneeOptions() {
+    // Initialiser la recherche
+    document.getElementById('employeeSearch').addEventListener('input', filterEmployeeList);
+    
+    // Afficher la liste des employés
+    renderEmployeeList(employees);
+}
+
+
+        // Helper to get current employee UUID (assigned_by)
+        let currentEmployeeIdCache = null;
+        function isUuidLike(v){
+          return typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+        }
+        function getCurrentEmployeeId() {
+          try {
+            // 1. Vérifier le cache en premier
+            if (currentEmployeeIdCache && isUuidLike(currentEmployeeIdCache)) {
+              console.log('✅ getCurrentEmployeeId: using cached ID:', currentEmployeeIdCache);
+              return currentEmployeeIdCache;
+            }
+
+            // 2. Vérifier l'URL (priorité haute)
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromUrl = urlParams.get('employee_id') || urlParams.get('user_id');
+            if (isUuidLike(fromUrl)) { 
+              currentEmployeeIdCache = fromUrl; 
+              console.log('✅ getCurrentEmployeeId: using URL ID:', fromUrl);
+              return currentEmployeeIdCache; 
+            }
+
+            // 3. Vérifier currentUser (priorité moyenne)
+            if (currentUser) {
+              if (isUuidLike(currentUser.employee_id)) { 
+                currentEmployeeIdCache = currentUser.employee_id; 
+                console.log('✅ getCurrentEmployeeId: using currentUser.employee_id:', currentUser.employee_id);
+                return currentEmployeeIdCache; 
+              }
+              if (isUuidLike(currentUser.id)) { 
+                currentEmployeeIdCache = currentUser.id; 
+                console.log('✅ getCurrentEmployeeId: using currentUser.id:', currentUser.id);
+                return currentEmployeeIdCache; 
+              }
+            }
+
+            // 4. Fallback: chercher dans la liste des employés par nom (priorité basse)
+            if (Array.isArray(employees) && employees.length && currentUser && (currentUser.first_name || currentUser.last_name)){
+              const match = employees.find(e => {
+                const empName = `${e.first_name||''} ${e.last_name||''}`.trim().toLowerCase();
+                const userName = `${currentUser.first_name||''} ${currentUser.last_name||''}`.trim().toLowerCase();
+                return empName === userName && empName !== '';
+              });
+              
+              if (match && isUuidLike(match.id)) { 
+                currentEmployeeIdCache = match.id; 
+                console.log('✅ getCurrentEmployeeId: using employees list match:', match.id);
+                return currentEmployeeIdCache; 
+              }
+            }
+
+            // 5. Si toujours pas trouvé, essayer de récupérer depuis l'API
+            console.warn('⚠️ getCurrentEmployeeId: unable to resolve UUID, will retry later');
+            return null;
+          } catch (e) {
+            console.error('❌ getCurrentEmployeeId error', e);
+            return null;
+          }
+        }
+
+        function renderTasks() {
+  const container = document.getElementById('tasksList');
+  const emptyState = document.getElementById('emptyState');
+
+  const mode = window.__tasksViewMode || 'tasks';
+  const isInstr = (t) => (t.title||'').startsWith('Instruction:') || t.isInstruction === true;
+  const viewTasks = Array.isArray(tasks) ? tasks.filter(t => mode==='instructions' ? isInstr(t) : !isInstr(t)) : [];
+
+  if (!Array.isArray(viewTasks) || viewTasks.length === 0) {
+    container.innerHTML = '';
+    emptyState.style.display = 'block';
+    return;
+  }
+
+  emptyState.style.display = 'none';
+
+  container.innerHTML = viewTasks.map(task => {
+    const isOwnedByCurrent = String(task.assigned_by) === String((currentUser&&currentUser.id)||'');
+    const isDR = (function(r){ if(!r) return false; const n=r.toString().trim().toLowerCase().replace(/\s+/g,'_'); return n==='department_responsible'||n==='responsible'||n==='responsable'||n==='dept_responsible'||n==='departmentresponsible'; })(currentUser?.role);
+    const isForeignForDR = isDR && !isOwnedByCurrent;
+    const isInstruction = (task.title||'').startsWith('Instruction:') || task.isInstruction === true;
+    
+    // Pour les instructions, ne pas afficher les assignés
+    const assigneesList = isInstruction 
+      ? 'Confidentiel' 
+      : (task.assignees && task.assignees.length > 0 
+          ? task.assignees.map(a => `${a.first_name} ${a.last_name}`).join(', ')
+          : 'Unassigned');
+
+    // Use employee ID for matching since assignee.id is an employee ID, not a user ID
+    const currentEmployeeIdForMatching = getCurrentEmployeeId();
+    const currentUserAssignee = task.assignees ? task.assignees.find(
+      assignee => assignee.id === currentEmployeeIdForMatching ||
+        `${assignee.first_name} ${assignee.last_name}` === `${currentUser?.first_name} ${currentUser?.last_name}`
+    ) : null;
+
+    const currentUserIsAssignee = !!currentUserAssignee;
+    const isCompleted = currentUserAssignee?.status === 'Completed';
+
+    return `
+      <div class="p-6 ${isForeignForDR?'bg-indigo-50':''} ${isInstruction?'bg-yellow-50 border-l-4 border-yellow-400':''} hover:bg-gray-50 transition-colors cursor-pointer" onclick="showTaskDetails('${task.id}')">
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <div class="flex items-center space-x-3 mb-2">
+              <h4 class="text-lg font-semibold text-gray-900">${task.title}</h4>
+              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusClass(task.status)}">
+                ${task.status}
+              </span>
+              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityClass(task.priority)}">
+                ${task.priority}
+              </span>
+              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeClass(task.type)}">
+                ${task.type || (isInstruction ? 'Instruction' : 'Task')}
+              </span>
+              ${(currentUser?.role === 'Employee' && isAssignedByDirector(task)) ? '<span class="inline-flex px-2 py-1 text-[11px] font-semibold rounded-full bg-purple-100 text-purple-700 border border-purple-200">Assignée par Directeur</span>' : ''}
+            </div>
+            
+            <p class="text-gray-600 mb-3">${task.description}</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+              <div class="flex items-center">
+                <i class="fas fa-calendar mr-2 text-blue-600"></i>
+                Due: ${Utils.formatDate(task.due_date)}
+              </div>
+              ${!isInstruction ? `
+                <div class="flex items-center">
+                  <i class="fas fa-users mr-2 text-blue-600"></i>
+                  Assigned to: ${assigneesList}
+                </div>
+              ` : ''}
+              <div class="flex items-center">
+                <i class="fas fa-user-tie mr-2 text-blue-600"></i>
+                By: ${task.assigned_by_first_name || 'Direction'} ${task.assigned_by_last_name || ''}
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-clock mr-2 text-blue-600"></i>
+                ${Utils.formatDateTime(task.created_at)}
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex flex-col space-y-2 ml-4 items-end">
+          ${!isInstruction ? `
+            ${currentUserIsAssignee ? (
+  isCompleted 
+    ? `<div id="task-actions-${task.id}" class="flex flex-col items-center space-y-1">
+         <span class="text-green-600 font-semibold text-sm">Completed ✅</span>
+         <button onclick=\"event.stopPropagation(); openReportModal('${task.id}')\" 
+                 class=\"w-9 h-9 flex items-center justify-center rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50\" 
+                 title=\"Ajouter un rapport\">
+           <i class=\"fas fa-file-alt\"></i>
+         </button>
+       </div>`
+    : `<div id="task-actions-${task.id}">
+         <button onclick=\"event.stopPropagation(); completeMyAssignment('${task.id}')\" 
+                 class=\"w-9 h-9 flex items-center justify-center rounded-lg border border-green-600 text-green-600 hover:bg-green-50\" 
+                 title=\"Mark as Complete\">
+           <i class=\"fas fa-check\"></i>
+         </button>
+       </div>`
+) : ''}
+
+            ${isDR ? (
+              isOwnedByCurrent
+                ? `
+                  <button onclick=\"event.stopPropagation(); editTask('${task.id}')\" 
+                          class=\"text-blue-600 hover:text-blue-800\" title=\"Edit\">
+                    <i class=\"fas fa-edit\"></i>
+                  </button>
+                  <button onclick=\"event.stopPropagation(); deleteTask('${task.id}')\" 
+                          class=\"text-red-600 hover:text-red-800\" title=\"Delete\">
+                    <i class=\"fas fa-trash\"></i>
+                  </button>
+                  <button onclick=\"event.stopPropagation(); loadReports('${task.id}')\" 
+                          class=\"text-purple-600 hover:text-purple-800\" title=\"Rapports\">
+                    <i class=\"fas fa-file-alt\"></i>
+                  </button>
+                  <button onclick=\"event.stopPropagation(); showTaskDetails('${task.id}')\" 
+                          class=\"px-2 py-1 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50\" title=\"Details\">Details</button>
+                `
+                : ''
+            ) : ''}
+          ` : `
+            <!-- Pour les instructions, afficher uniquement un bouton de lecture -->
+            <div class="flex flex-col space-y-2">
+              <button onclick=\"event.stopPropagation(); showTaskDetails('${task.id}')\" 
+                      class=\"px-3 py-1 text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200\" title=\"Lire l'instruction\">
+                <i class=\"fas fa-eye mr-1\"></i> Lire
+              </button>
+              ${currentUser?.role === 'Employee' ? `
+                <button onclick=\"event.stopPropagation(); acknowledgeInstruction('${task.id}')\" 
+                        class=\"px-3 py-1 text-green-700 bg-green-100 rounded-lg hover:bg-green-200\" title=\"Marquer comme lu\">
+                  <i class=\"fas fa-check mr-1\"></i> Lu
+                </button>
+              ` : ''}
+            </div>
+          `}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Fonction pour marquer une instruction comme lue
+async function acknowledgeInstruction(instructionId) {
+  try {
+    const employeeId = getCurrentEmployeeId();
+    if (!employeeId) {
+      Utils.showNotification('Cannot identify current employee', 'error');
+      return;
+    }
+
+    const response = await fetch(`${window.API_BASE || ''}/api/instructions/${instructionId}/acknowledge`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        employee_id: employeeId
+      })
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      Utils.showNotification('Instruction marquée comme lue', 'success');
+      // Optionnel: recharger les tâches pour mettre à jour l'affichage
+      // loadTasks();
+    } else {
+      throw new Error(result.error || 'Failed to acknowledge instruction');
+    }
+  } catch (error) {
+    console.error('Error acknowledging instruction:', error);
+    Utils.showNotification('Erreur lors du marquage: ' + error.message, 'error');
+  }
+}
+      function updateTaskStatistics() {
+  // Ensure tasks is an array
+  if (!Array.isArray(tasks)) {
+    tasks = [];
+  }
+  
+  const mode = window.__tasksViewMode || 'tasks';
+  const isInstr = (t) => (t.title||'').startsWith('Instruction:');
+  const baseTasks = tasks.filter(t => mode==='instructions' ? isInstr(t) : !isInstr(t));
+  let total = 0;
+  let completed = 0;
+  let inProgress = 0;
+  let overdue = 0;
+  
+  // Si l'utilisateur est un employé, compter selon son statut personnel
+  if (currentUser?.role === 'Employee') {
+    const currentEmployeeId = getCurrentEmployeeId();
+    
+    baseTasks.forEach(task => {
+      // Trouver l'assignation de l'employé courant dans cette tâche
+      const currentUserAssignee = task.assignees ? task.assignees.find(
+        assignee => assignee.id == currentEmployeeId ||
+          `${assignee.first_name} ${assignee.last_name}` === `${currentUser.first_name} ${currentUser.last_name}`
+      ) : null;
+      
+      // Si l'employé est assigné à cette tâche
+      if (currentUserAssignee) {
+        total++;
+        
+        // Compter selon le statut personnel de l'employé
+        if (currentUserAssignee.status === 'Completed') {
+          completed++;
+        } else {
+          // Vérifier si la tâche est en retard
+          if (new Date(task.due_date) < new Date()) {
+            overdue++;
+          } else {
+            inProgress++;
+          }
+        }
+      }
+    });
+  } else {
+    // Pour HR_Manager et Department_Responsible, compter par tâche (statut global)
+    total = baseTasks.length;
+    completed = baseTasks.filter(t => t.status === 'Completed').length;
+    
+    // Compter les tâches en cours (statut global pas "Completed")
+    inProgress = baseTasks.filter(t => 
+      t.status === 'In Progress' || 
+      (t.status === 'Pending' && new Date(t.due_date) >= new Date())
+    ).length;
+    
+    // Compter les tâches en retard (statut global pas "Completed" et date dépassée)
+    overdue = baseTasks.filter(t => 
+      t.status !== 'Completed' && 
+      new Date(t.due_date) < new Date()
+    ).length;
+  }
+
+  // Mettre à jour l'affichage
+  document.getElementById('totalTasks').textContent = total;
+  document.getElementById('completedTasks').textContent = completed;
+  document.getElementById('inProgressTasks').textContent = inProgress;
+  document.getElementById('overdueTasks').textContent = overdue;
+}
+
+        function getStatusClass(status) {
+           switch (status) {
+        case 'Completed':
+            return 'bg-green-100 text-green-800 border border-green-300';
+                case 'In Progress':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'Pending':
+                    return 'bg-gray-100 text-gray-800';
+                case 'Overdue':
+                    return 'bg-red-100 text-red-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function getPriorityClass(priority) {
+            switch (priority) {
+                case 'High':
+                    return 'bg-red-100 text-red-800';
+                case 'Medium':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'Low':
+                    return 'bg-green-100 text-green-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function getTypeClass(type) {
+            switch (type) {
+                case 'Daily':
+                    return 'bg-blue-100 text-blue-800';
+                case 'Special':
+                    return 'bg-purple-100 text-purple-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+       // Helper to detect tasks assigned by Director
+       // Helper to detect tasks assigned by Director
+       function isAssignedByDirector(task) {
+    if (!task) return false;
+
+    // 1) Check explicit role field on task (maintenant inclus dans la réponse backend)
+    const roleField = (task.assigned_by_role || '').toLowerCase();
+    if (roleField === 'director') {
+        return true;
+    }
+
+    // 2) Fallback: check role field on task
+    const taskRoleField = (task.role || '').toLowerCase();
+    if (taskRoleField === 'director') {
+        return true;
+    }
+
+    // 3) Fallback: check if assigner name contains "director" terms
+    const first = (task.assigned_by_first_name || '').toLowerCase();
+    const last = (task.assigned_by_last_name || '').toLowerCase();
+    const full = (first + ' ' + last).trim();
+    return /(director|directeur|direction)/i.test(full);
+}
+
+        // Fonction pour filtrer les tâches (UNIFIÉE)
+function filterTasks() {
+    const searchTerm = (document.getElementById('searchInput')?.value || '').toLowerCase();
+    const statusFilter = document.getElementById('statusFilter')?.value || '';
+    const typeFilter = document.getElementById('typeFilter')?.value || '';
+    const priorityFilter = document.getElementById('priorityFilter')?.value || '';
+    const assignedByFilter = document.getElementById('assignedByFilter') ? document.getElementById('assignedByFilter').value : '';
+
+    const mode = window.__tasksViewMode || 'tasks';
+    const isInstr = (t) => (t.title||'').startsWith('Instruction:');
+    const filteredTasks = (Array.isArray(tasks)?tasks:[]).filter(task => {
+        if (mode === 'instructions' && !isInstr(task)) return false;
+        if (mode === 'tasks' && isInstr(task)) return false;
+
+        const title = (task.title||'').toLowerCase();
+        const description = (task.description||'').toLowerCase();
+        const type = (task.type||'').toLowerCase();
+        const priority = (task.priority||'').toLowerCase();
+        const status = (task.status||'').toLowerCase();
+        const assignedToName = (getEmployeeNameById(task.assigned_to)||'').toLowerCase();
+        const assignedByName = (getEmployeeNameById(task.assigned_by)||'').toLowerCase();
+
+        const matchesSearch =
+            title.includes(searchTerm) ||
+            description.includes(searchTerm) ||
+            type.includes(searchTerm) ||
+            priority.includes(searchTerm) ||
+            status.includes(searchTerm) ||
+            assignedToName.includes(searchTerm) ||
+            assignedByName.includes(searchTerm);
+
+        const matchesStatus = !statusFilter || task.status === statusFilter;
+        const matchesType = !typeFilter || task.type === typeFilter;
+        const matchesPriority = !priorityFilter || task.priority === priorityFilter;
+
+        let matchesAssignedBy = true;
+        if (assignedByFilter) {
+            if (assignedByFilter === 'Director') {
+                matchesAssignedBy = isAssignedByDirector(task);
+            } else if (assignedByFilter === 'Others') {
+                matchesAssignedBy = !isAssignedByDirector(task);
+            }
+        }
+
+        return matchesSearch && matchesStatus && matchesType && matchesPriority && matchesAssignedBy;
+    });
+
+    renderFilteredTasks(filteredTasks);
+}
+
+function renderFilteredTasks(filteredTasks) {
+    const container = document.getElementById('tasksList');
+    const emptyState = document.getElementById('emptyState');
+
+    if (filteredTasks.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    
+    container.innerHTML = filteredTasks.map(task => {
+        const isInstruction = (task.title||'').startsWith('Instruction:') || task.isInstruction === true;
+        const isOwnedByCurrent = String(task.assigned_by) === String((currentUser&&currentUser.id)||'');
+        const isDR = (function(r){ if(!r) return false; const n=r.toString().trim().toLowerCase().replace(/\s+/g,'_'); return n==='department_responsible'||n==='responsible'||n==='responsable'||n==='dept_responsible'||n==='departmentresponsible'; })(currentUser?.role);
+        const isForeignForDR = isDR && !isOwnedByCurrent;
+        
+        // Pour les instructions, masquer les assignés - afficher "Confidentiel"
+        const assigneesList = isInstruction 
+            ? 'Confidentiel'
+            : (task.assignees && task.assignees.length > 0 
+                ? task.assignees.map(a => `${a.first_name} ${a.last_name}`).join(', ')
+                : 'Unassigned');
+
+        // Use employee ID for matching since assignee.id is an employee ID, not a user ID
+        const currentEmployeeIdForMatching = getCurrentEmployeeId();
+        const currentUserAssignee = task.assignees ? task.assignees.find(
+            assignee => assignee.id === currentEmployeeIdForMatching ||
+                `${assignee.first_name} ${assignee.last_name}` === `${currentUser?.first_name} ${currentUser?.last_name}`
+        ) : null;
+
+        const currentUserIsAssignee = !!currentUserAssignee;
+        const isCompleted = currentUserAssignee?.status === 'Completed';
+
+        // Badge directeur - condition améliorée
+        const showDirectorBadge = (currentUser?.role === 'Employee' || currentUser?.role === 'Department_Responsible') 
+                                 && isAssignedByDirector(task);
+
+        return `
+            <div class="p-6 ${isForeignForDR?'bg-indigo-50':''} ${isInstruction?'bg-yellow-50 border-l-4 border-yellow-400':''} hover:bg-gray-50 transition-colors cursor-pointer" onclick="showTaskDetails('${task.id}')">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-3 mb-2 flex-wrap">
+                            <h4 class="text-lg font-semibold text-gray-900">${task.title}</h4>
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusClass(task.status)}">
+                                ${task.status}
+                            </span>
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityClass(task.priority)}">
+                                ${task.priority}
+                            </span>
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeClass(task.type)}">
+                                ${task.type || (isInstruction ? 'Instruction' : 'Task')}
+                            </span>
+                            ${showDirectorBadge ? `
+                                <span class="inline-flex px-2 py-1 text-[11px] font-bold rounded-full bg-purple-100 text-purple-800 border-2 border-purple-300 shadow-sm">
+                                    <i class="fas fa-crown mr-1 text-purple-600"></i>
+                                    Assignée par Directeur
+                                </span>
+                            ` : ''}
+                        </div>
+                        
+                        <p class="text-gray-600 mb-3">${task.description}</p>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar mr-2 text-blue-600"></i>
+                                Due: ${Utils.formatDate(task.due_date)}
+                            </div>
+                            ${!isInstruction ? `
+                                <div class="flex items-center">
+                                    <i class="fas fa-users mr-2 text-blue-600"></i>
+                                    Assigned to: ${assigneesList}
+                                </div>
+                            ` : ''}
+                            <div class="flex items-center">
+                                <i class="fas fa-user-tie mr-2 text-blue-600"></i>
+                                By: ${task.assigned_by_first_name || 'Direction'} ${task.assigned_by_last_name || ''}
+                                ${showDirectorBadge ? '<i class="fas fa-crown ml-1 text-purple-600" title="Directeur"></i>' : ''}
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock mr-2 text-blue-600"></i>
+                                ${Utils.formatDateTime(task.created_at)}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col space-y-2 ml-4 items-end">
+                        ${!isInstruction ? `
+                        ${currentUserIsAssignee ? (
+                            isCompleted 
+                                ? '<span class="text-green-600 font-semibold text-sm">Task Completed</span>'
+                                : `<div id="task-actions-${task.id}">
+                                    <button onclick=\"event.stopPropagation(); completeMyAssignment('${task.id}')\" 
+                                            class=\"w-9 h-9 flex items-center justify-center rounded-lg border border-green-600 text-green-600 hover:bg-green-50\" 
+                                            title=\"Mark as Complete\">
+                                        <i class=\"fas fa-check\"></i>
+                                    </button>
+                                   </div>`
+                        ) : ''}
+
+                        ${isDR ? (
+                          isOwnedByCurrent
+                            ? `
+                              <button onclick=\"event.stopPropagation(); editTask('${task.id}')\" 
+                                      class=\"text-blue-600 hover:text-blue-800\" title=\"Edit\">
+                                <i class=\"fas fa-edit\"></i>
+                              </button>
+                              <button onclick=\"event.stopPropagation(); deleteTask('${task.id}')\" 
+                                      class=\"text-red-600 hover:text-red-800\" title=\"Delete\">
+                                <i class=\"fas fa-trash\"></i>
+                              </button>
+                              <button onclick=\"event.stopPropagation(); loadReports('${task.id}')\" 
+                                      class=\"text-purple-600 hover:text-purple-800\" title=\"Rapport\">
+                                <i class=\"fas fa-file-alt\"></i>
+                              </button>
+                              <button onclick=\"event.stopPropagation(); showTaskDetails('${task.id}')\" 
+                                      class=\"px-2 py-1 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50\" title=\"Details\">Details</button>
+                            `
+                            : ''
+                        ) : ''}
+                        ` : `
+                        <!-- Pour les instructions, afficher uniquement des boutons de lecture -->
+                        <div class="flex flex-col space-y-2">
+                            <button onclick=\"event.stopPropagation(); showTaskDetails('${task.id}')\" 
+                                    class=\"px-3 py-1 text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200\" title=\"Lire l'instruction\">
+                                <i class=\"fas fa-eye mr-1\"></i> Lire
+                            </button>
+                            ${currentUser?.role === 'Employee' ? `
+                                <button onclick=\"event.stopPropagation(); acknowledgeInstruction('${task.id}')\" 
+                                        class=\"px-3 py-1 text-green-700 bg-green-100 rounded-lg hover:bg-green-200\" title=\"Marquer comme lu\">
+                                    <i class=\"fas fa-check mr-1\"></i> Lu
+                                </button>
+                            ` : ''}
+                        </div>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Améliorer aussi la fonction filterTasks pour inclure la recherche + Assigned By et respecter le mode
+function filterTasks() {
+    const searchTerm = (document.getElementById('searchInput')?.value || '').toLowerCase();
+    const statusFilter = document.getElementById('statusFilter')?.value || '';
+    const typeFilter = document.getElementById('typeFilter')?.value || '';
+    const priorityFilter = document.getElementById('priorityFilter')?.value || '';
+    const assignedByFilter = document.getElementById('assignedByFilter') ? document.getElementById('assignedByFilter').value : '';
+
+    const mode = window.__tasksViewMode || 'tasks';
+    const isInstr = (t) => (t.title||'').startsWith('Instruction:');
+
+    const filteredTasks = (Array.isArray(tasks)?tasks:[]).filter(task => {
+        if (mode === 'instructions' && !isInstr(task)) return false;
+        if (mode === 'tasks' && isInstr(task)) return false;
+
+        const title = (task.title||'').toLowerCase();
+        const description = (task.description||'').toLowerCase();
+        const type = (task.type||'').toLowerCase();
+        const priority = (task.priority||'').toLowerCase();
+        const status = (task.status||'').toLowerCase();
+        const assignedByName = (((task.assigned_by_first_name||'')+' '+(task.assigned_by_last_name||'')).trim()).toLowerCase();
+        const assigneesNames = (task.assignees||[]).map(a => `${(a.first_name||'').toLowerCase()} ${(a.last_name||'').toLowerCase()}`).join(' ');
+
+        const matchesSearch =
+            title.includes(searchTerm) ||
+            description.includes(searchTerm) ||
+            type.includes(searchTerm) ||
+            priority.includes(searchTerm) ||
+            status.includes(searchTerm) ||
+            assignedByName.includes(searchTerm) ||
+            assigneesNames.includes(searchTerm);
+
+        const matchesStatus = !statusFilter || task.status === statusFilter;
+        const matchesType = !typeFilter || task.type === typeFilter;
+        const matchesPriority = !priorityFilter || task.priority === priorityFilter;
+
+        let matchesAssignedBy = true;
+        if (assignedByFilter) {
+            if (assignedByFilter === 'Director') {
+                matchesAssignedBy = isAssignedByDirector(task);
+            } else if (assignedByFilter === 'Others') {
+                matchesAssignedBy = !isAssignedByDirector(task);
+            }
+        }
+
+        return matchesSearch && matchesStatus && matchesType && matchesPriority && matchesAssignedBy;
+    });
+
+    renderFilteredTasks(filteredTasks);
+}
+
+        function openAddModal() {
+    currentTaskId = null; // S'assurer qu'on est en mode création
+    document.getElementById('modalTitle').textContent = 'Add Task';
+    document.getElementById('taskForm').reset();
+    
+    // Vider la sélection d'employés
+    document.getElementById('selectedEmployees').innerHTML = 
+        '<p class="text-gray-500 text-sm p-2" id="noSelectionText">No employees selected</p>';
+    renderEmployeeList(employees);
+    
+    // Set default due date to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('taskDueDate').value = tomorrow.toISOString().split('T')[0];
+    
+    document.getElementById('taskModal').classList.remove('hidden');
+    document.getElementById('taskModal').classList.add('flex');
+}
+function openEditModal(commentId, currentText) {
+  currentEditId = commentId;
+  currentOriginalText = currentText;
+
+  const modal = document.getElementById('editModal');
+  const textarea = document.getElementById('editCommentInput');
+
+  textarea.value = currentText;
+  modal.classList.remove('hidden');
+}
+
+function closeEditModal() {
+  const modal = document.getElementById('editModal');
+  modal.classList.add('hidden');
+  currentEditId = null;
+  currentOriginalText = null;
+}
+
+document.getElementById('saveEditBtn').addEventListener('click', async () => {
+  const newText = document.getElementById('editCommentInput').value;
+
+  if (!newText.trim()) {
+    Utils.showNotification('Le commentaire ne peut pas être vide', 'error');
+    return;
+  }
+  if (newText.trim() === currentOriginalText.trim()) {
+    closeEditModal();
+    return;
+  }
+
+  try {
+    const employeeId = getCurrentEmployeeId();
+    if (!employeeId) {
+      Utils.showNotification('Cannot identify current employee', 'error');
+      return;
+    }
+
+    const response = await fetch(`${window.API_BASE}/comments/${currentEditId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        comment: newText.trim(),
+        employeeId: employeeId
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+
+    if (data.success) {
+      const commentElement = document.querySelector(`.comment[data-comment-id="${currentEditId}"] .comment-text`);
+      if (commentElement) {
+        commentElement.textContent = newText.trim();
+      }
+      Utils.showNotification('Commentaire modifié avec succès', 'success');
+      closeEditModal();
+    } else {
+      throw new Error(data.error || 'Failed to update comment');
+    }
+  } catch (error) {
+    console.error('Error updating comment:', error);
+    Utils.showNotification('Erreur lors de la modification: ' + error.message, 'error');
+  }
+});
+       function editTask(id) {
+    const task = tasks.find(t => t.id == id); // Utiliser == pour gérer string/number
+    if (!task) {
+        Utils.showNotification('Task not found', 'error');
+        return;
+    }
+
+    // Stocker l'ID de la tâche en cours d'édition
+    currentTaskId = id;
+    
+    document.getElementById('modalTitle').textContent = 'Edit Task';
+    document.getElementById('taskTitle').value = task.title || '';
+    document.getElementById('taskDescription').value = task.description || '';
+    document.getElementById('taskType').value = task.type || 'Daily';
+    document.getElementById('taskPriority').value = task.priority || 'Low';
+    document.getElementById('taskDueDate').value = task.due_date || '';
+    
+    // Pré-sélectionner les employés assignés
+    const assignedEmployeeIds = [];
+    if (task.assignees && Array.isArray(task.assignees)) {
+        task.assignees.forEach(assignee => {
+            if (assignee.id) {
+                assignedEmployeeIds.push(assignee.id.toString());
+            }
+        });
+    }
+    
+    // Afficher la liste des employés avec pré-sélection
+    renderEmployeeList(employees, assignedEmployeeIds);
+    
+    // Vider et repeupler la zone de sélection
+    const selectedContainer = document.getElementById('selectedEmployees');
+    selectedContainer.innerHTML = '<p class="text-gray-500 text-sm p-2" id="noSelectionText">No employees selected</p>';
+    
+    // Ajouter les employés pré-sélectionnés à la zone de sélection
+    assignedEmployeeIds.forEach(id => {
+        addToSelection(id);
+    });
+    
+    document.getElementById('taskModal').classList.remove('hidden');
+    document.getElementById('taskModal').classList.add('flex');
+}
+
+
+        function closeModal() {
+    document.getElementById('taskModal').classList.add('hidden');
+    document.getElementById('taskModal').classList.remove('flex');
+    currentTaskId = null; // Réinitialiser l'ID
+}
+
+        function closeDetailsModal() {
+            document.getElementById('taskDetailsModal').classList.add('hidden');
+            document.getElementById('taskDetailsModal').classList.remove('flex');
+        }
+ async function updateTaskWithAssignees(taskId, formData) {
+    const response = await fetch(`${window.API_BASE}/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    });
+    
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+    
+    return await response.json();
+}
+        async function handleSubmit(e) {
+    e.preventDefault();
+    
+    // Récupérer les IDs des employés sélectionnés
+    const selectedElements = document.querySelectorAll('.selected-employee');
+    const assignedToIds = Array.from(selectedElements).map(el => el.dataset.id);
+    
+    if (assignedToIds.length === 0) {
+        Utils.showNotification('Please select at least one employee', 'error');
+        return;
+    }
+
+    const formData = {
+        title: document.getElementById('taskTitle').value,
+        description: document.getElementById('taskDescription').value,
+        type: document.getElementById('taskType').value,
+        priority: document.getElementById('taskPriority').value,
+        due_date: document.getElementById('taskDueDate').value,
+        assigned_to: assignedToIds
+    };
+
+    try {
+        if (currentTaskId) {
+            // Mode édition
+            await updateTaskWithAssignees(currentTaskId, formData);
+            Utils.showNotification('Task updated successfully', 'success');
+        } else {
+            // Mode création
+            const assignedById = getCurrentEmployeeId();
+            if (!assignedById) {
+                Utils.showNotification('Cannot identify current employee', 'error');
+                return;
+            }
+            formData.assigned_by = assignedById;
+            
+            await APIService.createTask(formData);
+            Utils.showNotification('Task created successfully', 'success');
+        }
+        
+        closeModal();
+        loadTasks();
+        
+    } catch (error) {
+        console.error('Error saving task:', error);
+        Utils.showNotification('Error saving task: ' + error.message, 'error');
+    }
+}
+async function loadTaskComments(taskId) {
+  try {
+    const response = await APIService.getTaskComments(taskId);
+    return response.comments || [];
+  } catch (error) {
+    console.error('Error loading comments:', error);
+    return [];
+  }
+}
+async function addComment() {
+  const input = document.getElementById('newComment');
+  const commentText = input.value.trim();
+  
+  if (!commentText) return;
+
+  try {
+    const taskId = currentTaskId; // Vous devez stocker l'ID de la tâche courante
+    const employeeId = getCurrentEmployeeId();
+    
+    const response = await APIService.addComment(taskId, commentText, employeeId);
+    
+    if (response.success) {
+      // Ajouter le commentaire à l'affichage
+      const commentsContainer = document.getElementById('taskComments');
+      const comment = response.comment;
+      
+      commentsContainer.innerHTML = `
+        <div class="bg-gray-50 rounded-lg p-3">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-sm font-medium text-gray-900">${comment.first_name} ${comment.last_name}</span>
+            <span class="text-xs text-gray-500">${Utils.formatDateTime(comment.created_at)}</span>
+          </div>
+          <p class="text-sm text-gray-600">${comment.comment}</p>
+        </div>
+      ` + commentsContainer.innerHTML;
+      
+      input.value = '';
+      Utils.showNotification('Comment added successfully', 'success');
+    }
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    Utils.showNotification('Error adding comment: ' + error.message, 'error');
+  }
+}
+// Modifier la fonction renderTasks pour afficher tous les assignés
+// AJOUTER CE CODE TEMPORAIREMENT dans renderTasks() pour débugger
+function renderTasks() {
+  const container = document.getElementById('tasksList');
+  const emptyState = document.getElementById('emptyState');
+
+  const mode = window.__tasksViewMode || 'tasks';
+  const isInstr = (t) => (t.title||'').startsWith('Instruction:') || t.isInstruction === true;
+  const viewTasks = Array.isArray(tasks) ? tasks.filter(t => mode==='instructions' ? isInstr(t) : !isInstr(t)) : [];
+
+  if (!Array.isArray(viewTasks) || viewTasks.length === 0) {
+    container.innerHTML = '';
+    emptyState.style.display = 'block';
+    return;
+  }
+
+  emptyState.style.display = 'none';
+
+  container.innerHTML = viewTasks.map(task => {
+    const isOwnedByCurrent = String(task.assigned_by) === String((currentUser&&currentUser.id)||'');
+    const isDR = currentUser?.role === 'Department_Responsible';
+    const isForeignForDR = isDR && !isOwnedByCurrent;
+    const isInstruction = (task.title||'').startsWith('Instruction:') || task.isInstruction === true;
+    
+    // Pour les instructions, ne pas afficher les assignés
+    const assigneesList = isInstruction 
+      ? 'Confidentiel' 
+      : (task.assignees && task.assignees.length > 0 
+          ? task.assignees.map(a => `${a.first_name} ${a.last_name}`).join(', ')
+          : 'Unassigned');
+
+    // Use employee ID for matching since assignee.id is an employee ID, not a user ID
+    const currentEmployeeIdForMatching = getCurrentEmployeeId();
+    const currentUserAssignee = task.assignees ? task.assignees.find(
+      assignee => assignee.id === currentEmployeeIdForMatching ||
+        `${assignee.first_name} ${assignee.last_name}` === `${currentUser?.first_name} ${currentUser?.last_name}`
+    ) : null;
+
+    const currentUserIsAssignee = !!currentUserAssignee;
+    const isCompleted = currentUserAssignee?.status === 'Completed';
+
+    // Badge directeur - condition améliorée
+    const showDirectorBadge = (currentUser?.role === 'Employee' || currentUser?.role === 'Department_Responsible') 
+                             && isAssignedByDirector(task);
+
+    return `
+      <div class="p-6 ${isForeignForDR?'bg-indigo-50':''} ${isInstruction?'bg-yellow-50 border-l-4 border-yellow-400':''} hover:bg-gray-50 transition-colors cursor-pointer" onclick="showTaskDetails('${task.id}')">
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <div class="flex items-center space-x-3 mb-2 flex-wrap">
+              <h4 class="text-lg font-semibold text-gray-900">${task.title}</h4>
+              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusClass(task.status)}">
+                ${task.status}
+              </span>
+              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityClass(task.priority)}">
+                ${task.priority}
+              </span>
+              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeClass(task.type)}">
+                ${task.type || (isInstruction ? 'Instruction' : 'Task')}
+              </span>
+              ${showDirectorBadge ? `
+                <span class="inline-flex px-2 py-1 text-[11px] font-bold rounded-full bg-purple-100 text-purple-800 border-2 border-purple-300 shadow-sm">
+                 
+                  Assignée par Directeur
+                </span>
+              ` : ''}
+            </div>
+            
+            <p class="text-gray-600 mb-3">${task.description}</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+              <div class="flex items-center">
+                <i class="fas fa-calendar mr-2 text-blue-600"></i>
+                Due: ${Utils.formatDate(task.due_date)}
+              </div>
+              ${!isInstruction ? `
+                <div class="flex items-center">
+                  <i class="fas fa-users mr-2 text-blue-600"></i>
+                  Assigned to: ${assigneesList}
+                </div>
+              ` : ''}
+              <div class="flex items-center">
+                <i class="fas fa-user-tie mr-2 text-blue-600"></i>
+                By: ${task.assigned_by_first_name || 'Direction'} ${task.assigned_by_last_name || ''}
+                ${showDirectorBadge ? '<i class="fas fa-crown ml-1 text-purple-600" title="Directeur"></i>' : ''}
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-clock mr-2 text-blue-600"></i>
+                ${Utils.formatDateTime(task.created_at)}
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex flex-col space-y-2 ml-4 items-end">
+          ${!isInstruction ? `
+            ${currentUserIsAssignee ? (
+  isCompleted 
+    ? `<div id="task-actions-${task.id}" class="flex flex-col items-center space-y-1">
+         <span class="text-green-600 font-semibold text-sm">Completed ✅</span>
+         <button onclick=\"event.stopPropagation(); openReportModal('${task.id}')\" 
+                 class=\"w-9 h-9 flex items-center justify-center rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50\" 
+                 title=\"Ajouter un rapport\">
+           <i class=\"fas fa-file-alt\"></i>
+         </button>
+       </div>`
+    : `<div id="task-actions-${task.id}">
+         <button onclick=\"event.stopPropagation(); completeMyAssignment('${task.id}')\" 
+                 class=\"w-9 h-9 flex items-center justify-center rounded-lg border border-green-600 text-green-600 hover:bg-green-50\" 
+                 title=\"Mark as Complete\">
+           <i class=\"fas fa-check\"></i>
+         </button>
+       </div>`
+) : ''}
+
+            ${isDR ? (
+              isOwnedByCurrent
+                ? `
+                  <button onclick=\"event.stopPropagation(); editTask('${task.id}')\" 
+                          class=\"text-blue-600 hover:text-blue-800\" title=\"Edit\">
+                    <i class=\"fas fa-edit\"></i>
+                  </button>
+                  <button onclick=\"event.stopPropagation(); deleteTask('${task.id}')\" 
+                          class=\"text-red-600 hover:text-red-800\" title=\"Delete\">
+                    <i class=\"fas fa-trash\"></i>
+                  </button>
+                  <button onclick=\"event.stopPropagation(); loadReports('${task.id}')\" 
+                          class=\"text-purple-600 hover:text-purple-800\" title=\"Rapports\">
+                    <i class=\"fas fa-file-alt\"></i>
+                  </button>
+                  <button onclick=\"event.stopPropagation(); showTaskDetails('${task.id}')\" 
+                          class=\"px-2 py-1 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50\" title=\"Details\">Details</button>
+                `
+                : ''
+            ) : ''}
+          ` : `
+            <!-- Pour les instructions, afficher uniquement un bouton de lecture -->
+            <div class="flex flex-col space-y-2">
+              <button onclick=\"event.stopPropagation(); showTaskDetails('${task.id}')\" 
+                      class=\"px-3 py-1 text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200\" title=\"Lire l'instruction\">
+                <i class=\"fas fa-eye mr-1\"></i> Lire
+              </button>
+              ${currentUser?.role === 'Employee' ? `
+                <button onclick=\"event.stopPropagation(); acknowledgeInstruction('${task.id}')\" 
+                        class=\"px-3 py-1 text-green-700 bg-green-100 rounded-lg hover:bg-green-200\" title=\"Marquer comme lu\">
+                  <i class=\"fas fa-check mr-1\"></i> Lu
+                </button>
+              ` : ''}
+            </div>
+          `}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Note: getCurrentEmployeeId is defined earlier with URL param + user fallbacks
+
+// NOUVEAU CODE
+async function completeMyAssignment(taskId) {
+  try {
+    const employeeId = getCurrentEmployeeId();
+    if (!employeeId) {
+      Utils.showNotification('Cannot identify current employee', 'error');
+      return;
+    }
+
+    const buttonContainer = document.getElementById(`task-actions-${taskId}`);
+    if (buttonContainer) {
+      buttonContainer.innerHTML = `
+        <span class="text-yellow-600 text-sm">Processing...</span>
+      `;
+    }
+
+    // 1. Update backend
+    await updateAssigneeStatus(taskId, employeeId, 'Completed');
+
+    // 2. Update local state
+    const task = tasks.find(t => t.id == taskId);
+    if (task && task.assignees) {
+      const assignee = task.assignees.find(a => a.id == employeeId);
+      if (assignee) {
+        assignee.status = 'Completed';
+        assignee.completed_at = new Date().toISOString();
+
+        // ✅ Afficher Completed + Ajouter un rapport (pas de bouton Complete)
+        if (buttonContainer) {
+          buttonContainer.innerHTML = `
+            <div class="flex flex-col items-center space-y-1">
+              <span class="text-green-600 font-semibold text-sm">Completed ✅</span>
+              <button onclick="event.stopPropagation(); openReportModal('${taskId}')" 
+                      class="w-9 h-9 flex items-center justify-center rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50" 
+                      title="Ajouter un rapport">
+                <i class="fas fa-file-alt"></i>
+              </button>
+            </div>
+          `;
+        }
+      }
+
+      // Vérifier si toutes les affectations sont finies
+      const allCompleted = task.assignees.every(a => a.status === 'Completed');
+      if (allCompleted) {
+        task.status = 'Completed';
+        task.completed_at = new Date().toISOString();
+      }
+    }
+
+    updateTaskStatistics();
+    Utils.showNotification('Task marked as completed!', 'success');
+
+  } catch (error) {
+    console.error('Error completing assignment:', error);
+
+    const buttonContainer = document.getElementById(`task-actions-${taskId}`);
+    if (buttonContainer) {
+      // En cas d'erreur → remettre le bouton Complete
+      buttonContainer.innerHTML = `
+        <button onclick="event.stopPropagation(); completeMyAssignment('${taskId}')" 
+                class="w-9 h-9 flex items-center justify-center rounded-lg border border-green-600 text-green-600 hover:bg-green-50" 
+                title="Mark as Complete">
+          <i class="fas fa-check"></i>
+        </button>
+      `;
+    }
+
+    Utils.showNotification('Error completing task: ' + (error.message || 'Unknown error'), 'error');
+  }
+}
+
+
+        async function updateTaskStatus(id, status) {
+    try {
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+            task.status = status;
+            if (status === 'Completed') {
+                task.completed_at = new Date().toISOString();
+                
+                // Afficher un message de confirmation
+                Utils.showNotification('Task marked as completed!', 'success');
+                
+                // Recharger les tâches pour mettre à jour l'affichage
+                setTimeout(() => {
+                    loadTasks();
+                }, 1000);
+            }
+            renderTasks();
+            updateTaskStatistics();
+        }
+    } catch (error) {
+        console.error('Error updating task:', error);
+        Utils.showNotification('Error updating task: ' + error.message, 'error');
+    }
+}
+
+       async function deleteTask(id) {
+    if (!confirm('Are you sure you want to delete this task?')) return;
+
+    try {
+        const response = await fetch(`${window.API_BASE}/tasks/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+
+        Utils.showNotification('Task deleted successfully', 'success');
+        loadTasks(); // Recharger la liste
+        
+    } catch (error) {
+        console.error('Error deleting task:', error);
+        Utils.showNotification('Error deleting task: ' + error.message, 'error');
+    }
+}
+
+      // NOUVEAU CODE CORRIGÉ
+async function updateAssigneeStatus(taskId, employeeId, status) {
+  try {
+    const apiUrl = 'http://localhost:3020';
+    
+    console.log('📤 Sending request to backend...');
+    
+    const response = await fetch(`${apiUrl}/tasks/${taskId}/assignees/${employeeId}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status })
+    });
+
+    const responseData = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(responseData.error || `HTTP ${response.status}`);
+    }
+
+    console.log('✅ Backend response:', responseData);
+    
+    // Supprimer cette ligne pour éviter la double notification
+    // Utils.showNotification('✅ Task status updated on server!', 'success');
+    
+    return responseData;
+
+  } catch (error) {
+    console.error('❌ Error updating status:', error);
+    throw error; // Relancer l'erreur pour que completeMyAssignment puisse la gérer
+  }
+}
+
+// Ajoutez async devant la fonction
+// Remplacez votre fonction showTaskDetails existante par cette version corrigée :
+
+async function showTaskDetails(id) {
+  const task = tasks.find(t => t.id == id);
+  if (!task) return;
+  
+  // Stocker l'ID pour les commentaires
+  currentTaskId = id;
+  
+  document.getElementById('detailsTitle').textContent = task.title;
+  
+  const assigneesHtml = task.assignees && task.assignees.length > 0 
+    ? task.assignees.map(assignee => {
+        const isCurrentUser = assignee.id === currentUser.id;
+        return `
+          <div class="flex items-center justify-between py-2 border-b">
+            <div>
+              <p class="font-medium">${assignee.first_name} ${assignee.last_name}</p>
+              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusClass(assignee.status)}">
+                ${assignee.status}
+              </span>
+              ${assignee.completed_at ? `
+                <p class="text-xs text-gray-500 mt-1">
+                  Completed: ${Utils.formatDateTime(assignee.completed_at)}
+                </p>
+              ` : ''}
+            </div>
+            ${isCurrentUser && assignee.status !== 'Completed' ? `
+              <button onclick="completeMyAssignment('${task.id}')" 
+                      class="px-3 py-1 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
+                Mark as Complete
+              </button>
+            ` : ''}
+          </div>
+        `;
+      }).join('')
+    : '<p class="text-gray-500">No assignees</p>';
+
+  const content = document.getElementById('taskDetailsContent');
+  content.innerHTML = `
+    <div class="space-y-4">
+      <div>
+        <h4 class="text-sm font-medium text-gray-900">Description</h4>
+        <p class="text-gray-600">${task.description}</p>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <h4 class="text-sm font-medium text-gray-900">Task Status</h4>
+          <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusClass(task.status)}">
+            ${task.status}
+          </span>
+        </div>
+        <div>
+          <h4 class="text-sm font-medium text-gray-900">Priority</h4>
+          <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityClass(task.priority)}">
+            ${task.priority}
+          </span>
+        </div>
+        <div>
+          <h4 class="text-sm font-medium text-gray-900">Type</h4>
+          <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeClass(task.type)}">
+            ${task.type}
+          </span>
+        </div>
+        <div>
+          <h4 class="text-sm font-medium text-gray-900">Due Date</h4>
+          <p class="text-gray-600">${Utils.formatDate(task.due_date)}</p>
+        </div>
+        <div>
+          <h4 class="text-sm font-medium text-gray-900">Assigned By</h4>
+          <p class="text-gray-600">${task.assigned_by_first_name} ${task.assigned_by_last_name}</p>
+        </div>
+        ${task.completed_at ? `
+          <div>
+            <h4 class="text-sm font-medium text-gray-900">Completed At</h4>
+            <p class="text-gray-600">${Utils.formatDateTime(task.completed_at)}</p>
+          </div>
+        ` : ''}
+      </div>
+      
+      <div>
+        <h4 class="text-sm font-medium text-gray-900 mb-2">Assignees</h4>
+        <div class="bg-gray-50 rounded-lg p-3">
+          ${assigneesHtml}
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Charger les commentaires
+  await loadAndDisplayTaskComments(id);
+
+  document.getElementById('taskDetailsModal').classList.remove('hidden');
+  document.getElementById('taskDetailsModal').classList.add('flex');
+}
+async function editComment(commentId, currentText) {
+  // Échapper les guillemets simples pour éviter les erreurs
+  const escapedText = currentText.replace(/'/g, "\\'").replace(/"/g, '\\"');
+  const newText = prompt('Modifier votre commentaire:', escapedText);
+  
+  if (newText === null) return; // Annulation
+  if (newText.trim() === currentText.trim()) return; // Texte identique
+  
+  if (!newText.trim()) {
+    Utils.showNotification('Le commentaire ne peut pas être vide', 'error');
+    return;
+  }
+  
+  try {
+    const employeeId = getCurrentEmployeeId();
+    if (!employeeId) {
+      Utils.showNotification('Cannot identify current employee', 'error');
+      return;
+    }
+    
+    const response = await fetch(`${window.API_BASE}/comments/${commentId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        comment: newText.trim(),
+        employeeId: employeeId
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || `HTTP ${response.status}`);
+    }
+    
+    if (data.success) {
+      // Mettre à jour l'affichage du commentaire
+      const commentElement = document.querySelector(`.comment[data-comment-id="${commentId}"] .comment-text`);
+      if (commentElement) {
+        commentElement.textContent = newText.trim();
+      }
+      Utils.showNotification('Commentaire modifié avec succès', 'success');
+    } else {
+      throw new Error(data.error || 'Failed to update comment');
+    }
+  } catch (error) {
+    console.error('Error updating comment:', error);
+    Utils.showNotification('Erreur lors de la modification: ' + error.message, 'error');
+  }
+}
+
+// Fonction pour supprimer un commentaire (CORRIGÉE)
+async function deleteComment(commentId) {
+  if (!confirm('Êtes-vous sûr de vouloir supprimer ce commentaire?')) return;
+  
+  try {
+    const employeeId = getCurrentEmployeeId();
+    if (!employeeId) {
+      Utils.showNotification('Cannot identify current employee', 'error');
+      return;
+    }
+    
+    const response = await fetch(`${window.API_BASE}/comments/${commentId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ employeeId: employeeId })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || `HTTP ${response.status}`);
+    }
+    
+    if (data.success) {
+      // Supprimer l'élément du commentaire de l'interface
+      const commentElement = document.querySelector(`.comment[data-comment-id="${commentId}"]`);
+      if (commentElement) {
+        commentElement.remove();
+      }
+      
+      // Vérifier s'il reste des commentaires
+      const commentsContainer = document.getElementById('taskComments');
+      if (commentsContainer.children.length === 0) {
+        commentsContainer.innerHTML = '<p class="text-gray-500 text-sm">No comments yet</p>';
+      }
+      
+      Utils.showNotification('Commentaire supprimé avec succès', 'success');
+    } else {
+      throw new Error(data.error || 'Failed to delete comment');
+    }
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    Utils.showNotification('Erreur lors de la suppression: ' + error.message, 'error');
+  }
+}
+// Fonction corrigée pour charger et afficher les commentaires
+async function loadAndDisplayTaskComments(taskId) {
+  try {
+    const commentsContainer = document.getElementById('taskComments');
+    commentsContainer.innerHTML = '<p class="text-gray-500 text-sm">Loading comments...</p>';
+    
+    const response = await fetch(`${window.API_BASE}/tasks/${taskId}/comments`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const currentEmployeeId = getCurrentEmployeeId();
+    
+    if (data.success && data.comments && data.comments.length > 0) {
+     commentsContainer.innerHTML = data.comments.map(comment => {
+  const isCurrentUserComment = comment.employee_id == currentEmployeeId;
+  const escapedComment = comment.comment.replace(/"/g, '&quot;').replace(/'/g, "&#39;");
+  
+  return `
+    <div class="comment bg-gray-50 rounded-lg p-3 mb-2" data-comment-id="${comment.id}">
+      <div class="flex items-center justify-between mb-1">
+        <div class="flex items-center">
+          <span class="text-sm font-medium text-gray-900">${comment.first_name} ${comment.last_name}</span>
+        </div>
+        <span class="text-xs text-gray-500">${Utils.formatDateTime(comment.created_at)}</span>
+      </div>
+      <p class="text-sm text-gray-600 comment-text">${comment.comment}</p>
+
+      ${isCurrentUserComment ? `
+        <div class="mt-2 text-sm">
+          <button onclick="openEditModal('${comment.id}', '${escapedComment}')"
+  style="all:unset; cursor:pointer; font-size:1rem; font-weight:600; color:#111827 !important; margin-right:20px !important;"
+  onmouseover="this.style.textDecoration='underline'"
+  onmouseout="this.style.textDecoration='none'">
+  Edit
+</button>
+          <button onclick="deleteComment('${comment.id}')"
+            style="all:unset; cursor:pointer; font-size:1rem; font-weight:600; color:#111827 !important;"
+            onmouseover="this.style.textDecoration='underline'"
+            onmouseout="this.style.textDecoration='none'">
+            Delete
+          </button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}).join('');
+
+
+
+
+    } else {
+      commentsContainer.innerHTML = '<p class="text-gray-500 text-sm">No comments yet</p>';
+    }
+  } catch (error) {
+    console.error('Error loading comments:', error);
+    commentsContainer.innerHTML = '<p class="text-red-500 text-sm">Error loading comments</p>';
+  }
+}
+
+
+
+
+
+       async function addComment() {
+  const input = document.getElementById('newComment');
+  const commentText = input.value.trim();
+  
+  if (!commentText) {
+    Utils.showNotification('Please enter a comment', 'warning');
+    return;
+  }
+
+  if (!currentTaskId) {
+    Utils.showNotification('No task selected', 'error');
+    return;
+  }
+
+  try {
+    const employeeId = getCurrentEmployeeId();
+    if (!employeeId) {
+      Utils.showNotification('Cannot identify current employee', 'error');
+      return;
+    }
+    
+    // Disable button during submission
+    const button = document.getElementById('addCommentBtn');
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    const response = await fetch(`${window.API_BASE}/tasks/${currentTaskId}/comments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        comment: commentText, 
+        employee_id: employeeId  // ← Changed from employeeId to employee_id
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.success) {
+      // Clear input
+      input.value = '';
+      
+      // Reload comments
+      await loadAndDisplayTaskComments(currentTaskId);
+      
+      Utils.showNotification('Comment added successfully', 'success');
+    } else {
+      throw new Error(data.error || 'Failed to add comment');
+    }
+    
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    Utils.showNotification('Error adding comment: ' + error.message, 'error');
+  } finally {
+    // Re-enable button
+    const button = document.getElementById('addCommentBtn');
+    button.disabled = false;
+    button.innerHTML = '<i class="fas fa-paper-plane"></i>';
+  }
+}
+
+// Expose handlers globally to avoid ReferenceErrors if referenced by templates loaded earlier
+if (typeof window !== 'undefined') {
+  if (typeof openEditModal === 'function') window.openEditModal = openEditModal;
+  if (typeof deleteComment === 'function') window.deleteComment = deleteComment;
+  if (typeof editComment === 'function') window.editComment = editComment;
+}
+
+    </script>
+</body>
+</html>

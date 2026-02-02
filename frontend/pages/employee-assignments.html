@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="nav.assign_timetables">Employee Timetable Assignments - HR Operations Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+
+    <style>
+        .employee-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .employee-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-color: #3B82F6;
+        }
+
+        .status-assigned {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+
+        .status-not-assigned {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        }
+
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+
+        .timetable-preview {
+            background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- The reusable navbar will be automatically inserted here -->
+
+    <!-- Main Content -->
+    <div class="main-content flex-1 overflow-y-auto">
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6">
+            <div class="max-w-7xl mx-auto">
+                <!-- Page Header -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900" data-translate="nav.assign_timetables">Employee
+                                Timetable Assignments</h1>
+                            <p class="text-gray-600" data-translate="assignments.description">Manage employee schedule
+                                assignments</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <!-- Language Selector -->
+                            <select id="languageSelector"
+                                class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="en">English</option>
+                                <option value="fr">Français</option>
+                                <option value="ar">العربية</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <!-- Filters -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex-1 min-w-64">
+                            <div class="relative">
+                                <input type="text" id="searchInput" placeholder="Search employees..."
+                                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            </div>
+                        </div>
+                        <select id="filterStatus"
+                            class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="all">All Employees</option>
+                            <option value="assigned">Assigned</option>
+                            <option value="not_assigned">Not Assigned</option>
+                        </select>
+                        <select id="filterDepartment"
+                            class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">All Departments</option>
+                        </select>
+                        <button onclick="loadEmployees()"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-filter mr-2"></i>Apply Filters
+                        </button>
+                        <div class="flex items-center space-x-2 ml-auto">
+                            <button id="gridViewBtn" class="p-2 rounded-lg transition-colors" title="Grid View">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                            <button id="listViewBtn" class="p-2 rounded-lg transition-colors" title="List View">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-100">
+                                <i class="fas fa-users text-blue-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Total Employees</p>
+                                <p id="totalEmployees" class="text-2xl font-semibold text-gray-900">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100">
+                                <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Assigned</p>
+                                <p id="assignedEmployees" class="text-2xl font-semibold text-gray-900">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-orange-100">
+                                <i class="fas fa-exclamation-circle text-orange-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Not Assigned</p>
+                                <p id="notAssignedEmployees" class="text-2xl font-semibold text-gray-900">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employees Grid -->
+                <div id="employeesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Employee cards will be loaded here -->
+                </div>
+
+                <!-- Employees List (Table View) -->
+                <div id="employeesList" class="hidden">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Employee</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Department</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Assigned Timetable</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Status</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employeesTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Table rows will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="text-center py-12 hidden">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <p class="mt-2 text-gray-600">Loading employees...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="text-center py-12 hidden">
+                    <div class="mx-auto h-24 w-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-users text-gray-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No employees found</h3>
+                    <p class="text-gray-500">Try adjusting your search criteria.</p>
+                </div>
+            </div>
+
+            <!-- Assignment Modal -->
+            <div id="assignmentModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-screen overflow-y-auto">
+                        <div class="p-6 border-b border-gray-200">
+                            <h3 id="assignmentModalTitle" class="text-lg font-semibold text-gray-900"></h3>
+                        </div>
+
+                        <form id="assignmentForm" class="p-6">
+                            <input type="hidden" id="assignmentEmployeeId">
+                            <input type="hidden" id="assignmentId">
+
+                            <!-- Employee Info -->
+                            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                                <h3 class="font-medium text-gray-900 mb-2">Employee Information</h3>
+                                <div id="employeeInfo" class="text-sm text-gray-600">
+                                    <!-- Employee details will be loaded here -->
+                                </div>
+                            </div>
+
+                            <!-- Timetable Selection -->
+                            <div class="mb-6">
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="block text-sm font-medium text-gray-700">Select Timetable *</label>
+                                    <button type="button" onclick="goToCreateTimetable()"
+                                        class="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                                        <i class="fas fa-plus mr-1"></i>Create New
+                                    </button>
+                                </div>
+                                <select id="timetableSelect" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <!-- Options loaded by JS -->
+                                </select>
+                            </div>
+
+                            <!-- Date Range -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Effective From *</label>
+                                    <input type="date" id="effectiveFrom" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Effective To</label>
+                                    <input type="date" id="effectiveTo"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                            </div>
+
+                            <!-- Priority -->
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                                <input type="number" id="priority" min="1" value="1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <p class="text-xs text-gray-500 mt-1">Higher numbers have higher priority</p>
+                            </div>
+
+                            <!-- Timetable Preview -->
+                            <div id="timetablePreview" class="hidden mb-6">
+                                <h3 class="font-medium text-gray-900 mb-3">Timetable Preview</h3>
+                                <div id="timetablePreviewContent" class="timetable-preview rounded-lg p-4">
+                                    <!-- Timetable preview will be loaded here -->
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                                <button type="button" onclick="closeAssignmentModal()"
+                                    class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                                    Cancel
+                                </button>
+                                <button type="submit"
+                                    class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105">
+                                    <i class="fas fa-save mr-2"></i>Save Assignment
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View Assignment Modal -->
+            <div id="viewAssignmentModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-screen overflow-y-auto">
+                        <div class="p-6 border-b border-gray-200">
+                            <h3 id="viewAssignmentModalTitle" class="text-lg font-semibold text-gray-900"></h3>
+                        </div>
+
+                        <div id="viewAssignmentContent" class="p-6">
+                            <!-- Assignment details will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script src="../assets/js/auth.js"></script>
+            <script>
+                let currentEmployees = [];
+                let availableTimetables = [];
+                let departments = [];
+                let currentView = 'grid';
+
+                // Initialize page
+                document.addEventListener('DOMContentLoaded', async function () {
+                    requireAuth();
+                    loadDepartments();
+                    await loadTimetables();
+
+                    // View switcher events
+                    document.getElementById('gridViewBtn').addEventListener('click', () => switchView('grid'));
+                    document.getElementById('listViewBtn').addEventListener('click', () => switchView('list'));
+
+                    const savedView = localStorage.getItem('employee_assignment_view') || 'grid';
+                    switchView(savedView);
+
+                    await loadEmployees(); // Ensure employees are loaded before checking for return state
+
+                    // Handle the return trip from timetable creation
+                    const returnStateJSON = sessionStorage.getItem('returnFromTimetableCreation');
+                    if (returnStateJSON) {
+                        sessionStorage.removeItem('returnFromTimetableCreation');
+                        try {
+                            const { employeeId, newTimetableId } = JSON.parse(returnStateJSON);
+                            if (employeeId && newTimetableId) {
+                                const employee = currentEmployees.find(emp => emp.id === employeeId);
+                                if (employee) {
+                                    // Re-open the assignment modal for the correct employee
+                                    assignTimetable(employeeId);
+                                    // A short delay ensures the modal is fully rendered before we manipulate it
+                                    setTimeout(() => {
+                                        const timetableSelect = document.getElementById('timetableSelect');
+                                        timetableSelect.value = newTimetableId;
+                                        timetableSelect.dispatchEvent(new Event('change')); // Trigger preview
+                                        showNotification('New timetable selected. Confirm dates and save.', 'info');
+                                    }, 200);
+                                }
+                            }
+                        } catch (e) {
+                            console.error("Error processing return from timetable creation:", e);
+                        }
+                    }
+
+                    // Set default effective from date to today
+                    document.getElementById('effectiveFrom').value = new Date().toISOString().split('T')[0];
+                });
+
+                // Load departments
+                async function loadDepartments() {
+                    try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch(`${DEPARTMENT_API_URL}/departments`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            departments = data || [];
+
+                            const select = document.getElementById('filterDepartment');
+                            departments.forEach(dept => {
+                                const option = document.createElement('option');
+                                option.value = dept.id;
+                                option.textContent = dept.name;
+                                select.appendChild(option);
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error loading departments:', error);
+                    }
+                }
+
+                // Load timetables
+                async function loadTimetables() {
+                    try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch(`${TIMETABLE_API_URL}/timetables?limit=100`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            availableTimetables = data.timetables || [];
+
+                            const select = document.getElementById('timetableSelect');
+                            select.innerHTML = '<option value="">Choose a timetable...</option>';
+
+                            availableTimetables.forEach(timetable => {
+                                const option = document.createElement('option');
+                                option.value = timetable.id;
+                                option.textContent = `${timetable.name} (${timetable.type})`;
+                                select.appendChild(option);
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error loading timetables:', error);
+                    }
+                }
+
+                // Load employees
+                async function loadEmployees() {
+                    const loadingState = document.getElementById('loadingState');
+                    const emptyState = document.getElementById('emptyState');
+                    const grid = document.getElementById('employeesGrid');
+                    const searchInput = document.getElementById('searchInput');
+                    const filterStatusEl = document.getElementById('filterStatus');
+                    const filterDepartmentEl = document.getElementById('filterDepartment');
+
+                    if (!loadingState || !emptyState || !grid) {
+                        console.error('Required DOM elements not found');
+                        return;
+                    }
+
+                    loadingState.classList.remove('hidden');
+                    emptyState.classList.add('hidden');
+                    grid.innerHTML = '';
+
+                    try {
+                        const token = localStorage.getItem('token');
+                        const searchTerm = searchInput ? searchInput.value : '';
+                        const filterStatus = filterStatusEl ? filterStatusEl.value : 'all';
+                        const filterDepartment = filterDepartmentEl ? filterDepartmentEl.value : '';
+
+                        let url = `${TIMETABLE_API_URL}/employee-assignments?limit=100`;
+                        if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
+                        if (filterStatus !== 'all') url += `&filter=${filterStatus}`;
+                        if (filterDepartment) url += `&department=${filterDepartment}`;
+
+                        const response = await fetch(url, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) throw new Error('Failed to load employees');
+
+                        const data = await response.json();
+                        currentEmployees = data.employees;
+
+                        loadingState.classList.add('hidden');
+
+                        if (currentEmployees.length === 0) {
+                            emptyState.classList.remove('hidden');
+                            document.getElementById('employeesGrid').classList.add('hidden');
+                            document.getElementById('employeesList').classList.add('hidden');
+                        } else {
+                            renderViews();
+                            updateStatistics();
+                        }
+                    } catch (error) {
+                        console.error('Error loading employees:', error);
+                        emptyState.classList.remove('hidden');
+                        loadingState.classList.add('hidden');
+                        showNotification('Failed to load employees', 'error');
+                    }
+                }
+
+                // Render both grid and list views
+                function renderViews() {
+                    renderEmployeesGrid();
+                    renderEmployeesList();
+                }
+
+                function renderEmployeesGrid() {
+                    const grid = document.getElementById('employeesGrid');
+                    grid.innerHTML = currentEmployees.map(employee => `
+                <div class="employee-card bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center">
+                            <div class="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                                ${employee.first_name.charAt(0)}${employee.last_name.charAt(0)}
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-lg font-semibold text-gray-900">${employee.first_name} ${employee.last_name}</h3>
+                                <p class="text-sm text-gray-600">${employee.position_name || 'No Position'}</p>
+                                <p class="text-xs text-gray-500">${employee.department_name || 'No Department'}</p>
+                            </div>
+                        </div>
+                        <span class="inline-block px-2 py-1 text-xs font-medium rounded-full text-white ${employee.assignment_status === 'Assigned' ? 'status-assigned' : 'status-not-assigned'
+                        }">
+                            ${employee.assignment_status}
+                        </span>
+                    </div>
+                    
+                    ${employee.timetable_name ? `
+                        <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">${employee.timetable_name}</p>
+                                    <p class="text-xs text-gray-600">${employee.timetable_type}</p>
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    From: ${new Date(employee.effective_from).toLocaleDateString()}
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="flex space-x-2">
+                        ${getEmployeeActionButtons(employee, 'grid')}
+                    </div>
+                </div>
+            `).join('');
+                }
+
+                // Update statistics
+                function updateStatistics() {
+                    const total = currentEmployees.length;
+                    const assigned = currentEmployees.filter(emp => emp.assignment_status === 'Assigned').length;
+                    const notAssigned = total - assigned;
+
+                    document.getElementById('totalEmployees').textContent = total;
+                    document.getElementById('assignedEmployees').textContent = assigned;
+                    document.getElementById('notAssignedEmployees').textContent = notAssigned;
+                }
+
+                // Assign timetable
+                function assignTimetable(employeeId) {
+                    const employee = currentEmployees.find(emp => emp.id === employeeId);
+                    if (!employee) return;
+
+                    document.getElementById('assignmentModalTitle').textContent = 'Assign Timetable';
+                    document.getElementById('assignmentEmployeeId').value = employeeId;
+                    document.getElementById('assignmentId').value = '';
+                    document.getElementById('assignmentForm').reset();
+                    document.getElementById('assignmentEmployeeId').value = employeeId;
+                    document.getElementById('effectiveFrom').value = new Date().toISOString().split('T')[0];
+
+                    document.getElementById('employeeInfo').innerHTML = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div><strong>Name:</strong> ${employee.first_name} ${employee.last_name}</div>
+                    <div><strong>Position:</strong> ${employee.position_name || 'N/A'}</div>
+                    <div><strong>Department:</strong> ${employee.department_name || 'N/A'}</div>
+                    <div><strong>Email:</strong> ${employee.email || 'N/A'}</div>
+                </div>
+            `;
+
+                    document.getElementById('timetablePreview').classList.add('hidden');
+                    document.getElementById('assignmentModal').classList.remove('hidden');
+                }
+
+                // Edit assignment
+                async function editAssignment(employeeId) {
+                    try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch(`${TIMETABLE_API_URL}/employee-assignments/${employeeId}`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) throw new Error('Failed to load assignment details');
+
+                        const data = await response.json();
+                        const employee = data.employee;
+                        const assignment = data.assignment;
+
+                        document.getElementById('assignmentModalTitle').textContent = 'Edit Assignment';
+                        document.getElementById('assignmentEmployeeId').value = employeeId;
+                        document.getElementById('assignmentId').value = assignment.id;
+
+                        document.getElementById('employeeInfo').innerHTML = `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><strong>Name:</strong> ${employee.first_name} ${employee.last_name}</div>
+                        <div><strong>Position:</strong> ${employee.position_name || 'N/A'}</div>
+                        <div><strong>Department:</strong> ${employee.department_name || 'N/A'}</div>
+                        <div><strong>Email:</strong> ${employee.email || 'N/A'}</div>
+                    </div>
+                `;
+
+                        document.getElementById('timetableSelect').value = assignment.timetable_id;
+                        document.getElementById('effectiveFrom').value = assignment.effective_from;
+                        document.getElementById('effectiveTo').value = assignment.effective_to || '';
+                        document.getElementById('priority').value = assignment.priority || 1;
+
+                        // Load timetable preview
+                        await loadTimetablePreview(assignment.timetable_id);
+
+                        document.getElementById('assignmentModal').classList.remove('hidden');
+                    } catch (error) {
+                        console.error('Error loading assignment for edit:', error);
+                        showNotification('Failed to load assignment details', 'error');
+                    }
+                }
+
+                // View assignment
+                async function viewAssignment(employeeId) {
+                    try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch(`${TIMETABLE_API_URL}/employee-assignments/${employeeId}`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) throw new Error('Failed to load assignment details');
+
+                        const data = await response.json();
+                        const employee = data.employee;
+                        const assignment = data.assignment;
+                        const intervals = data.intervals;
+
+                        document.getElementById('viewAssignmentModalTitle').textContent = `${employee.first_name} ${employee.last_name} - Assignment Details`;
+
+                        const content = document.getElementById('viewAssignmentContent');
+                        content.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <h3 class="font-medium text-gray-900 mb-3">Employee Information</h3>
+                            <div class="space-y-2 text-sm">
+                                <div><span class="font-medium">Name:</span> ${employee.first_name} ${employee.last_name}</div>
+                                <div><span class="font-medium">Position:</span> ${employee.position_name || 'N/A'}</div>
+                                <div><span class="font-medium">Department:</span> ${employee.department_name || 'N/A'}</div>
+                                <div><span class="font-medium">Email:</span> ${employee.email || 'N/A'}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-gray-900 mb-3">Assignment Details</h3>
+                            <div class="space-y-2 text-sm">
+                                <div><span class="font-medium">Timetable:</span> ${assignment.timetable_name}</div>
+                                <div><span class="font-medium">Type:</span> ${assignment.timetable_type}</div>
+                                <div><span class="font-medium">Effective From:</span> ${new Date(assignment.effective_from).toLocaleDateString()}</div>
+                                <div><span class="font-medium">Effective To:</span> ${assignment.effective_to ? new Date(assignment.effective_to).toLocaleDateString() : 'Ongoing'}</div>
+                                <div><span class="font-medium">Priority:</span> ${assignment.priority}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-medium text-gray-900 mb-4">Weekly Schedule</h3>
+                        <div class="grid grid-cols-1 gap-4">
+                            ${intervals.map(interval => `
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <span class="font-medium">${getDayName(interval.weekday)}</span>
+                                            <span class="text-gray-600 ml-2">${interval.start_time} - ${interval.end_time}</span>
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            ${interval.break_minutes > 0 ? `${interval.break_minutes}min break` : 'No break'}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                        document.getElementById('viewAssignmentModal').classList.remove('hidden');
+                    } catch (error) {
+                        console.error('Error viewing assignment:', error);
+                        showNotification('Failed to load assignment details', 'error');
+                    }
+                }
+
+                // Remove assignment
+                async function removeAssignment(employeeId) {
+                    if (!confirm('Are you sure you want to remove this timetable assignment?')) {
+                        return;
+                    }
+
+                    try {
+                        const employee = currentEmployees.find(emp => emp.id === employeeId);
+                        if (!employee || !employee.timetable_id) return;
+
+                        // Find the assignment ID (this would need to be stored or fetched)
+                        const token = localStorage.getItem('token');
+                        const detailsResponse = await fetch(`${TIMETABLE_API_URL}/employee-assignments/${employeeId}`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!detailsResponse.ok) throw new Error('Failed to get assignment details');
+
+                        const details = await detailsResponse.json();
+                        const assignmentId = details.assignment.id;
+
+                        const response = await fetch(`${TIMETABLE_API_URL}/employee-assignments/${assignmentId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) throw new Error('Failed to remove assignment');
+
+                        showNotification('Assignment removed successfully', 'success');
+                        loadEmployees();
+                    } catch (error) {
+                        console.error('Error removing assignment:', error);
+                        showNotification('Failed to remove assignment', 'error');
+                    }
+                }
+
+                // Load timetable preview
+                async function loadTimetablePreview(timetableId) {
+                    if (!timetableId) {
+                        document.getElementById('timetablePreview').classList.add('hidden');
+                        return;
+                    }
+
+                    try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch(`${TIMETABLE_API_URL}/timetables/${timetableId}`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) throw new Error('Failed to load timetable');
+
+                        const timetable = await response.json();
+
+                        const previewContent = document.getElementById('timetablePreviewContent');
+                        previewContent.innerHTML = `
+                    <h4 class="font-medium text-gray-900 mb-3">${timetable.name} (${timetable.type})</h4>
+                    <div class="space-y-2">
+                        ${timetable.intervals.map(interval => `
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="font-medium">${getDayName(interval.weekday)}</span>
+                                <span class="text-gray-600">${interval.start_time} - ${interval.end_time}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                        document.getElementById('timetablePreview').classList.remove('hidden');
+                    } catch (error) {
+                        console.error('Error loading timetable preview:', error);
+                    }
+                }
+
+                // Timetable select change handler
+                document.getElementById('timetableSelect').addEventListener('change', function () {
+                    loadTimetablePreview(this.value);
+                });
+
+                // Submit assignment form
+                document.getElementById('assignmentForm').addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    const employeeId = document.getElementById('assignmentEmployeeId').value;
+                    const assignmentId = document.getElementById('assignmentId').value;
+                    const timetableId = document.getElementById('timetableSelect').value;
+                    const effectiveFrom = document.getElementById('effectiveFrom').value;
+                    const effectiveTo = document.getElementById('effectiveTo').value;
+                    const priority = parseInt(document.getElementById('priority').value) || 1;
+
+                    try {
+                        const token = localStorage.getItem('token');
+
+                        if (assignmentId) {
+                            // Update existing assignment
+                            const response = await fetch(`${TIMETABLE_API_URL}/employee-assignments/${assignmentId}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    timetableId,
+                                    effectiveFrom,
+                                    effectiveTo: effectiveTo || null,
+                                    priority
+                                })
+                            });
+
+                            if (!response.ok) throw new Error('Failed to update assignment');
+
+                            showNotification('Assignment updated successfully', 'success');
+                        } else {
+                            // Create new assignment
+                            const response = await fetch(`${TIMETABLE_API_URL}/employee-assignments`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    employeeId,
+                                    timetableId,
+                                    effectiveFrom,
+                                    effectiveTo: effectiveTo || null,
+                                    priority
+                                })
+                            });
+
+                            if (!response.ok) throw new Error('Failed to create assignment');
+
+                            showNotification('Assignment created successfully', 'success');
+                        }
+
+                        closeAssignmentModal();
+                        loadEmployees();
+                    } catch (error) {
+                        console.error('Error saving assignment:', error);
+                        showNotification('Failed to save assignment', 'error');
+                    }
+                });
+
+                // Navigate to create a new timetable
+                function goToCreateTimetable() {
+                    const employeeId = document.getElementById('assignmentEmployeeId').value;
+                    // Use sessionStorage to remember which employee we are assigning for
+                    sessionStorage.setItem('returnToAssignments', JSON.stringify({ employeeId: employeeId }));
+                    window.location.href = 'timetable-library.html?action=create';
+                }
+
+                function getEmployeeActionButtons(employee, viewType) {
+                    if (employee.assignment_status === 'Assigned') {
+                        if (viewType === 'grid') {
+                            return `
+                        <button onclick="viewAssignment('${employee.id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                            <i class="fas fa-eye mr-1"></i>View
+                        </button>
+                        <button onclick="editAssignment('${employee.id}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                            <i class="fas fa-edit mr-1"></i>Edit
+                        </button>
+                        <button onclick="removeAssignment('${employee.id}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                        } else { // list view
+                            return `
+                        <button onclick="viewAssignment('${employee.id}')" class="text-blue-600 hover:text-blue-700" title="View"><i class="fas fa-eye"></i></button>
+                        <button onclick="editAssignment('${employee.id}')" class="text-green-600 hover:text-green-700" title="Edit"><i class="fas fa-edit"></i></button>
+                        <button onclick="removeAssignment('${employee.id}')" class="text-red-600 hover:text-red-700" title="Delete"><i class="fas fa-trash"></i></button>
+                    `;
+                        }
+                    } else {
+                        if (viewType === 'grid') {
+                            return `
+                        <button onclick="assignTimetable('${employee.id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                            <i class="fas fa-plus mr-1"></i>Assign Timetable
+                        </button>
+                    `;
+                        } else { // list view
+                            return `<button onclick="assignTimetable('${employee.id}')" class="text-blue-600 hover:text-blue-700" title="Assign Timetable"><i class="fas fa-plus"></i></button>`;
+                        }
+                    }
+                }
+
+                function renderEmployeesList() {
+                    const tableBody = document.getElementById('employeesTableBody');
+                    tableBody.innerHTML = currentEmployees.map(employee => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                                ${employee.first_name.charAt(0)}${employee.last_name.charAt(0)}
+                            </div>
+                            <div class="ml-3">
+                                <div class="text-sm font-medium text-gray-900">${employee.first_name} ${employee.last_name}</div>
+                                <div class="text-sm text-gray-500">${employee.position_name || 'No Position'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.department_name || 'No Department'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.timetable_name || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full text-white ${employee.assignment_status === 'Assigned' ? 'status-assigned' : 'status-not-assigned'}">${employee.assignment_status}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2">${getEmployeeActionButtons(employee, 'list')}</div>
+                    </td>
+                </tr>
+            `).join('');
+                }
+
+                // Helper functions
+                function getDayName(dayNumber) {
+                    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                    return days[dayNumber];
+                }
+
+                function closeAssignmentModal() {
+                    document.getElementById('assignmentModal').classList.add('hidden');
+                }
+
+                function closeViewAssignmentModal() {
+                    document.getElementById('viewAssignmentModal').classList.add('hidden');
+                }
+
+                function goBack() {
+                    window.location.href = 'hr-dashboard.html';
+                }
+
+                // Search functionality
+                document.getElementById('searchInput').addEventListener('input', function () {
+                    clearTimeout(this.searchTimeout);
+                    this.searchTimeout = setTimeout(() => {
+                        loadEmployees();
+                    }, 300);
+                });
+
+                // View switcher
+                function switchView(view) {
+                    currentView = view;
+                    localStorage.setItem('employee_assignment_view', view);
+
+                    const gridView = document.getElementById('employeesGrid');
+                    const listView = document.getElementById('employeesList');
+                    const gridBtn = document.getElementById('gridViewBtn');
+                    const listBtn = document.getElementById('listViewBtn');
+
+                    if (view === 'grid') {
+                        gridView.classList.remove('hidden');
+                        listView.classList.add('hidden');
+                        gridBtn.classList.add('bg-blue-600', 'text-white');
+                        gridBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                        listBtn.classList.add('bg-gray-200', 'text-gray-700');
+                        listBtn.classList.remove('bg-blue-600', 'text-white');
+                    } else { // 'list'
+                        gridView.classList.add('hidden');
+                        listView.classList.remove('hidden');
+                        listBtn.classList.add('bg-blue-600', 'text-white');
+                        listBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                        gridBtn.classList.add('bg-gray-200', 'text-gray-700');
+                        gridBtn.classList.remove('bg-blue-600', 'text-white');
+                    }
+                }
+
+                // Notification system
+                function showNotification(message, type = 'info') {
+                    const notification = document.createElement('div');
+                    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full ${type === 'success' ? 'bg-green-500 text-white' :
+                        type === 'error' ? 'bg-red-500 text-white' :
+                            'bg-blue-500 text-white'
+                        }`;
+                    notification.textContent = message;
+
+                    document.body.appendChild(notification);
+
+                    setTimeout(() => {
+                        notification.classList.remove('translate-x-full');
+                    }, 100);
+
+                    setTimeout(() => {
+                        notification.classList.add('translate-x-full');
+                        setTimeout(() => {
+                            document.body.removeChild(notification);
+                        }, 300);
+                    }, 3000);
+                }
+
+                // API configuration
+                const TIMETABLE_API_URL = 'http://localhost:3011'; // Timetable service URL
+                const DEPARTMENT_API_URL = 'http://localhost:3003'; // Department service URL
+
+                // Language selector
+                const languageSelector = document.getElementById('languageSelector');
+                if (languageSelector) {
+                    languageSelector.value = (typeof currentLanguage !== 'undefined' ? currentLanguage : (window.currentLanguage || 'en'));
+                    languageSelector.addEventListener('change', (e) => {
+                        if (typeof setLanguage === 'function') {
+                            setLanguage(e.target.value);
+                        }
+                    });
+                }
+
+                // Initialize translations
+                if (typeof updatePageTranslations === 'function') {
+                    updatePageTranslations();
+                }
+            </script>
+    </div>
+    </main>
+    </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/translations.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/navbar.js"></script>
+</body>
+
+</html>

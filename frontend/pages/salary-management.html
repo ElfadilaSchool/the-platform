@@ -1,0 +1,2675 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Management - HR Operations Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    
+    <style>
+        .salary-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .salary-card:hover {
+            
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-color: #3B82F6;
+        }
+        .status-paid {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+        .status-not-paid {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        }
+        .status-error {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        }
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+        .salary-breakdown {
+            background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+        }
+        .amount-positive {
+            color: #059669;
+        }
+        .amount-negative {
+            color: #DC2626;
+        }
+        .period-selector {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .da-currency {
+            color: #1e40af;
+            font-weight: 600;
+        }
+        .parameter-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            background: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- The reusable navbar will be automatically inserted here -->
+    
+    <!-- Main Content -->
+    <div class="main-content flex-1 overflow-y-auto">
+
+            <!-- Content -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <div class="max-w-7xl mx-auto">
+                    <!-- Page Header -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h1 class="text-2xl font-bold text-gray-900" data-translate="nav.salary_overview">Salary Management</h1>
+                                <p class="text-gray-600" data-translate="salary.description">Manage employee salaries and payroll (DA Currency)</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <!-- Language Selector -->
+                                <select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="en">English</option>
+                                    <option value="fr">Français</option>
+                                    <option value="ar">العربية</option>
+                                </select>
+                                <button onclick="exportSalaries()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                    <i class="fas fa-download mr-2"></i>Export Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+        <!-- Validation Info Banner -->
+        <div id="validationInfoBanner" class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6 hidden">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-blue-600 text-xl mt-0.5"></i>
+                </div>
+                <div class="ml-3 flex-1">
+                    <h3 class="text-sm font-semibold text-blue-900 mb-1">Monthly Attendance Validation Required</h3>
+                    <p class="text-sm text-blue-700 mb-2">
+                        Before calculating salaries, monthly attendance must be validated for each employee. This ensures accuracy and allows you to review attendance data, approve overtime, and handle exceptions.
+                    </p>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <button onclick="showBulkValidationModal()" class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-check-double mr-1"></i>
+                            Bulk Validate All
+                        </button>
+                        <button onclick="hideValidationBanner()" class="inline-flex items-center px-3 py-1.5 bg-white text-blue-700 text-xs font-medium rounded-lg border border-blue-300 hover:bg-blue-50 transition-colors">
+                            <i class="fas fa-times mr-1"></i>
+                            Dismiss
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Period Selector and Filters -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="period-selector text-white px-4 py-2 rounded-lg">
+                    <div class="flex items-center space-x-4">
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Month</label>
+                            <select id="monthSelect" class="bg-white text-gray-900 border-0 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500">
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6">June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Year</label>
+                            <select id="yearSelect" class="bg-white text-gray-900 border-0 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500">
+                                <!-- Years will be populated by JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex-1 min-w-64">
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Search employees..." 
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <select id="departmentFilter" class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">All Departments</option>
+                </select>
+                
+                <button onclick="loadSalaries()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-sync mr-2"></i>Load Salaries
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100">
+                        <i class="fas fa-users text-blue-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total Employees</p>
+                        <p id="totalEmployees" class="text-2xl font-semibold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100">
+                        <i class="fas fa-coins text-green-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total Payroll</p>
+                        <p id="totalPayroll" class="text-2xl font-semibold da-currency">0 DA</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100">
+                        <i class="fas fa-money-check-alt text-purple-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-600 mb-2">Payment Status</p>
+                        <div class="flex justify-between items-center">
+                            <div class="text-center">
+                                <p class="text-xs text-gray-500">Paid</p>
+                                <p id="paidCount" class="text-lg font-semibold text-green-600">0</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-xs text-gray-500">Pending</p>
+                                <p id="pendingCount" class="text-lg font-semibold text-orange-600">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-emerald-100">
+                        <i class="fas fa-arrow-up text-emerald-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total Raise</p>
+                        <p id="totalRaise" class="text-2xl font-semibold text-emerald-600">0 DA</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-red-100">
+                        <i class="fas fa-arrow-down text-red-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total Decrease</p>
+                        <p id="totalDecrease" class="text-2xl font-semibold text-red-600">0 DA</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Salaries Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex flex-wrap items-center gap-3">
+                    <label class="inline-flex items-center text-sm text-gray-700">
+                        <input id="selectAllCheckbox" type="checkbox" class="w-4 h-4 mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        Select all on page
+                    </label>
+                    <button id="clearSelectionBtn" class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
+                        Clear selection
+                    </button>
+                    <button id="paySelectedBtn" class="px-3 py-1.5 text-sm rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-check mr-1"></i>
+                        Pay selected <span id="paySelectedCount">(0)</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Select</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Worked Days</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Salary (DA)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salariesTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Salary rows will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div id="paginationContainer" class="px-6 py-3 border-t border-gray-200 bg-gray-50">
+                <!-- Pagination will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-12 hidden">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p class="mt-2 text-gray-600">Loading salaries...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-12 hidden">
+            <div class="mx-auto h-24 w-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-money-bill-wave text-gray-400 text-3xl"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No salary data found</h3>
+            <p class="text-gray-500">Try selecting a different month or year.</p>
+        </div>
+    </div>
+
+    <!-- Salary Details Modal -->
+    <div id="salaryModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop modal-overlay hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-screen overflow-y-auto modal-content">
+                <div class="p-4 border-b border-gray-200 relative">
+                    <h2 id="salaryModalTitle" class="text-xl font-semibold text-gray-900" data-translate="salary.salary_details">Salary Details</h2>
+                    <button type="button" onclick="closeSalaryModal()" class="modal-close absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div id="salaryModalContent" class="p-4">
+                    <!-- Salary details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Validation Modal -->
+    <div id="bulkValidationModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop modal-overlay hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-screen overflow-y-auto modal-content">
+                <div class="p-6 border-b border-gray-200 relative">
+                    <h2 class="text-xl font-semibold text-gray-900">Bulk Validate Attendance</h2>
+                    <button type="button" onclick="closeBulkValidationModal()" class="modal-close absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="p-6">
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-yellow-700">
+                                    <strong>Important:</strong> This will validate attendance for all employees in the selected period. Make sure you have reviewed:
+                                </p>
+                                <ul class="mt-2 text-sm text-yellow-700 list-disc list-inside space-y-1">
+                                    <li>All pending exception requests</li>
+                                    <li>All pending overtime requests</li>
+                                    <li>Missing punch records</li>
+                                    <li>Late arrivals and early departures</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="bulkValidationProgress" class="hidden mb-4">
+                        <div class="mb-2 flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-700">Validating...</span>
+                            <span class="text-sm font-medium text-gray-700"><span id="validationProgressCount">0</span> / <span id="validationProgressTotal">0</span></span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div id="validationProgressBar" class="bg-blue-600 h-2.5 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeBulkValidationModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="button" onclick="performBulkValidation()" id="bulkValidateBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-check-double mr-2"></i>
+                            Validate All Employees
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Salary Parameters Modal - Hidden -->
+    <!-- <div id="parametersModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6 border-b border-gray-200">
+                    
+                </div>
+                
+                <div id="parametersContent" class="p-6">
+                    <-- Parameters will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Employee Adjustments Modal -->
+    <div id="adjustmentsModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop modal-overlay hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full modal-content">
+                <div class="p-6 border-b border-gray-200 relative">
+                    <button type="button" onclick="closeAdjustmentsModal()" class="modal-close absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="adjustmentForm" class="p-6">
+                    <input type="hidden" id="adjustmentEmployeeId">
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Adjustment Type *</label>
+                        <select id="adjustmentType" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Select type...</option>
+                            <option value="credit">Credit (Deduction)</option>
+                            <option value="decrease">Decrease (Penalty)</option>
+                            <option value="raise">Raise (Bonus)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Amount (DA) *</label>
+                        <input type="number" id="adjustmentAmount" step="0.01" min="0" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Effective Date *</label>
+                        <input type="date" id="adjustmentEffectiveDate" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea id="adjustmentDescription" rows="3" 
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  placeholder="Optional description..."></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeAdjustmentsModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105">
+                            <i class="fas fa-plus mr-2"></i>Add Adjustment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../components/api.js"></script>
+    <script>
+        const API_BASE_URL = 'http://localhost:3010'; // Update this to your salary service URL
+        
+        let currentSalaries = [];
+        let currentPagination = {};
+        let departments = [];
+        let salaryParameters = {};
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Language selector
+            const languageSelector = document.getElementById('languageSelector');
+            if (languageSelector) {
+                languageSelector.value = (typeof currentLanguage !== 'undefined' ? currentLanguage : (window.currentLanguage || 'en'));
+                languageSelector.addEventListener('change', (e) => {
+                    if (typeof setLanguage === 'function') {
+                        setLanguage(e.target.value);
+                    }
+                    if (typeof updatePageTranslations === 'function') {
+                        updatePageTranslations();
+                    }
+                });
+            }
+            
+            // Initialize translations
+            if (typeof updatePageTranslations === 'function') {
+                updatePageTranslations();
+            }
+            requireAuth();
+            
+            // Ensure API object is available
+            if (typeof window.API === 'undefined') {
+                console.error('API object is not available. Make sure api.js is loaded.');
+            }
+            
+            // Verify critical DOM elements exist
+            const salaryModal = document.getElementById('salaryModal');
+            if (!salaryModal) {
+                console.error('Critical error: salaryModal element not found in DOM at page load!');
+            }
+            
+            // Wait a bit for DOM to be fully ready, then initialize
+            setTimeout(function() {
+                // Initialize date selectors first
+                const dateSelectorsReady = initializeDateSelectors();
+                if (!dateSelectorsReady) {
+                    console.error('Failed to initialize date selectors. Retrying...');
+                    // Retry once after a short delay
+                    setTimeout(function() {
+                        if (!initializeDateSelectors()) {
+                            console.error('Failed to initialize date selectors after retry. Page may not function correctly.');
+                            return;
+                        }
+                        loadDepartments();
+                        loadSalaries();
+                        handleUrlParameters();
+                    }, 100);
+                    return;
+                }
+                
+            loadDepartments();
+            // loadSalaryParameters(); // Hidden
+            loadSalaries();
+            
+            // Check for URL parameters to auto-open salary popup
+            handleUrlParameters();
+            }, 50);
+        });
+
+        function initializeDateSelectors() {
+            const monthSelect = document.getElementById('monthSelect');
+            const yearSelect = document.getElementById('yearSelect');
+            
+            if (!monthSelect || !yearSelect) {
+                console.error('Month or year select elements not found in DOM');
+                return false;
+            }
+            
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth() + 1;
+            const currentYear = currentDate.getFullYear();
+            
+            // Set current month
+            monthSelect.value = currentMonth;
+            
+            // Populate years (current year and previous 5 years)
+            yearSelect.innerHTML = ''; // Clear existing options
+            for (let year = currentYear; year >= currentYear - 5; year--) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                if (year === currentYear) option.selected = true;
+                yearSelect.appendChild(option);
+            }
+            
+            return true;
+        }
+
+        async function loadDepartments() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/departments`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.status === 401) {
+                    showNotification('Authentication failed. Please log in again.', 'error', 'Session Expired');
+                    setTimeout(() => {
+                        window.location.href = '../index.html';
+                    }, 2000);
+                    return;
+                }
+                
+                if (!response.ok) throw new Error('Failed to load departments');
+                
+                const data = await response.json();
+                departments = data.departments;
+                
+                const select = document.getElementById('departmentFilter');
+                select.innerHTML = '<option value="">All Departments</option>';
+                departments.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept.id;
+                    option.textContent = dept.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading departments:', error);
+            }
+        }
+
+        // Parameters functionality hidden
+        /*
+        async function loadSalaryParameters() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/salary-parameters`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load salary parameters');
+                
+                const data = await response.json();
+                salaryParameters = {};
+                data.parameters.forEach(param => {
+                    salaryParameters[param.parameter_name] = param;
+                });
+            } catch (error) {
+                console.error('Error loading salary parameters:', error);
+            }
+        }
+        */
+
+        async function loadSalaries(page = 1) {
+            try {
+                showLoading(true);
+                
+                const token = localStorage.getItem('token');
+                const monthSelect = document.getElementById('monthSelect');
+                const yearSelect = document.getElementById('yearSelect');
+                const searchInput = document.getElementById('searchInput');
+                const departmentFilter = document.getElementById('departmentFilter');
+                
+                if (!monthSelect || !yearSelect) {
+                    console.error('Month or year select element not found');
+                    showLoading(false);
+                    return;
+                }
+                
+                const month = monthSelect.value;
+                const year = yearSelect.value;
+                const search = searchInput ? searchInput.value : '';
+                const department = departmentFilter ? departmentFilter.value : '';
+                
+                // Load summary statistics
+                await loadSummaryStatistics();
+                
+                const params = new URLSearchParams({
+                    month,
+                    year,
+                    page,
+                    limit: 10
+                });
+                
+                if (search) params.append('search', search);
+                if (department) params.append('department', department);
+                
+                const response = await fetch(`${API_BASE_URL}/salaries?${params}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load salaries');
+                
+                const data = await response.json();
+                currentSalaries = data.salaries;
+                currentPagination = data.pagination;
+                
+                displaySalaries();
+                displayPagination();
+                checkAndShowValidationBanner();
+                
+                showLoading(false);
+                
+                if (currentSalaries.length === 0) {
+                    showEmptyState(true);
+                } else {
+                    showEmptyState(false);
+                }
+                
+            } catch (error) {
+                console.error('Error loading salaries:', error);
+                showNotification('Failed to load salaries. Please refresh the page.', 'error', 'Loading Error');
+                showLoading(false);
+            }
+        }
+
+        async function loadSummaryStatistics() {
+            try {
+                const token = localStorage.getItem('token');
+                const monthSelect = document.getElementById('monthSelect');
+                const yearSelect = document.getElementById('yearSelect');
+                const departmentFilter = document.getElementById('departmentFilter');
+                
+                if (!monthSelect || !yearSelect) {
+                    console.warn('Month or year select element not found for summary statistics');
+                    return;
+                }
+                
+                const month = monthSelect.value;
+                const year = yearSelect.value;
+                const department = departmentFilter ? departmentFilter.value : '';
+                
+                const params = new URLSearchParams({
+                    month,
+                    year
+                });
+                
+                if (department) params.append('department', department);
+                
+                const response = await fetch(`${API_BASE_URL}/salaries/summary?${params}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load summary statistics');
+                
+                const data = await response.json();
+                console.log('Summary API response:', data);
+                updateSummaryCardsFromAPI(data.summary);
+                
+            } catch (error) {
+                console.error('Error loading summary statistics:', error);
+                // Fallback to client-side calculation
+                updateSummaryCards();
+            }
+        }
+
+        function checkAndShowValidationBanner() {
+            // Check if there are any unvalidated employees
+            const hasUnvalidated = currentSalaries.some(s => s.validation_status !== 'Validated' || (s.error && s.error.includes('not validated')));
+            const banner = document.getElementById('validationInfoBanner');
+            
+            if (hasUnvalidated && !sessionStorage.getItem('hideValidationBanner')) {
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
+        }
+
+        function hideValidationBanner() {
+            document.getElementById('validationInfoBanner').classList.add('hidden');
+            sessionStorage.setItem('hideValidationBanner', 'true');
+        }
+
+        let selectedEmployeeIds = new Set();
+
+        function displaySalaries() {
+            const tbody = document.getElementById('salariesTableBody');
+            
+            if (currentSalaries.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-500">No salary data found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = currentSalaries.map(salary => {
+                const eligible = salary.validation_status === 'Validated' && salary.payment_status !== 'Paid';
+                const checked = selectedEmployeeIds.has(String(salary.employee_id));
+                return `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-4 whitespace-nowrap">
+                        <input type="checkbox" class="row-select-checkbox w-4 h-4" data-employee-id="${salary.employee_id}" ${eligible ? '' : 'disabled'} ${checked ? 'checked' : ''} />
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <span class="text-sm font-medium text-blue-600">${salary.employee_name.split(' ').map(n => n[0]).join('')}</span>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">${salary.employee_name}</div>
+                                <div class="text-xs text-gray-500">${salary.department_name || 'N/A'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${salary.position || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div class="flex flex-col">
+                            <span class="font-medium">${salary.worked_days || 0}</span>
+                            <span class="text-xs text-gray-500">Absent: ${salary.absent_days || 0}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${salary.worked_days === 0 && salary.net_salary === 0 ? `
+                            <div class="flex flex-col gap-1">
+                                <div class="text-sm font-medium text-gray-500 line-through">${formatCurrency(salary.net_salary || 0)} DA</div>
+                                <div class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                    <i class="fas fa-ban mr-1"></i>
+                                    No Worked Days
+                                </div>
+                            </div>
+                        ` : `
+                        <div class="text-sm font-medium da-currency">
+                            ${formatCurrency(salary.net_salary || 0)} DA
+                        </div>
+                        `}
+                        ${salary.validation_status === 'Validated' ? 
+                            `<div class="text-xs text-green-600 flex items-center"><i class="fas fa-check-circle mr-1"></i>Validated</div>` : 
+                            salary.error && salary.error.includes('not validated') ?
+                            `<div class="text-xs text-orange-600 flex items-center">
+                                <i class="fas fa-clock mr-1"></i>
+                                <span class="font-medium">Awaiting Validation</span>
+                            </div>` :
+                            `<div class="text-xs text-orange-600 flex items-center"><i class="fas fa-exclamation-triangle mr-1"></i>Not Validated</div>`
+                        }
+                        ${salary.error && !salary.error.includes('not validated') ? `<div class="text-xs text-red-500"><i class="fas fa-exclamation-circle mr-1"></i>${salary.error}</div>` : ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex flex-col gap-1">
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full text-white ${getStatusClass(salary.payment_status)}">
+                            ${salary.payment_status || 'Not Paid'}
+                        </span>
+                            ${salary.payment_status === 'Paid' && salary.payment_method ? `
+                                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full ${salary.payment_method === 'worked_days' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'}">
+                                    ${salary.payment_method === 'worked_days' ? 'Exception Method' : 'Standard Method'}
+                                </span>
+                            ` : ''}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex flex-wrap gap-2">
+                            ${salary.validation_status === 'Validated' ? `
+                                <button onclick="viewSalaryDetails('${salary.employee_id}')" 
+                                        class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors" title="View Salary Details">
+                                    <i class="fas fa-eye mr-1"></i>
+                                    View
+                                </button>
+                            ` : `
+                                <button onclick="openDailyAttendanceForValidation('${salary.employee_id}', ${salary.year}, ${salary.month})" 
+                                        class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full hover:from-orange-600 hover:to-orange-700 transition-all shadow-sm" title="Review and validate monthly attendance to enable salary calculation">
+                                    <i class="fas fa-calendar-check mr-1"></i>
+                                    Validate Attendance
+                                </button>
+                            `}
+                            <button onclick="addAdjustment('${salary.employee_id}')" 
+                                    class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors" title="Add Adjustment">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            ${salary.payment_status !== 'Paid' ? `
+                                <button onclick="markAsPaid('${salary.employee_id}')" 
+                                        class="inline-flex items-center px-3 py-1.5 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors ${salary.validation_status !== 'Validated' ? 'opacity-50 cursor-not-allowed' : ''}" ${salary.validation_status !== 'Validated' ? 'disabled title=\"Validate attendance first\"' : 'title=\"Mark as Paid\"'}>
+                                    <i class="fas fa-check mr-1"></i>
+                                    Mark Paid
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+
+            bindRowSelectionHandlers();
+            refreshBulkControls();
+        }
+
+        function bindRowSelectionHandlers() {
+            const checkboxes = document.querySelectorAll('.row-select-checkbox');
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    const employeeId = String(e.target.getAttribute('data-employee-id'));
+                    if (e.target.checked) {
+                        selectedEmployeeIds.add(employeeId);
+                    } else {
+                        selectedEmployeeIds.delete(employeeId);
+                    }
+                    refreshBulkControls();
+                });
+            });
+
+            const selectAll = document.getElementById('selectAllCheckbox');
+            if (selectAll) {
+                // Determine if all eligible on page are selected
+                const eligibleOnPage = Array.from(document.querySelectorAll('.row-select-checkbox:not(:disabled)'));
+                const allSelected = eligibleOnPage.length > 0 && eligibleOnPage.every(cb => cb.checked);
+                selectAll.checked = allSelected;
+            }
+        }
+
+        function refreshBulkControls() {
+            const count = selectedEmployeeIds.size;
+            const btn = document.getElementById('paySelectedBtn');
+            const cnt = document.getElementById('paySelectedCount');
+            if (btn) btn.disabled = count === 0;
+            if (cnt) cnt.textContent = `(${count})`;
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'Paid': return 'status-paid';
+                case 'Error': return 'status-error';
+                default: return 'status-not-paid';
+            }
+        }
+
+        // Format time hours to readable format (matches attendance page format)
+        function formatTimeHours(hours) {
+            if (!hours || hours === 0) return '0m';
+            
+            const totalMinutes = Math.round(hours * 60);
+            
+            if (totalMinutes < 60) {
+                return `${totalMinutes}m`;
+            }
+            
+            const h = Math.floor(totalMinutes / 60);
+            const m = totalMinutes % 60;
+            
+            if (m === 0) {
+                return `${h}h`;
+            }
+            
+            return `${h}h ${m}m`;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'decimal',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount || 0);
+        }
+
+        function displayPagination() {
+            const container = document.getElementById('paginationContainer');
+            const { page, pages, total, limit } = currentPagination;
+            
+            if (pages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let paginationHtml = `
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        Showing ${((page - 1) * limit) + 1} to ${Math.min(page * limit, total)} of ${total} results
+                    </div>
+                    <div class="flex space-x-2">
+            `;
+            
+            // Previous button
+            if (page > 1) {
+                paginationHtml += `
+                    <button onclick="loadSalaries(${page - 1})" class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                        Previous
+                    </button>
+                `;
+            }
+            
+            // Page numbers
+            const startPage = Math.max(1, page - 2);
+            const endPage = Math.min(pages, page + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHtml += `
+                    <button onclick="loadSalaries(${i})" class="px-3 py-1 text-sm border rounded transition-colors ${
+                        i === page 
+                            ? 'bg-blue-600 text-white border-blue-600' 
+                            : 'border-gray-300 hover:bg-gray-50'
+                    }">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            // Next button
+            if (page < pages) {
+                paginationHtml += `
+                    <button onclick="loadSalaries(${page + 1})" class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                        Next
+                    </button>
+                `;
+            }
+            
+            paginationHtml += `
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = paginationHtml;
+        }
+
+        function updateSummaryCardsFromAPI(summary) {
+            console.log('Updating summary cards with:', summary);
+            document.getElementById('totalEmployees').textContent = summary.total_employees;
+            document.getElementById('totalPayroll').textContent = `${formatCurrency(summary.total_payroll)} DA`;
+            document.getElementById('paidCount').textContent = summary.paid_count;
+            document.getElementById('pendingCount').textContent = summary.pending_count;
+            document.getElementById('totalRaise').textContent = `${formatCurrency(summary.total_raise)} DA`;
+            document.getElementById('totalDecrease').textContent = `${formatCurrency(summary.total_decrease)} DA`;
+        }
+
+        function updateSummaryCards() {
+            const totalEmployees = currentSalaries.length;
+            const totalPayroll = currentSalaries.reduce((sum, salary) => sum + (salary.net_salary || 0), 0);
+            const paidCount = currentSalaries.filter(salary => salary.payment_status === 'Paid').length;
+            const pendingCount = totalEmployees - paidCount;
+            
+            // Calculate total raise and decrease from wage changes
+            let totalRaise = 0;
+            let totalDecrease = 0;
+            
+            currentSalaries.forEach(salary => {
+                const wageChanges = salary.wage_changes || 0;
+                if (wageChanges > 0) {
+                    totalRaise += wageChanges;
+                } else if (wageChanges < 0) {
+                    totalDecrease += Math.abs(wageChanges);
+                }
+            });
+            
+            document.getElementById('totalEmployees').textContent = totalEmployees;
+            document.getElementById('totalPayroll').textContent = `${formatCurrency(totalPayroll)} DA`;
+            document.getElementById('paidCount').textContent = paidCount;
+            document.getElementById('pendingCount').textContent = pendingCount;
+            document.getElementById('totalRaise').textContent = `${formatCurrency(totalRaise)} DA`;
+            document.getElementById('totalDecrease').textContent = `${formatCurrency(totalDecrease)} DA`;
+        }
+
+        // Cache modal reference to avoid repeated DOM queries
+        let cachedSalaryModal = null;
+        
+        function getSalaryModal() {
+            if (cachedSalaryModal && document.body.contains(cachedSalaryModal)) {
+                return cachedSalaryModal;
+            }
+            
+            cachedSalaryModal = document.getElementById('salaryModal');
+            
+            // If still not found, try other methods
+            if (!cachedSalaryModal) {
+                cachedSalaryModal = document.querySelector('#salaryModal');
+            }
+            
+            if (!cachedSalaryModal) {
+                // Last resort - search for any element with this ID
+                const allWithId = document.querySelectorAll('[id="salaryModal"]');
+                if (allWithId.length > 0) {
+                    cachedSalaryModal = allWithId[0];
+                }
+            }
+            
+            // If modal is completely missing, recreate it
+            if (!cachedSalaryModal) {
+                console.warn('Salary modal not found in DOM, recreating it...');
+                cachedSalaryModal = recreateSalaryModal();
+            }
+            
+            return cachedSalaryModal;
+        }
+        
+        function recreateSalaryModal() {
+            // Create the modal structure
+            const modal = document.createElement('div');
+            modal.id = 'salaryModal';
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 modal-backdrop modal-overlay hidden z-50';
+            modal.innerHTML = `
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-screen overflow-y-auto modal-content">
+                        <div class="p-4 border-b border-gray-200 relative">
+                            <h2 id="salaryModalTitle" class="text-xl font-semibold text-gray-900" data-translate="salary.salary_details">Salary Details</h2>
+                            <button type="button" onclick="closeSalaryModal()" class="modal-close absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="salaryModalContent" class="p-4">
+                            <!-- Salary details will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Append to body
+            document.body.appendChild(modal);
+            console.log('Salary modal recreated and added to DOM');
+            return modal;
+        }
+        
+        async function viewSalaryDetails(employeeId) {
+            try {
+                // Wait for DOM to be fully ready
+                if (document.readyState === 'loading') {
+                    await new Promise(resolve => {
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', resolve);
+                        } else {
+                            resolve();
+                        }
+                    });
+                }
+                
+                // Ensure modal exists - use cached reference
+                let modal = getSalaryModal();
+                
+                // If still not found, wait and retry
+                if (!modal) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    cachedSalaryModal = null; // Clear cache
+                    modal = getSalaryModal();
+                }
+                
+                // Final attempt
+                if (!modal) {
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    cachedSalaryModal = null; // Clear cache
+                    modal = getSalaryModal();
+                }
+                
+                if (!modal) {
+                    console.error('Salary modal container not found in DOM after multiple attempts.');
+                    console.error('Document ready state:', document.readyState);
+                    console.error('Modal in body:', document.body.querySelector('#salaryModal'));
+                    console.error('All elements with salaryModal id:', document.querySelectorAll('[id="salaryModal"]').length);
+                    showNotification('Failed to display salary details - modal container not available. Please refresh the page.', 'error', 'Display Error');
+                    return;
+                }
+                
+                const token = localStorage.getItem('token');
+                const month = document.getElementById('monthSelect').value;
+                const year = document.getElementById('yearSelect').value;
+                
+                const response = await fetch(`${API_BASE_URL}/salaries/${employeeId}/compare?month=${month}&year=${year}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load salary details');
+                
+                const data = await response.json();
+                const algerianSalary = data.algerian_method;
+                const workedDaysSalary = data.worked_days_method;
+                
+                // Calculate mismatch status for display
+                // Current stats come from fresh calculation (matches attendance page)
+                // Validated stats come from employee_monthly_summaries (may be outdated if validation was done earlier)
+                
+                // Show modal first to ensure elements are accessible
+                modal.classList.remove('hidden');
+                
+                // Wait a bit for modal to render
+                await new Promise(resolve => setTimeout(resolve, 50));
+                
+                // Get modal elements - try multiple ways with retries
+                let modalTitle = modal.querySelector('#salaryModalTitle') || document.getElementById('salaryModalTitle');
+                let content = modal.querySelector('#salaryModalContent') || document.getElementById('salaryModalContent');
+                
+                // If still not found, wait and try again
+                if (!modalTitle || !content) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    modalTitle = modal.querySelector('#salaryModalTitle') || modal.querySelector('h2[id="salaryModalTitle"]') || document.getElementById('salaryModalTitle');
+                    content = modal.querySelector('#salaryModalContent') || modal.querySelector('div[id="salaryModalContent"]') || document.getElementById('salaryModalContent');
+                }
+                
+                // Final check with fallback creation
+                if (!modalTitle || !content) {
+                    console.error('Salary modal elements not found. Modal exists:', !!modal, 'Title:', !!modalTitle, 'Content:', !!content);
+                    
+                    // Try to create elements if they don't exist
+                    if (!modalTitle) {
+                        modalTitle = document.createElement('h2');
+                        modalTitle.id = 'salaryModalTitle';
+                        modalTitle.className = 'text-xl font-semibold text-gray-900';
+                        const headerDiv = modal.querySelector('.p-4.border-b') || modal.querySelector('[class*="border-b"]');
+                        if (headerDiv) {
+                            headerDiv.insertBefore(modalTitle, headerDiv.firstChild);
+                        }
+                    }
+                    
+                    if (!content) {
+                        content = document.createElement('div');
+                        content.id = 'salaryModalContent';
+                        content.className = 'p-4';
+                        const modalContentDiv = modal.querySelector('.bg-white.rounded-xl') || modal.querySelector('[class*="bg-white"]');
+                        if (modalContentDiv) {
+                            modalContentDiv.appendChild(content);
+                        }
+                    }
+                    
+                    // Last resort check
+                    if (!modalTitle || !content) {
+                        modal.classList.add('hidden');
+                        showNotification('Failed to display salary details - modal structure error. Please refresh the page.', 'error', 'Display Error');
+                        return;
+                    }
+                }
+                
+                // Verify modal is still in DOM before proceeding
+                if (!document.body.contains(modal)) {
+                    console.error('Modal was removed from DOM!');
+                    showNotification('Modal structure error. Please refresh the page.', 'error', 'Display Error');
+                    return;
+                }
+                
+                // Helper function to translate with fallback
+                const t = (key, fallback) => {
+                    if (typeof translate === 'function') {
+                        const result = translate(key);
+                        return (result && result !== key) ? result : fallback;
+                    }
+                    return fallback;
+                };
+                
+                const salaryDetailsText = t('salary.salary_details', 'Salary Details');
+                modalTitle.textContent = `${data.employee_name} - ${salaryDetailsText}`;
+                
+                // Determine payment method name for display
+                const paymentMethod = data.payment_record?.calculation_method || 'algerian';
+                const methodDisplayName = paymentMethod === 'worked_days' 
+                    ? t('salary.partial_month', 'Partial Month (Exception)')
+                    : t('salary.standard_method', 'Standard Method');
+                
+                // Check if employee has 0 worked days
+                const hasZeroWorkedDays = (algerianSalary.worked_days === 0 || workedDaysSalary.worked_days === 0);
+                
+                // Store reference to content before updating (in case it gets replaced)
+                const originalContent = content;
+                content.innerHTML = `
+                    <!-- Employee Header Card -->
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-4 text-white mb-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-semibold">${data.employee_name}</h3>
+                                <p class="text-blue-100">${data.position || 'N/A'} • ${data.department_name || 'N/A'}</p>
+                                <p class="text-blue-200 text-sm">${getMonthName(data.month)} ${data.year}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-3xl font-bold ${hasZeroWorkedDays ? 'line-through text-gray-300' : ''}" id="displayNetSalary">${formatCurrency(algerianSalary.net_salary || 0)} DA</div>
+                                <div class="text-blue-100 text-sm" id="displayMethodLabel">${t('salary.standard_method', 'Standard Method')}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${hasZeroWorkedDays ? `
+                    <!-- Zero Worked Days Warning -->
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-r-lg">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <h3 class="text-sm font-semibold text-red-800">
+                                    ${t('salary.no_worked_days_title', 'No Worked Days - Salary Set to Zero')}
+                                </h3>
+                                <div class="mt-2 text-sm text-red-700">
+                                    <p>${t('salary.no_worked_days_message', 'This employee has <strong>0 worked days</strong> for this month. The salary has been automatically set to <strong>0 DA</strong> regardless of base salary or other factors.')}</p>
+                                    <p class="mt-1">${t('salary.no_worked_days_reason', '<strong>Reason:</strong> If an employee works 0 days in a month, they receive no salary payment.')}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <!-- Calculation Method Toggle -->
+                    <div class="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-lg font-semibold text-gray-900 mb-2">${t('salary.calculation_method', 'Salary Calculation Method')}</h4>
+                                <p class="text-sm text-gray-600">${t('salary.choose_calculation', 'Choose how to calculate this employee\'s salary')}</p>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center">
+                                    <span class="text-sm font-medium text-gray-700 mr-3">${t('salary.standard_method', 'Standard Method')}</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="calculationToggle" class="sr-only peer" onchange="toggleCalculationMethod()">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        <span class="ml-3 text-sm font-medium text-gray-700">${t('salary.partial_month', 'Partial Month (Exception)')}</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3 p-3 bg-orange-50 border-l-4 border-orange-400 rounded-lg">
+                            <div class="text-sm text-orange-800">
+                                <div>${t('salary.standard_method_description', '<strong>Standard Method:</strong> Base Salary + Overtime + Adjustments - Absence Deductions - Late/Early Deductions')}</div>
+                                <div class="mt-2">${t('salary.partial_month_description', '<strong>Partial Month (Exception):</strong> Use this for new employees who started mid-month. Calculates: (Worked Days × Daily Rate) + Overtime + Adjustments - Late/Early Deductions')}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Content Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <!-- Left Column: Quick Stats -->
+                        <div>
+                            <h3 class="text-base font-semibold text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-chart-bar text-blue-600 mr-2"></i>
+                                ${t('salary.attendance_summary', 'Attendance Summary')}
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center flex-1">
+                                            <div class="p-2 bg-green-100 rounded-lg">
+                                                <i class="fas fa-calendar-check text-green-600"></i>
+                                            </div>
+                                            <div class="ml-3">
+                                                <p class="text-sm text-gray-600">${t('salary.worked_days', 'Worked Days')}</p>
+                                                <p class="text-lg font-semibold text-gray-900">
+                                                    ${parseInt(algerianSalary.worked_days || 0)} ${t('salary.worked_days_count', 'worked days')}
+                                                </p>
+                                                ${(algerianSalary.half_days && parseInt(algerianSalary.half_days) > 0) ? `
+                                                    <p class="text-xs text-gray-500 mt-1">
+                                                        (${parseInt(algerianSalary.full_days || (algerianSalary.worked_days - algerianSalary.half_days))} ${t('salary.full_days', 'full days')}, ${parseInt(algerianSalary.half_days)} ${t('salary.half_days', 'half days')})
+                                                    </p>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center flex-1">
+                                            <div class="p-2 bg-red-100 rounded-lg">
+                                                <i class="fas fa-calendar-times text-red-600"></i>
+                                            </div>
+                                            <div class="ml-3">
+                                                <p class="text-sm text-gray-600">${t('salary.absent_days', 'Absent Days')}</p>
+                                                <p class="text-lg font-semibold text-gray-900">
+                                                    ${parseInt(algerianSalary.absent_days || 0)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                    <div class="flex items-center">
+                                        <div class="p-2 bg-blue-100 rounded-lg">
+                                            <i class="fas fa-clock text-blue-600"></i>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-gray-600">${t('salary.overtime', 'Overtime')}</p>
+                                            <p class="text-lg font-semibold text-gray-900">${(algerianSalary.overtime_hours || 0).toFixed(1)}h</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                    <div class="flex items-center">
+                                        <div class="p-2 bg-orange-100 rounded-lg">
+                                            <i class="fas fa-clock text-orange-600"></i>
+                                        </div>
+                                        <div class="ml-3 flex-1">
+                                            <p class="text-sm text-gray-600">${t('salary.late_arrival', 'Late Arrival')}</p>
+                                            <p class="text-lg font-semibold text-gray-900">
+                                                ${formatTimeHours(algerianSalary.late_hours || 0)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                    <div class="flex items-center">
+                                        <div class="p-2 bg-orange-100 rounded-lg">
+                                            <i class="fas fa-sign-out-alt text-orange-600"></i>
+                                        </div>
+                                        <div class="ml-3 flex-1">
+                                            <p class="text-sm text-gray-600">${t('salary.early_departure', 'Early Departure')}</p>
+                                            <p class="text-lg font-semibold text-gray-900">
+                                                ${formatTimeHours(algerianSalary.early_departure_hours || 0)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column: Salary Breakdown Comparison -->
+                        <div>
+                            <h3 class="text-base font-semibold text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-calculator text-blue-600 mr-2"></i>
+                                ${t('salary.salary_breakdown', 'Salary Breakdown')}
+                            </h3>
+                            
+                            <!-- Standard Method Breakdown -->
+                            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden mb-4" id="algerianBreakdown">
+                                <div class="bg-blue-50 px-4 py-2 border-b border-gray-200">
+                                    <h4 class="text-sm font-semibold text-blue-900">${t('salary.standard_method', 'Standard Method')}</h4>
+                                </div>
+                                <div class="p-4">
+                            <!-- Base Salary Section -->
+                            <div class="mb-4">
+                                <h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-coins text-yellow-600 mr-2"></i>
+                                    ${t('salary.base_salary', 'Base Salary')}
+                                </h4>
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-600">${t('salary.monthly_base_salary', 'Monthly Base Salary')}</span>
+                                                <span class="font-semibold text-lg">${formatCurrency(algerianSalary.base_salary || 0)} DA</span>
+                                    </div>
+                                    <div class="flex justify-between items-center mt-2">
+                                        <span class="text-sm text-gray-500">${t('salary.daily_rate', 'Daily Rate (Base ÷ 22)')}</span>
+                                                <span class="font-medium">${formatCurrency(algerianSalary.daily_rate || 0)} DA</span>
+                                    </div>
+                                    <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-300">
+                                        <span class="text-sm text-gray-500">${t('salary.hourly_rate', 'Hourly Rate')}</span>
+                                                <span class="font-medium">${formatCurrency(algerianSalary.hourly_rate || 0)} DA/hr</span>
+                                    </div>
+                                    <div class="flex justify-between items-center mt-2">
+                                        <span class="text-sm text-gray-500">${t('salary.overtime_rate', 'Overtime Rate')}</span>
+                                                <span class="font-medium">${formatCurrency(algerianSalary.overtime_hour_rate || 0)} DA/hr</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additions Section -->
+                            <div class="mb-4">
+                                <h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-plus-circle text-green-600 mr-2"></i>
+                                    ${t('salary.additions', 'Additions')}
+                                </h4>
+                                <div class="space-y-3">
+                                            ${(algerianSalary.overtime_amount || 0) > 0 ? `
+                                        <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                                            <div>
+                                                <span class="text-gray-700">Overtime Pay</span>
+                                                        <p class="text-xs text-gray-500">${(algerianSalary.overtime_hours || 0).toFixed(2)}h × ${formatCurrency(algerianSalary.overtime_hour_rate || 0)} DA</p>
+                                            </div>
+                                                    <span class="font-semibold text-green-600">+${formatCurrency(algerianSalary.overtime_amount || 0)} DA</span>
+                                        </div>
+                                    ` : ''}
+                                            ${(algerianSalary.wage_changes || 0) > 0 ? `
+                                        <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                                            <div>
+                                                <span class="text-gray-700">Wage Adjustments</span>
+                                                <p class="text-xs text-gray-500">Net positive adjustments</p>
+                                            </div>
+                                                    <span class="font-semibold text-green-600">+${formatCurrency(algerianSalary.wage_changes || 0)} DA</span>
+                                        </div>
+                                    ` : ''}
+                                            ${((algerianSalary.overtime_amount || 0) === 0 && (algerianSalary.wage_changes || 0) <= 0) ? `
+                                        <div class="text-center py-4 text-gray-500">
+                                            <i class="fas fa-minus-circle text-2xl mb-2"></i>
+                                            <p data-translate="salary.no_additions">No additions this month</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            <!-- Deductions Section -->
+                            <div class="mb-4">
+                                <h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-minus-circle text-red-600 mr-2"></i>
+                                    ${t('salary.deductions', 'Deductions')}
+                                </h4>
+                                <div class="space-y-3">
+                                            ${(algerianSalary.absence_deduction || 0) > 0 ? `
+                                        <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                                            <div>
+                                                <span class="text-gray-700">Absence Deduction</span>
+                                                        <p class="text-xs text-gray-500">${algerianSalary.absent_days || 0} days × ${formatCurrency(algerianSalary.daily_rate || 0)} DA</p>
+                                            </div>
+                                                    <span class="font-semibold text-red-600">-${formatCurrency(algerianSalary.absence_deduction || 0)} DA</span>
+                                        </div>
+                                    ` : ''}
+                                            ${(algerianSalary.half_day_deduction || 0) > 0 ? `
+                                        <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                                            <div>
+                                                <span class="text-gray-700">Half Days Deduction</span>
+                                                        <p class="text-xs text-gray-500">${algerianSalary.half_days || 0} half days × 0.5 × ${formatCurrency(algerianSalary.daily_rate || 0)} DA</p>
+                                            </div>
+                                                    <span class="font-semibold text-red-600">-${formatCurrency(algerianSalary.half_day_deduction || 0)} DA</span>
+                                        </div>
+                                    ` : ''}
+                                            ${(algerianSalary.late_deduction || 0) > 0 ? `
+                                        <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                                            <div>
+                                                <span class="text-gray-700">${t('salary.late_arrival', 'Late Arrival')}</span>
+                                                        <p class="text-xs text-gray-500">${formatTimeHours(algerianSalary.late_hours || 0)} × ${formatCurrency(algerianSalary.overtime_hour_rate || 0)} DA/hr</p>
+                                            </div>
+                                                    <span class="font-semibold text-red-600">-${formatCurrency(algerianSalary.late_deduction || 0)} DA</span>
+                                        </div>
+                                    ` : ''}
+                                            ${(algerianSalary.early_departure_deduction || 0) > 0 ? `
+                                        <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                                            <div>
+                                                <span class="text-gray-700">${t('salary.early_departure', 'Early Departure')}</span>
+                                                        <p class="text-xs text-gray-500">${formatTimeHours(algerianSalary.early_departure_hours || 0)} × ${formatCurrency(algerianSalary.overtime_hour_rate || 0)} DA/hr</p>
+                                            </div>
+                                                    <span class="font-semibold text-red-600">-${formatCurrency(algerianSalary.early_departure_deduction || 0)} DA</span>
+                                        </div>
+                                    ` : ''}
+                                            ${(algerianSalary.wage_changes || 0) < 0 ? `
+                                        <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                                            <div>
+                                                <span class="text-gray-700">Wage Adjustments</span>
+                                                <p class="text-xs text-gray-500">Net negative adjustments</p>
+                                            </div>
+                                                    <span class="font-semibold text-red-600">${formatCurrency(algerianSalary.wage_changes || 0)} DA</span>
+                                        </div>
+                                    ` : ''}
+                                            ${((algerianSalary.absence_deduction || 0) === 0 && (algerianSalary.half_day_deduction || 0) === 0 && (algerianSalary.late_deduction || 0) === 0 && (algerianSalary.early_departure_deduction || 0) === 0 && (algerianSalary.wage_changes || 0) >= 0) ? `
+                                        <div class="text-center py-4 text-gray-500">
+                                            <i class="fas fa-check-circle text-2xl mb-2 text-green-500"></i>
+                                            <p data-translate="salary.no_deductions">No deductions this month</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            <!-- Summary Section -->
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-gray-700">${t('salary.gross_salary', 'Gross Salary')}</span>
+                                            <span class="font-semibold">${formatCurrency(algerianSalary.gross_salary || 0)} DA</span>
+                                </div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-gray-700">${t('salary.total_deductions', 'Total Deductions')}</span>
+                                            <span class="font-semibold text-red-600">-${formatCurrency(algerianSalary.total_deductions || 0)} DA</span>
+                                </div>
+                                <hr class="border-gray-300 my-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-lg font-semibold text-gray-900">${t('salary.net_salary', 'Net Salary')}</span>
+                                            <span class="text-2xl font-bold text-blue-600">${formatCurrency(algerianSalary.net_salary || 0)} DA</span>
+                                </div>
+                            </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Partial Month (Exception) Method Breakdown -->
+                            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden mb-4 hidden" id="workedDaysBreakdown">
+                                <div class="bg-orange-50 px-4 py-2 border-b border-gray-200">
+                                    <h4 class="text-sm font-semibold text-orange-900">${t('salary.partial_month', 'Partial Month (Exception)')}</h4>
+                                </div>
+                                <div class="p-4">
+                                    <!-- Worked Days Salary Section -->
+                                    <div class="mb-4">
+                                        <h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <i class="fas fa-calendar-check text-green-600 mr-2"></i>
+                                            ${t('salary.worked_days_salary', 'Worked Days Salary')}
+                                        </h4>
+                                        <div class="bg-gray-50 rounded-lg p-4">
+                                            <div class="flex justify-between items-center">
+                                                <div>
+                                                    <span class="text-gray-600">${t('salary.worked_days', 'Worked Days')}</span>
+                                                    ${(workedDaysSalary.half_days && parseInt(workedDaysSalary.half_days) > 0) ? `
+                                                        <p class="text-xs text-gray-500 mt-1">
+                                                            ${parseInt(workedDaysSalary.full_days || (workedDaysSalary.worked_days - workedDaysSalary.half_days))} ${t('salary.full_days', 'full days')}, ${parseInt(workedDaysSalary.half_days)} ${t('salary.half_days', 'half days')}
+                                                        </p>
+                                                    ` : ''}
+                                                </div>
+                                                <span class="font-semibold text-lg">${workedDaysSalary.worked_days || 0} ${t('salary.days', 'days')}</span>
+                                            </div>
+                                            <div class="flex justify-between items-center mt-2">
+                                                <span class="text-sm text-gray-500">${t('salary.daily_rate', 'Daily Rate')}</span>
+                                                <span class="font-medium">${formatCurrency(workedDaysSalary.daily_rate || 0)} DA</span>
+                                            </div>
+                                            <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-300">
+                                                <span class="text-sm text-gray-500">${t('salary.hourly_rate', 'Hourly Rate')}</span>
+                                                <span class="font-medium">${formatCurrency(workedDaysSalary.hourly_rate || 0)} DA/hr</span>
+                                            </div>
+                                            <div class="flex justify-between items-center mt-2">
+                                                <span class="text-sm text-gray-500">${t('salary.overtime_rate', 'Overtime Rate')}</span>
+                                                <span class="font-medium">${formatCurrency(workedDaysSalary.overtime_hour_rate || 0)} DA/hr</span>
+                                            </div>
+                                            ${(workedDaysSalary.half_day_deduction || 0) > 0 ? `
+                                            <div class="flex justify-between items-center mt-2 border-t pt-2">
+                                                <span class="text-sm text-gray-500">${t('salary.half_days_deduction', 'Half Days Deduction')}</span>
+                                                <span class="font-medium text-red-600">-${formatCurrency(workedDaysSalary.half_day_deduction || 0)} DA</span>
+                                            </div>
+                                            <div class="text-xs text-gray-500 mt-1 pl-2">
+                                                ${workedDaysSalary.half_days || 0} ${t('salary.half_days', 'half days')} × 0.5 × ${formatCurrency(workedDaysSalary.daily_rate || 0)} DA
+                                            </div>
+                                            ` : ''}
+                                            <div class="flex justify-between items-center mt-2 border-t pt-2">
+                                                <span class="text-gray-700 font-medium">${t('salary.worked_days_salary', 'Worked Days Salary')}</span>
+                                                <span class="font-semibold text-lg text-green-600">${formatCurrency(workedDaysSalary.worked_days_salary || 0)} DA</span>
+                                            </div>
+                                            ${(workedDaysSalary.half_day_deduction || 0) > 0 ? `
+                                            <div class="text-xs text-gray-500 mt-1 pl-2">
+                                                ${t('salary.calculation', 'Calculation:')} (${workedDaysSalary.worked_days || 0} ${t('salary.days', 'days')} × ${formatCurrency(workedDaysSalary.daily_rate || 0)} DA) - ${formatCurrency(workedDaysSalary.half_day_deduction || 0)} DA (${t('salary.half_days', 'half days')})
+                                            </div>
+                                            ` : ''}
+                        </div>
+                    </div>
+
+                                    <!-- Additions Section -->
+                                    <div class="mb-4">
+                                        <h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <i class="fas fa-plus-circle text-green-600 mr-2"></i>
+                                            ${t('salary.additions', 'Additions')}
+                                        </h4>
+                                        <div class="space-y-3">
+                                            ${(workedDaysSalary.overtime_amount || 0) > 0 ? `
+                                                <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                                                    <div>
+                                                        <span class="text-gray-700">Overtime Pay</span>
+                                                        <p class="text-xs text-gray-500">${(workedDaysSalary.overtime_hours || 0).toFixed(2)}h × ${formatCurrency(workedDaysSalary.overtime_hour_rate || 0)} DA</p>
+                                                    </div>
+                                                    <span class="font-semibold text-green-600">+${formatCurrency(workedDaysSalary.overtime_amount || 0)} DA</span>
+                                                </div>
+                                            ` : ''}
+                                            ${(workedDaysSalary.wage_changes || 0) > 0 ? `
+                                                <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                                                    <div>
+                                                        <span class="text-gray-700">Wage Adjustments</span>
+                                                        <p class="text-xs text-gray-500">Net positive adjustments</p>
+                                                    </div>
+                                                    <span class="font-semibold text-green-600">+${formatCurrency(workedDaysSalary.wage_changes || 0)} DA</span>
+                                                </div>
+                                            ` : ''}
+                                            ${((workedDaysSalary.overtime_amount || 0) === 0 && (workedDaysSalary.wage_changes || 0) <= 0) ? `
+                                                <div class="text-center py-4 text-gray-500">
+                                                    <i class="fas fa-minus-circle text-2xl mb-2"></i>
+                                                    <p>${t('salary.no_additions', 'No additions this month')}</p>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+
+                                    <!-- Deductions Section -->
+                                    <div class="mb-4">
+                                            <h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <i class="fas fa-minus-circle text-red-600 mr-2"></i>
+                                            ${t('salary.deductions', 'Deductions')}
+                                        </h4>
+                                        <div class="space-y-3">
+                                            ${(workedDaysSalary.late_deduction || 0) > 0 ? `
+                                                <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                                                    <div>
+                                                        <span class="text-gray-700">${t('salary.late_arrival', 'Late Arrival')}</span>
+                                                        <p class="text-xs text-gray-500">${formatTimeHours(workedDaysSalary.late_hours || 0)} × ${formatCurrency(workedDaysSalary.overtime_hour_rate || 0)} DA/hr</p>
+                                                    </div>
+                                                    <span class="font-semibold text-red-600">-${formatCurrency(workedDaysSalary.late_deduction || 0)} DA</span>
+                                                </div>
+                                            ` : ''}
+                                            ${(workedDaysSalary.early_departure_deduction || 0) > 0 ? `
+                                                <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                                                    <div>
+                                                        <span class="text-gray-700">${t('salary.early_departure', 'Early Departure')}</span>
+                                                        <p class="text-xs text-gray-500">${formatTimeHours(workedDaysSalary.early_departure_hours || 0)} × ${formatCurrency(workedDaysSalary.overtime_hour_rate || 0)} DA/hr</p>
+                                                    </div>
+                                                    <span class="font-semibold text-red-600">-${formatCurrency(workedDaysSalary.early_departure_deduction || 0)} DA</span>
+                                                </div>
+                                            ` : ''}
+                                            ${(workedDaysSalary.wage_changes || 0) < 0 ? `
+                                                <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                                                    <div>
+                                                        <span class="text-gray-700">Wage Adjustments</span>
+                                                        <p class="text-xs text-gray-500">Net negative adjustments</p>
+                                                    </div>
+                                                    <span class="font-semibold text-red-600">${formatCurrency(workedDaysSalary.wage_changes || 0)} DA</span>
+                                                </div>
+                                            ` : ''}
+                                            ${((workedDaysSalary.half_day_deduction || 0) === 0 && (workedDaysSalary.late_deduction || 0) === 0 && (workedDaysSalary.early_departure_deduction || 0) === 0 && (workedDaysSalary.wage_changes || 0) >= 0) ? `
+                                                <div class="text-center py-4 text-gray-500">
+                                                    <i class="fas fa-check-circle text-2xl mb-2 text-green-500"></i>
+                                                    <p>${t('salary.no_deductions', 'No deductions this month')}</p>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+
+                                    <!-- Summary Section -->
+                                    <div class="bg-green-50 rounded-lg p-4">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-gray-700">${t('salary.gross_salary', 'Gross Salary')}</span>
+                                            <span class="font-semibold">${formatCurrency(workedDaysSalary.gross_salary || 0)} DA</span>
+                                        </div>
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-gray-700">${t('salary.total_deductions', 'Total Deductions')}</span>
+                                            <span class="font-semibold text-red-600">-${formatCurrency(workedDaysSalary.total_deductions || 0)} DA</span>
+                                        </div>
+                                        <hr class="border-gray-300 my-3">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-lg font-semibold text-gray-900">${t('salary.net_salary', 'Net Salary')}</span>
+                                            <span class="text-2xl font-bold text-green-600">${formatCurrency(workedDaysSalary.net_salary || 0)} DA</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Details Section -->
+                    ${data.payment_record && data.payment_status === 'Paid' ? `
+                    <div class="mt-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-2 border-green-200 p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center">
+                                <div class="p-3 bg-green-500 rounded-full mr-4">
+                                    <i class="fas fa-check-circle text-white text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold text-green-900">${t('salary.payment_details', 'Payment Details')}</h3>
+                                    <p class="text-sm text-green-700">${t('salary.marked_as_paid', 'This salary has been marked as paid')}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                            <div class="bg-white rounded-lg p-4 border border-green-200">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-calendar-check text-green-600 mr-2"></i>
+                                    <span class="text-sm font-medium text-gray-600">${t('salary.paid_date', 'Paid Date')}</span>
+                                </div>
+                                <p class="text-lg font-semibold text-gray-900">${data.payment_record.paid_at ? new Date(data.payment_record.paid_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</p>
+                                ${data.payment_record.paid_at ? `<p class="text-xs text-gray-500 mt-1">${new Date(data.payment_record.paid_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>` : ''}
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-green-200">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-calculator text-blue-600 mr-2"></i>
+                                    <span class="text-sm font-medium text-gray-600">${t('salary.calculation_method', 'Calculation Method')}</span>
+                                </div>
+                                <p class="text-lg font-semibold text-gray-900">${data.payment_record.calculation_method === 'worked_days' ? t('salary.partial_month', 'Partial Month (Exception)') : t('salary.standard_method', 'Standard Method')}</p>
+                                <p class="text-xs text-gray-500 mt-1">${data.payment_record.calculation_method === 'worked_days' ? t('salary.partial_month_explanation', 'For new employees - Based on worked days') : t('salary.standard_method_explanation', 'Based on full salary minus deductions')}</p>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-green-200">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-money-bill-wave text-emerald-600 mr-2"></i>
+                                    <span class="text-sm font-medium text-gray-600">${t('salary.amount_paid', 'Amount Paid')}</span>
+                                </div>
+                                <p class="text-2xl font-bold text-green-600">${formatCurrency(data.payment_record.amount || 0)} DA</p>
+                                <p class="text-xs text-gray-500 mt-1">${t('salary.net_salary_amount', 'Net salary amount')}</p>
+                            </div>
+                        </div>
+                        ${data.payment_record.paid_by_user_id ? `
+                            <div class="mt-4 pt-4 border-t border-green-200">
+                                <p class="text-sm text-gray-600">
+                                    <i class="fas fa-user-check text-gray-500 mr-1"></i>
+                                    ${t('salary.processed_by', 'Processed by:')} <span class="font-medium">Payment ID ${data.payment_record.id.substring(0, 8)}...</span>
+                                </p>
+                            </div>
+                        ` : ''}
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Bottom Section: Adjustments and Actions -->
+                    <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <!-- Left: Adjustments -->
+                        ${data.adjustments && data.adjustments.length > 0 ? `
+                            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                                    <h3 class="text-base font-semibold text-gray-900 flex items-center">
+                                        <i class="fas fa-edit text-purple-600 mr-2"></i>
+                                        Recent Adjustments
+                                    </h3>
+                                </div>
+                                <div class="p-4">
+                                    <div class="space-y-3">
+                                        ${data.adjustments.map(adj => `
+                                            <div class="flex justify-between items-center p-3 border border-gray-200 rounded-lg">
+                                                <div>
+                                                    <span class="font-medium text-gray-900">${adj.adjustment_type.charAt(0).toUpperCase() + adj.adjustment_type.slice(1)}</span>
+                                                    <p class="text-sm text-gray-500">${new Date(adj.effective_date).toLocaleDateString()}</p>
+                                                    ${adj.description ? `<p class="text-xs text-gray-400">${adj.description}</p>` : ''}
+                                                </div>
+                                                <span class="font-semibold ${adj.adjustment_type === 'raise' ? 'text-green-600' : 'text-red-600'}">
+                                                    ${adj.adjustment_type === 'raise' ? '+' : '-'}${formatCurrency(adj.amount || 0)} DA
+                                                </span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="bg-white rounded-lg border border-gray-200 p-4 text-center text-gray-500">
+                                <i class="fas fa-edit text-xl mb-2"></i>
+                                <p class="text-sm">No adjustments this month</p>
+                            </div>
+                        `}
+                        
+                        <!-- Right: Navigation Links Section -->
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <i class="fas fa-external-link-alt text-blue-600 mr-2"></i>
+                                Quick Actions
+                            </h4>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="openDailyAttendance('${employeeId}', ${data.year}, ${data.month})" 
+                                        class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-calendar-day mr-1"></i>
+                                    View Daily Attendance
+                                </button>
+                                ${algerianSalary.validation_status === 'Calculated' ? `
+                                    <button onclick="openDailyAttendanceForValidation('${employeeId}', ${data.year}, ${data.month})" 
+                                            class="inline-flex items-center px-3 py-1.5 bg-orange-600 text-white text-xs font-medium rounded-lg hover:bg-orange-700 transition-colors">
+                                        <i class="fas fa-check-circle mr-1"></i>
+                                        Validate Attendance
+                                    </button>
+                                ` : ''}
+                                ${algerianSalary.validation_status === 'Validated' && data.payment_status !== 'Paid' ? `
+                                    <button onclick="markAsPaidFromModal('${employeeId}')" 
+                                            id="markPaidInModalBtn"
+                                            class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white text-xs font-medium rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all shadow-md" 
+                                            title="Mark as paid using the currently selected calculation method">
+                                        <i class="fas fa-check-circle mr-1"></i>
+                                        Mark as Paid
+                                    </button>
+                                ` : ''}
+                            </div>
+                            ${algerianSalary.validation_status === 'Calculated' ? `
+                                <div class="mt-2 p-2 bg-orange-50 border border-orange-200 rounded-lg">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-exclamation-triangle text-orange-600 mr-2"></i>
+                                        <span class="text-sm text-orange-800">
+                                            <strong>Attendance not validated</strong> - Click "Validate Attendance" to review and approve this month's data.
+                                        </span>
+                                    </div>
+                                </div>
+                            ` : `
+                                <div class="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                                        <span class="text-sm text-green-800">
+                                            <strong>Attendance validated</strong> - This month's data has been reviewed and approved.
+                                        </span>
+                                    </div>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                    
+                `;
+                
+                // Store salary data globally for toggle functionality
+                window.currentSalaryData = data;
+                // Update translations for dynamically generated content
+                // Call immediately after content is set
+                const updateModalTranslations = () => {
+                    if (typeof updatePageTranslations === 'function') {
+                        updatePageTranslations();
+                    }
+                };
+                
+                // Use multiple strategies to ensure translations are applied
+                updateModalTranslations(); // Immediate
+                requestAnimationFrame(() => {
+                    updateModalTranslations(); // After render
+                    setTimeout(updateModalTranslations, 50); // After a short delay
+                    setTimeout(updateModalTranslations, 200); // Final attempt
+                });
+                
+                // Also listen for language changes to re-translate
+                document.addEventListener('languageChanged', function reTranslateModal() {
+                    if (typeof updatePageTranslations === 'function') {
+                        const modal = document.getElementById('salaryModal');
+                        if (modal && !modal.classList.contains('hidden')) {
+                            updatePageTranslations();
+                        }
+                    }
+                });
+                
+                window.currentAlgerianSalary = algerianSalary;
+                window.currentWorkedDaysSalary = workedDaysSalary;
+                window.currentSelectedCalculationMethod = 'algerian'; // Default method
+                
+                const modalElement = getSalaryModal();
+                if (modalElement) {
+                    modalElement.classList.remove('hidden');
+                } else {
+                    console.error('Cannot show modal - not found');
+                }
+            } catch (error) {
+                console.error('Error viewing salary details:', error);
+                showNotification('Failed to load salary details. Please try again.', 'error', 'Loading Error');
+            }
+        }
+
+        // Toggle calculation method function
+        function toggleCalculationMethod() {
+            // Ensure modal is still in DOM
+            const modal = getSalaryModal();
+            if (!modal || !document.body.contains(modal)) {
+                console.error('Toggle: Modal not available');
+                return;
+            }
+            
+            const toggle = modal.querySelector('#calculationToggle') || document.getElementById('calculationToggle');
+            const algerianBreakdown = modal.querySelector('#algerianBreakdown') || document.getElementById('algerianBreakdown');
+            const workedDaysBreakdown = modal.querySelector('#workedDaysBreakdown') || document.getElementById('workedDaysBreakdown');
+            const displayNetSalary = modal.querySelector('#displayNetSalary') || document.getElementById('displayNetSalary');
+            const displayMethodLabel = modal.querySelector('#displayMethodLabel') || document.getElementById('displayMethodLabel');
+            
+            if (!toggle || !algerianBreakdown || !workedDaysBreakdown || !displayNetSalary || !displayMethodLabel) {
+                console.error('Toggle elements not found in modal');
+                console.error('Toggle:', !!toggle, 'Algerian:', !!algerianBreakdown, 'WorkedDays:', !!workedDaysBreakdown, 'NetSalary:', !!displayNetSalary, 'Label:', !!displayMethodLabel);
+                return;
+            }
+            
+            if (toggle.checked) {
+                // Show partial month (exception) method
+                algerianBreakdown.classList.add('hidden');
+                workedDaysBreakdown.classList.remove('hidden');
+                displayNetSalary.textContent = `${formatCurrency(window.currentWorkedDaysSalary.net_salary || 0)} DA`;
+                const partialMonthText = typeof translate === 'function' ? translate('salary.partial_month') : 'Partial Month (Exception)';
+                displayMethodLabel.textContent = partialMonthText;
+                window.currentSelectedCalculationMethod = 'worked_days'; // Store selected method
+            } else {
+                // Show standard method
+                algerianBreakdown.classList.remove('hidden');
+                workedDaysBreakdown.classList.add('hidden');
+                displayNetSalary.textContent = `${formatCurrency(window.currentAlgerianSalary.net_salary || 0)} DA`;
+                const standardMethodText = typeof translate === 'function' ? translate('salary.standard_method') : 'Standard Method';
+                displayMethodLabel.textContent = standardMethodText;
+                window.currentSelectedCalculationMethod = 'algerian'; // Store selected method
+            }
+        }
+
+        // Parameters modal functionality hidden
+        /*
+        async function showParametersModal() {
+            try {
+                const content = document.getElementById('parametersContent');
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        ${Object.values(salaryParameters).map(param => `
+                            <div class="parameter-card">
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="font-medium text-gray-900">${param.parameter_name.replace(/_/g, ' ').toUpperCase()}</label>
+                                    <input type="number" 
+                                           id="param_${param.parameter_name}" 
+                                           value="${param.parameter_value}" 
+                                           step="0.01" 
+                                           class="w-24 px-2 py-1 border border-gray-300 rounded text-sm">
+                                </div>
+                                <p class="text-xs text-gray-500">${param.description || ''}</p>
+                            </div>
+                        `).join('')}
+                        
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button onclick="closeParametersModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                            <button onclick="saveParameters()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                Save Parameters
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('parametersModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error showing parameters modal:', error);
+                showNotification('Failed to load parameters', 'error');
+            }
+        }
+        */
+
+        // Parameters save functionality hidden
+        /*
+        async function saveParameters() {
+            try {
+                const token = localStorage.getItem('token');
+                
+                for (const paramName of Object.keys(salaryParameters)) {
+                    const input = document.getElementById(`param_${paramName}`);
+                    if (input) {
+                        const newValue = parseFloat(input.value);
+                        if (newValue !== salaryParameters[paramName].parameter_value) {
+                            await fetch(`${API_BASE_URL}/salary-parameters/${paramName}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    parameter_value: newValue,
+                                    description: salaryParameters[paramName].description
+                                })
+                            });
+                        }
+                    }
+                }
+                
+                await loadSalaryParameters();
+                closeParametersModal();
+                showNotification('Parameters updated successfully', 'success');
+                loadSalaries(); // Reload salaries with new parameters
+            } catch (error) {
+                console.error('Error saving parameters:', error);
+                showNotification('Failed to save parameters', 'error');
+            }
+        }
+        */
+
+        function addAdjustment(employeeId) {
+            document.getElementById('adjustmentEmployeeId').value = employeeId;
+            document.getElementById('adjustmentForm').reset();
+            document.getElementById('adjustmentEmployeeId').value = employeeId;
+            // Default to today's local date (YYYY-MM-DD) without timezone shift
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            document.getElementById('adjustmentEffectiveDate').value = `${yyyy}-${mm}-${dd}`;
+            document.getElementById('adjustmentsModal').classList.remove('hidden');
+        }
+
+        document.getElementById('adjustmentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const employeeId = document.getElementById('adjustmentEmployeeId').value;
+            const adjustmentType = document.getElementById('adjustmentType').value;
+            const amount = parseFloat(document.getElementById('adjustmentAmount').value);
+            const effectiveDate = document.getElementById('adjustmentEffectiveDate').value; // YYYY-MM-DD
+            const description = document.getElementById('adjustmentDescription').value;
+            
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/employees/${employeeId}/adjustments`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        adjustment_type: adjustmentType,
+                        amount,
+                        // Send date as provided and include user timezone for backend to interpret correctly
+                        effective_date: effectiveDate,
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        description
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to add adjustment');
+                
+                showNotification('Adjustment added successfully', 'success', 'Adjustment Recorded');
+                closeAdjustmentsModal();
+                loadSalaries(currentPagination.page);
+            } catch (error) {
+                console.error('Error adding adjustment:', error);
+                showNotification('Failed to add adjustment. Please try again.', 'error', 'Adjustment Failed');
+            }
+        });
+
+        async function markAsPaid(employeeId, calculationMethod = null) {
+            showConfirmation(
+                'Mark Salary as Paid',
+                'Are you sure you want to mark this salary as paid? This action cannot be undone.',
+                async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const month = document.getElementById('monthSelect').value;
+                const year = document.getElementById('yearSelect').value;
+                        
+                        // Use provided method, or the globally stored method from detail view, or default to algerian
+                        const methodToUse = calculationMethod || window.currentSelectedCalculationMethod || 'algerian';
+                
+                const response = await fetch(`${API_BASE_URL}/salaries/${employeeId}/pay`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                            body: JSON.stringify({ 
+                                month: parseInt(month), 
+                                year: parseInt(year),
+                                calculation_method: methodToUse
+                            })
+                });
+                
+                        if (!response.ok) throw new Error('Failed to mark salary as paid');
+                        
+                        const responseData = await response.json();
+                        
+                        // Show appropriate notification based on whether excess was carried forward
+                        if (responseData.excessDeductionCarriedForward && responseData.nextMonth) {
+                            const nextMonthName = getMonthName(responseData.nextMonth.month);
+                            showNotification(
+                                `Salary marked as paid successfully.<br><br><strong>Excess Deduction Carried Forward:</strong> ${formatCurrency(responseData.excessDeductionCarriedForward)} DA has been carried forward to ${nextMonthName} ${responseData.nextMonth.year} as a decrease adjustment.`,
+                                'success',
+                                'Payment Recorded'
+                            );
+                        } else {
+                            showNotification('Salary marked as paid successfully', 'success', 'Payment Recorded');
+                        }
+                        
+                        // If modal is open, close it and reload
+                        const modal = getSalaryModal();
+                        if (modal && !modal.classList.contains('hidden')) {
+                            closeSalaryModal();
+                        }
+                        
+                        loadSalaries(currentPagination.page);
+            } catch (error) {
+                console.error('Error marking salary as paid:', error);
+                        showNotification('Failed to mark salary as paid. Please try again.', 'error', 'Payment Failed');
+                    }
+                },
+                null,
+                'Mark as Paid',
+                'Cancel',
+                'bg-green-600 hover:bg-green-700'
+            );
+        }
+
+        // Mark as paid from within the modal (uses current toggle state)
+        async function markAsPaidFromModal(employeeId) {
+            // Get the current selected method from the toggle state
+            const toggle = document.getElementById('calculationToggle');
+            const currentMethod = toggle && toggle.checked ? 'worked_days' : 'algerian';
+            const methodName = currentMethod === 'worked_days' ? 'Partial Month (Exception)' : 'Standard Method';
+            
+            showConfirmation(
+                'Mark Salary as Paid',
+                `Mark this salary as paid using <strong>${methodName}</strong>?<br><br>This will use the calculation method you currently have selected in the detail view. This action cannot be undone.`,
+                async () => {
+                    // Call the main markAsPaid function with the current method
+                    await markAsPaid(employeeId, currentMethod);
+                },
+                null,
+                'Mark as Paid',
+                'Cancel',
+                'bg-green-600 hover:bg-green-700'
+            );
+        }
+
+        // Bulk handlers
+        document.addEventListener('DOMContentLoaded', () => {
+            const selectAll = document.getElementById('selectAllCheckbox');
+            const clearBtn = document.getElementById('clearSelectionBtn');
+            const payBtn = document.getElementById('paySelectedBtn');
+
+            if (selectAll) {
+                selectAll.addEventListener('change', () => {
+                    const eligibleOnPage = document.querySelectorAll('.row-select-checkbox:not(:disabled)');
+                    if (selectAll.checked) {
+                        eligibleOnPage.forEach(cb => {
+                            cb.checked = true;
+                            selectedEmployeeIds.add(String(cb.getAttribute('data-employee-id')));
+                        });
+                    } else {
+                        eligibleOnPage.forEach(cb => {
+                            cb.checked = false;
+                            selectedEmployeeIds.delete(String(cb.getAttribute('data-employee-id')));
+                        });
+                    }
+                    refreshBulkControls();
+                });
+            }
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    selectedEmployeeIds.clear();
+                    document.querySelectorAll('.row-select-checkbox').forEach(cb => cb.checked = false);
+                    const selectAllBox = document.getElementById('selectAllCheckbox');
+                    if (selectAllBox) selectAllBox.checked = false;
+                    refreshBulkControls();
+                });
+            }
+
+            if (payBtn) {
+                payBtn.addEventListener('click', async () => {
+                    if (selectedEmployeeIds.size === 0) {
+                        showNotification('Please select at least one employee', 'warning', 'No Selection');
+                        return;
+                    }
+                    
+                    showConfirmation(
+                        'Bulk Mark Salaries as Paid',
+                        `Are you sure you want to mark <strong>${selectedEmployeeIds.size}</strong> selected salary/salaries as paid?<br><br>This action cannot be undone.`,
+                        async () => {
+                    try {
+                        payBtn.disabled = true;
+                        payBtn.classList.add('opacity-50');
+
+                        const month = document.getElementById('monthSelect').value;
+                        const year = document.getElementById('yearSelect').value;
+                        const token = localStorage.getItem('token');
+
+                        const ids = Array.from(selectedEmployeeIds);
+                        // Process sequentially to avoid hammering the API
+                        for (const id of ids) {
+                            await fetch(`${API_BASE_URL}/salaries/${id}/pay`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ month: parseInt(month), year: parseInt(year) })
+                            }).then(r => { if (!r.ok) throw new Error('Failed'); });
+                        }
+
+                                showNotification(`Successfully marked ${ids.length} salary/salaries as paid`, 'success', 'Bulk Payment Complete');
+                        selectedEmployeeIds.clear();
+                        const selectAllBox = document.getElementById('selectAllCheckbox');
+                        if (selectAllBox) selectAllBox.checked = false;
+                        refreshBulkControls();
+                        loadSalaries(currentPagination.page);
+                    } catch (e) {
+                        console.error(e);
+                                showNotification('Bulk pay failed for one or more items. Please try again.', 'error', 'Bulk Payment Failed');
+                    } finally {
+                        payBtn.disabled = false;
+                        payBtn.classList.remove('opacity-50');
+                    }
+                        },
+                        null,
+                        'Confirm Payment',
+                        'Cancel',
+                        'bg-green-600 hover:bg-green-700'
+                    );
+                });
+            }
+        });
+
+        async function exportSalaries() {
+            try {
+                const token = localStorage.getItem('token');
+                const month = document.getElementById('monthSelect').value;
+                const year = document.getElementById('yearSelect').value;
+                
+                const response = await fetch(`${API_BASE_URL}/salaries/export/excel?month=${month}&year=${year}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to export salaries');
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `salary-report-${year}-${month}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                showNotification('Salary report exported successfully', 'success', 'Export Complete');
+            } catch (error) {
+                console.error('Error exporting salaries:', error);
+                showNotification('Failed to export salary report. Please try again.', 'error', 'Export Failed');
+            }
+        }
+
+        // Helper functions
+        function getMonthName(monthNumber) {
+            const months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            return months[monthNumber - 1];
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingState').classList.toggle('hidden', !show);
+        }
+
+        function showEmptyState(show) {
+            document.getElementById('emptyState').classList.toggle('hidden', !show);
+        }
+
+        function closeSalaryModal() {
+            const modal = getSalaryModal();
+            if (modal && document.body.contains(modal)) {
+                modal.classList.add('hidden');
+                // Clear the content but keep the modal structure
+                const content = modal.querySelector('#salaryModalContent') || document.getElementById('salaryModalContent');
+                if (content) {
+                    content.innerHTML = '<!-- Salary details will be loaded here -->';
+                }
+                // Clear global state
+                window.currentSelectedCalculationMethod = null;
+            } else {
+                console.warn('closeSalaryModal: Modal not found or removed from DOM');
+                cachedSalaryModal = null; // Clear cache
+            }
+        }
+
+        // Parameters modal close functionality hidden
+        /*
+        function closeParametersModal() {
+            document.getElementById('parametersModal').classList.add('hidden');
+        }
+        */
+
+        function closeAdjustmentsModal() {
+            document.getElementById('adjustmentsModal').classList.add('hidden');
+        }
+
+        function showBulkValidationModal() {
+            document.getElementById('bulkValidationModal').classList.remove('hidden');
+            document.getElementById('bulkValidationProgress').classList.add('hidden');
+        }
+
+        function closeBulkValidationModal() {
+            document.getElementById('bulkValidationModal').classList.add('hidden');
+        }
+
+        async function performBulkValidation() {
+            const month = document.getElementById('monthSelect').value;
+            const year = document.getElementById('yearSelect').value;
+            const department = document.getElementById('departmentFilter').value;
+            
+            try {
+                // First, check if validation is allowed (no pending cases)
+                const token = localStorage.getItem('token');
+                let validationCheckUrl = `http://localhost:3000/api/attendance/validation/check/${year}/${month}`;
+                if (department) {
+                    validationCheckUrl += `?department=${department}`;
+                }
+                
+                const validationCheckResponse = await fetch(validationCheckUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (validationCheckResponse.ok) {
+                    const validationCheck = await validationCheckResponse.json();
+                    if (!validationCheck.can_validate) {
+                        showNotification(
+                            `Cannot validate: ${validationCheck.pending_count} pending day(s) must be resolved first. Please go to the attendance page to treat pending cases.`,
+                            'error',
+                            'Validation Blocked'
+                        );
+                        closeBulkValidationModal();
+                        return;
+                    }
+                } else {
+                    // If check fails, warn but allow to continue
+                    console.warn('Failed to check pending status, proceeding with validation');
+                    showNotification('Could not verify pending days. Please ensure all pending cases are resolved before validating.', 'warning', 'Validation Warning');
+                }
+                
+                document.getElementById('bulkValidateBtn').disabled = true;
+                document.getElementById('bulkValidationProgress').classList.remove('hidden');
+                
+                // Get all unvalidated employees
+                const unvalidatedEmployees = currentSalaries.filter(s => 
+                    s.validation_status !== 'Validated' || (s.error && s.error.includes('not validated'))
+                );
+                
+                if (unvalidatedEmployees.length === 0) {
+                    showNotification('All employees are already validated', 'info', 'Validation Status');
+                    closeBulkValidationModal();
+                    return;
+                }
+                
+                const total = unvalidatedEmployees.length;
+                document.getElementById('validationProgressTotal').textContent = total;
+                
+                let completed = 0;
+                let successful = 0;
+                let failed = 0;
+                
+                // Validate each employee
+                for (const employee of unvalidatedEmployees) {
+                    try {
+                        // Call the attendance service validation API
+                        const token = localStorage.getItem('token');
+                        const response = await fetch(`http://localhost:3000/api/attendance/validate/employee/${employee.employee_id}`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ 
+                                year: parseInt(year), 
+                                month: parseInt(month) 
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            successful++;
+                        } else {
+                            failed++;
+                            console.error(`Failed to validate ${employee.employee_name}`);
+                        }
+                    } catch (error) {
+                        failed++;
+                        console.error(`Error validating ${employee.employee_name}:`, error);
+                    }
+                    
+                    completed++;
+                    document.getElementById('validationProgressCount').textContent = completed;
+                    const percentage = (completed / total) * 100;
+                    document.getElementById('validationProgressBar').style.width = `${percentage}%`;
+                }
+                
+                closeBulkValidationModal();
+                
+                if (failed === 0) {
+                    showNotification(`Successfully validated ${successful} employees`, 'success', 'Bulk Validation Complete');
+                } else {
+                    showNotification(`Validated ${successful} employees, ${failed} failed`, 'warning', 'Bulk Validation Results');
+                }
+                
+                // Reload salaries to show updated validation status
+                loadSalaries(currentPagination.page);
+                
+            } catch (error) {
+                console.error('Bulk validation error:', error);
+                showNotification('Bulk validation failed. Please try again.', 'error', 'Validation Failed');
+            } finally {
+                document.getElementById('bulkValidateBtn').disabled = false;
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'hr-dashboard.html';
+        }
+
+        // Event listeners
+        document.getElementById('monthSelect').addEventListener('change', () => loadSalaries());
+        document.getElementById('yearSelect').addEventListener('change', () => loadSalaries());
+        document.getElementById('departmentFilter').addEventListener('change', () => loadSalaries());
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(() => {
+                loadSalaries();
+            }, 300);
+        });
+
+        // Handle URL parameters for auto-opening salary popup
+        function handleUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const employeeId = urlParams.get('employeeId');
+            const year = urlParams.get('year');
+            const month = urlParams.get('month');
+            const tokenParam = urlParams.get('token');
+            
+            if (employeeId && year && month) {
+                // Check if user is authenticated
+                let token = localStorage.getItem('token');
+                
+                // If token is provided in URL, use it and store it
+                if (tokenParam && !token) {
+                    token = tokenParam;
+                    localStorage.setItem('token', token);
+                    console.log('Token restored from URL parameter');
+                }
+                
+                if (!token) {
+                    showNotification('Please log in to view salary details', 'error', 'Authentication Required');
+                    // Redirect to login page
+                    setTimeout(() => {
+                        window.location.href = '../index.html';
+                    }, 2000);
+                    return;
+                }
+                
+                // Check if token is expired
+                try {
+                    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+                    const currentTime = Math.floor(Date.now() / 1000);
+                    if (tokenPayload.exp && tokenPayload.exp < currentTime) {
+                        showNotification('Your session has expired. Please log in again.', 'error', 'Session Expired');
+                        localStorage.removeItem('token');
+                        setTimeout(() => {
+                            window.location.href = '../index.html';
+                        }, 2000);
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error parsing token:', error);
+                }
+                
+                // Set the date selectors to match the parameters
+                document.getElementById('yearSelect').value = year;
+                document.getElementById('monthSelect').value = month;
+                
+                // Wait for salaries to load, then open the popup
+                setTimeout(() => {
+                    viewSalaryDetails(employeeId);
+                }, 2000); // Increased timeout to allow for data loading
+            }
+        }
+
+        // Navigation functions for daily attendance
+        function openDailyAttendance(employeeId, year, month) {
+            const params = new URLSearchParams({
+                employeeId: employeeId,
+                year: year,
+                month: month
+            });
+            
+            // Determine the attendance service URL based on current port
+            const currentPort = window.location.port;
+            let attendanceUrl;
+            
+            if (currentPort === '5502' || currentPort === '5503') {
+                // If we're on frontend (Live Server), try attendance service on port 3000
+                attendanceUrl = `http://localhost:3000/daily?${params.toString()}`;
+            } else {
+                // Fallback to relative path
+                attendanceUrl = `../attendance-service/daily-attendance.html?${params.toString()}`;
+            }
+            
+            console.log('Opening daily attendance with URL:', attendanceUrl);
+            
+            try {
+                const newWindow = window.open(attendanceUrl, '_blank');
+                
+                // Check if the window opened successfully
+                if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+                    showNotification('Please allow popups and ensure the attendance service is running on port 3000', 'error', 'Service Unavailable');
+                }
+            } catch (error) {
+                console.error('Failed to open attendance page:', error);
+                showNotification('Please ensure the attendance service is running on port 3000', 'error', 'Service Unavailable');
+            }
+        }
+
+        async function openDailyAttendanceForValidation(employeeId, year, month) {
+            try {
+                // Block validation if there are pending exceptions or overtime for this employee/month
+                // Check if API object is available
+                if (typeof window.API === 'undefined') {
+                    console.warn('API object not available, skipping pending items check');
+                } else {
+                    try {
+                const params = { employeeId, year, month, limit: 1 };
+                const [pendingExc, pendingOT] = await Promise.all([
+                            window.API.getPendingExceptions(params).catch(() => ({ data: [] })),
+                            window.API.getPendingOvertime(params).catch(() => ({ data: [] }))
+                ]);
+
+                const excList = pendingExc && pendingExc.success ? (pendingExc.data || pendingExc.exceptions || []) : [];
+                const otList = pendingOT && pendingOT.success ? (pendingOT.data || []) : [];
+
+                if (excList.length > 0 || otList.length > 0) {
+                            showNotification('Cannot validate: pending items exist for this month. Please resolve them first.', 'error', 'Validation Blocked');
+                    return;
+                        }
+                    } catch (apiError) {
+                        console.warn('Error checking pending items:', apiError);
+                        // Continue with validation even if API check fails
+                    }
+                }
+
+                const qs = new URLSearchParams({
+                    employeeId: String(employeeId),
+                    year: String(year),
+                    month: String(month),
+                    focusValidation: 'true'
+                });
+
+                // Determine the attendance service URL based on current port
+                const currentPort = window.location.port;
+                let attendanceUrl;
+                if (currentPort === '5502' || currentPort === '5503') {
+                    attendanceUrl = `http://localhost:3000/daily?${qs.toString()}`;
+                } else {
+                    attendanceUrl = `../attendance-service/daily-attendance.html?${qs.toString()}`;
+                }
+
+                console.log('Opening daily attendance for validation with URL:', attendanceUrl);
+                const newWindow = window.open(attendanceUrl, '_blank');
+                if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+                    showNotification('Please allow popups and ensure the attendance service is running on port 3000', 'error', 'Service Unavailable');
+                }
+            } catch (error) {
+                console.error('Failed to open attendance page:', error);
+                showNotification('Please ensure the attendance service is running on port 3000', 'error', 'Service Unavailable');
+            }
+        }
+
+        // Modal-based notification system
+        function showNotification(message, type = 'info', title = null) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-overlay';
+            
+            // Determine colors and icons based on type
+            let iconClass, iconBg, borderColor, titleText;
+            switch(type) {
+                case 'success':
+                    iconClass = 'fas fa-check-circle text-green-600';
+                    iconBg = 'bg-green-100';
+                    borderColor = 'border-green-500';
+                    titleText = title || 'Success';
+                    break;
+                case 'error':
+                    iconClass = 'fas fa-exclamation-circle text-red-600';
+                    iconBg = 'bg-red-100';
+                    borderColor = 'border-red-500';
+                    titleText = title || 'Error';
+                    break;
+                case 'warning':
+                    iconClass = 'fas fa-exclamation-triangle text-yellow-600';
+                    iconBg = 'bg-yellow-100';
+                    borderColor = 'border-yellow-500';
+                    titleText = title || 'Warning';
+                    break;
+                default:
+                    iconClass = 'fas fa-info-circle text-blue-600';
+                    iconBg = 'bg-blue-100';
+                    borderColor = 'border-blue-500';
+                    titleText = title || 'Information';
+            }
+            
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 modal-content transform transition-all">
+                    <div class="p-6">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <div class="${iconBg} rounded-full p-3">
+                                    <i class="${iconClass} text-2xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">${titleText}</h3>
+                                <div class="text-sm text-gray-600">${message}</div>
+                            </div>
+                            <button onclick="this.closest('.modal-overlay').remove()" class="ml-4 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 bg-gray-50 rounded-b-xl border-t border-gray-200 flex justify-end">
+                        <button onclick="this.closest('.modal-overlay').remove()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                            OK
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Add animation
+            setTimeout(() => {
+                modal.querySelector('.modal-content').classList.add('scale-100');
+            }, 10);
+            
+            // Auto-close after 5 seconds for info messages (keep error/success longer)
+            if (type === 'info') {
+            setTimeout(() => {
+                    if (modal.parentElement) {
+                        modal.querySelector('.modal-content').classList.add('scale-95', 'opacity-0');
+                        setTimeout(() => modal.remove(), 200);
+                    }
+                }, 5000);
+            }
+        }
+        
+        // Confirmation modal
+        function showConfirmation(title, message, onConfirm, onCancel = null, confirmText = 'Confirm', cancelText = 'Cancel', confirmClass = 'bg-blue-600 hover:bg-blue-700') {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-overlay';
+            
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = `px-6 py-2 ${confirmClass} text-white rounded-lg transition-colors font-medium`;
+            confirmBtn.textContent = confirmText;
+            confirmBtn.onclick = () => {
+                if (onConfirm) onConfirm();
+                modal.remove();
+            };
+            
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-medium';
+            cancelBtn.textContent = cancelText;
+            cancelBtn.onclick = () => {
+                if (onCancel) onCancel();
+                modal.remove();
+            };
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'ml-4 text-gray-400 hover:text-gray-600';
+            closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            closeBtn.onclick = () => {
+                if (onCancel) onCancel();
+                modal.remove();
+            };
+            
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 modal-content transform transition-all">
+                    <div class="p-6">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <div class="bg-yellow-100 rounded-full p-3">
+                                    <i class="fas fa-question-circle text-yellow-600 text-2xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">${title}</h3>
+                                <p class="text-sm text-gray-600">${message}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 bg-gray-50 rounded-b-xl border-t border-gray-200 flex justify-end space-x-3">
+                    </div>
+                </div>
+            `;
+            
+            const actionsDiv = modal.querySelector('.bg-gray-50');
+            actionsDiv.appendChild(cancelBtn);
+            actionsDiv.appendChild(confirmBtn);
+            
+            const headerDiv = modal.querySelector('.flex.items-start');
+            headerDiv.appendChild(closeBtn);
+            
+            document.body.appendChild(modal);
+            
+            // Add animation
+                setTimeout(() => {
+                modal.querySelector('.modal-content').classList.add('scale-100');
+            }, 10);
+        }
+    </script>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="../assets/js/translations.js"></script>
+    <script src="../assets/js/navbar.js"></script>
+</body>
+</html>
+

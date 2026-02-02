@@ -1,0 +1,19 @@
+# Node & React
+node_modules/
+build/
+dist/
+.next/
+*.log
+coverage/
+
+# IDE
+.vscode/
+.idea/
+
+# Env & secrets
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db

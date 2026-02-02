@@ -1,0 +1,3109 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <script type="text/javascript">
+        // This is a CodeSandbox injection script that's used to
+        // add navigation and inspector functionality to the preview
+        (function () {
+            // 1) Get the <script> tag that's currently running:
+            var me = document.currentScript;
+
+            // 2) Create the blocking‐style <script> to load:
+            var script = document.createElement("script");
+            script.src = "https://codesandbox.io/p/preview-protocol.js";
+
+            // By default a dynamically‐inserted <script> is async=true.
+            // Turn async off to make it behave like a normal blocking <script>:
+            script.async = false;
+            // (Do NOT set defer.)
+
+            // 3) Insert it immediately after the current <script>:
+            me.parentNode.insertBefore(script, me);
+        })();
+
+        const isIFramePreview = window.top !== window.self;
+
+        // Only run this script in editor context
+        if (isIFramePreview) {
+            // This script is used to enable Chrome DevTools functionality
+            (function () {
+                var script = document.createElement("script");
+                script.src =
+                    "https://codesandbox.io/p/chrome-devtool/protocol/index.js";
+
+                script.onload = () => {
+                    const devtoolProtocol = window.chobitsu;
+                    if (devtoolProtocol) {
+                        window.addEventListener("message", (event) => {
+                            const { type, data } = event.data;
+
+                            if (type === "FROM_DEVTOOL") {
+                                devtoolProtocol.sendRawMessage(data);
+                            }
+                        });
+
+                        devtoolProtocol.setOnMessage((data) => {
+                            if (data.includes('"id":"tmp')) {
+                                return;
+                            }
+
+                            window.parent.postMessage({ type: "TO_DEVTOOL", data }, "*");
+                        });
+
+                        devtoolProtocol.sendRawMessage(
+                            `{"id":5,"method":"Runtime.enable","params":{}}`
+                        );
+                    }
+                }
+
+                (document.head || document.documentElement).prepend(script);
+            })();
+        }
+
+        if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === "undefined") {
+            let nextID = 0;
+            let hook = (__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+                renderers: new Map(),
+                supportsFiber: true,
+                inject: (renderer) => {
+                    const id = nextID++;
+                    hook.renderers.set(id, renderer);
+                    return id;
+                },
+                onScheduleFiberRoot() { },
+                onCommitFiberRoot() { },
+                onCommitFiberUnmount() { },
+            });
+        }
+
+        document.currentScript.remove();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title data-translate="attendance.daily.title">Daily Attendance - HR Operations Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .stat-chip {
+            transition: all 0.2s ease;
+        }
+
+        .stat-chip:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            width: fit-content;
+            min-width: auto;
+        }
+
+        .status-present {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-absent {
+            background-color: #fecaca;
+            color: #991b1b;
+        }
+
+        .status-justified {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-overridden {
+            background-color: #dcfce7;
+            color: #166534;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background-color: #fdba74;
+            color: #c2410c;
+            font-weight: 600;
+            box-shadow: 0 0 0 2px #fb923c33;
+        }
+
+        .status-late {
+            background-color: #fed7aa;
+            color: #9a3412;
+        }
+
+        .status-early {
+            background-color: #fed7aa;
+            color: #9a3412;
+        }
+
+        .status-missing-one {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-missing-both {
+            background-color: #fecaca;
+            color: #991b1b;
+            font-weight: 600;
+        }
+
+        .table-row:hover {
+            background-color: #f9fafb;
+        }
+
+        .validated-row {
+            background-color: #f0fdf4;
+        }
+
+        .side-panel {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .time-input {
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    <!-- Back Button (only visible when embedded) -->
+    <div id="backButtonContainer" class="hidden fixed top-4 z-40" style="left: calc(4rem + 1rem);">
+        <button onclick="goBack()"
+            class="bg-white hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-lg shadow-md border border-gray-300 transition-all duration-200 flex items-center space-x-2 hover:shadow-lg"
+            data-translate="common.back">
+            <i class="fas fa-arrow-left"></i>
+            <span data-translate="common.back">Back</span>
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8" style="padding-top: 1.5rem;">
+        <!-- Employee Header -->
+        <div class="bg-white rounded-lg shadow-sm mb-6 p-6">
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <div class="flex items-center mb-2 space-x-3">
+                        <h2 id="employeeName" class="text-2xl font-bold text-gray-900">-</h2>
+                        <span id="employeePosition"
+                            class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">-</span>
+                        <span id="validationStatusBadge" class="status-badge bg-gray-100 text-gray-700"
+                            data-translate="attendance.daily.not_loaded">Not Loaded</span>
+                    </div>
+                    <p id="employeeDepartment" class="text-gray-600">-</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1"
+                            data-translate="common.year">Year</label>
+                        <select id="yearSelector"
+                            class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1"
+                            data-translate="common.month">Month</label>
+                        <select id="monthSelector"
+                            class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="1" data-translate="common.month.january">January</option>
+                            <option value="2" data-translate="common.month.february">February</option>
+                            <option value="3" data-translate="common.month.march">March</option>
+                            <option value="4" data-translate="common.month.april">April</option>
+                            <option value="5" data-translate="common.month.may">May</option>
+                            <option value="6" data-translate="common.month.june">June</option>
+                            <option value="7" data-translate="common.month.july">July</option>
+                            <option value="8" data-translate="common.month.august">August</option>
+                            <option value="9" data-translate="common.month.september">September</option>
+                            <option value="10" data-translate="common.month.october">October</option>
+                            <option value="11" data-translate="common.month.november">November</option>
+                            <option value="12" data-translate="common.month.december">December</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="loadEmployeeData()"
+                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                            <i class="fas fa-search mr-2"></i>
+                            <span data-translate="common.load">Load</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div class="grid grid-cols-2 md:grid-cols-8 gap-4 mb-6">
+            <div class="stat-chip bg-white rounded-lg p-4 text-center shadow-sm">
+                <div class="text-2xl font-semibold text-blue-600" id="scheduledDays">-</div>
+                <div class="text-xs text-gray-500" data-translate="attendance.daily.scheduled_days">Scheduled Days</div>
+            </div>
+            <div class="stat-chip bg-white rounded-lg p-4 text-center shadow-sm">
+                <div class="text-2xl font-semibold text-green-600" id="workedDays">-</div>
+                <div class="text-xs text-gray-500" data-translate="attendance.daily.worked_days">Worked Days</div>
+            </div>
+            <div class="stat-chip bg-white rounded-lg p-4 text-center shadow-sm">
+                <div class="text-2xl font-semibold text-red-600" id="absenceDays">-</div>
+                <div class="text-xs text-gray-500" data-translate="attendance.daily.absence_days">Absence Days</div>
+            </div>
+            <div class="stat-chip bg-white rounded-lg p-4 text-center shadow-sm">
+                <div class="text-2xl font-semibold text-yellow-600" id="pendingDays">-</div>
+                <div class="text-xs text-gray-500" data-translate="attendance.daily.pending_days">Pending Days</div>
+            </div>
+            <div class="stat-chip bg-white rounded-lg p-4 text-center shadow-sm">
+                <div class="text-2xl font-semibold text-yellow-600" id="lateCount">-</div>
+                <div class="text-xs text-gray-500" data-translate="attendance.daily.late">Late</div>
+                <div class="text-xs text-gray-500" id="lateTotalText" data-translate="attendance.daily.total">Total: -
+                </div>
+            </div>
+            <div class="stat-chip bg-white rounded-lg p-4 text-center shadow-sm">
+                <div class="text-2xl font-semibold text-orange-600" id="earlyCount">-</div>
+                <div class="text-xs text-gray-500" data-translate="attendance.daily.early">Early</div>
+                <div class="text-xs text-gray-500" id="earlyTotalText" data-translate="attendance.daily.total">Total: -
+                </div>
+            </div>
+            <div class="stat-chip bg-white rounded-lg p-4 text-center shadow-sm">
+                <div class="text-2xl font-semibold text-purple-600" id="totalOvertimeHours">-</div>
+                <div class="text-xs text-gray-500" data-translate="attendance.daily.overtime_hours">Overtime Hours</div>
+            </div>
+            <div class="stat-chip bg-white rounded-lg p-4 text-center shadow-sm">
+                <div class="text-2xl font-semibold text-indigo-600" id="wageChanges">-</div>
+                <div class="text-xs text-gray-500" data-translate="attendance.daily.wage_changes">Wage Changes</div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div
+            class="validation-section flex justify-between items-center mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900" data-translate="attendance.daily.records_title">Daily
+                    Attendance Records</h3>
+                <p class="text-sm text-gray-600 mt-1" data-translate="attendance.daily.records_description">Review and
+                    validate attendance data for payroll processing</p>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="testAPI()"
+                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm">
+                    <i class="fas fa-bug mr-2"></i>
+                    <span data-translate="attendance.daily.test_api">Test API</span>
+                </button>
+                <button onclick="openSalaryPopup()"
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm">
+                    <i class="fas fa-money-bill-wave mr-2"></i>
+                    <span data-translate="attendance.daily.view_salary">View Salary</span>
+                </button>
+                <button onclick="recalculateMonth()"
+                    class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm">
+                    <i class="fas fa-calculator mr-2"></i>
+                    <span data-translate="attendance.daily.recalculate">Recalculate</span>
+                </button>
+                <button onclick="validateMonth()"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                    <i class="fas fa-check-double mr-2"></i>
+                    <span data-translate="attendance.daily.validate_month">Validate Month</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Left Panel: Daily Attendance Table (3/4 width) -->
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        data-translate="attendance.daily.date">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        data-translate="attendance.daily.scheduled_shift">Scheduled Shift</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        data-translate="attendance.daily.entry_time">Entry Time</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        data-translate="attendance.daily.exit_time">Exit Time</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        data-translate="attendance.daily.overtime_hours">Overtime Hours</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        data-translate="common.status">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        data-translate="common.actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Table rows will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="attendanceLoading" class="text-center py-12 hidden">
+                        <div class="loading-spinner rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p class="text-gray-500" data-translate="attendance.daily.loading">Loading attendance data...
+                        </p>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="attendanceEmpty" class="text-center py-12 hidden">
+                        <i class="fas fa-calendar-alt text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500" data-translate="attendance.daily.no_records">No attendance records
+                            found</p>
+                        <p class="text-sm text-gray-400" data-translate="attendance.daily.no_scheduled_days">No
+                            scheduled days for the selected period</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Side Panels (1/4 width) -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Exceptions Panel -->
+                <div class="bg-white rounded-lg shadow-sm">
+                    <div class="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+                        <h4 class="font-medium text-gray-900" data-translate="attendance.daily.exceptions">Exceptions
+                        </h4>
+                    </div>
+                    <div id="exceptionsPanel" class="side-panel p-4">
+                        <div id="pendingExceptionsList">
+                            <!-- Pending exceptions will be loaded here -->
+                        </div>
+                        <div id="exceptionsHistoryList" class="mt-4 border-t border-gray-200 pt-4">
+                            <!-- Exceptions history will be loaded here -->
+                        </div>
+                        <div id="exceptionsEmpty" class="text-center py-8 text-gray-500 text-sm hidden">
+                            <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                            <p data-translate="attendance.daily.no_exceptions">No exceptions</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Wage Changes Panel -->
+                <div class="bg-white rounded-lg shadow-sm">
+                    <div class="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+                        <h4 class="font-medium text-gray-900" data-translate="attendance.daily.wage_changes">Wage
+                            Changes</h4>
+                        <button onclick="openWageChangeModal()" class="text-blue-600 hover:text-blue-800 text-sm">
+                            <i class="fas fa-plus mr-1"></i>
+                            <span data-translate="common.add">Add</span>
+                        </button>
+                    </div>
+                    <div id="wageChangesPanel" class="side-panel p-4">
+                        <div id="wageChangesList">
+                            <!-- Wage changes will be loaded here -->
+                        </div>
+                        <div id="wageChangesEmpty" class="text-center py-8 text-gray-500 text-sm hidden">
+                            <i class="fas fa-dollar-sign text-2xl mb-2"></i>
+                            <p data-translate="attendance.daily.no_wage_changes">No wage changes</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Overtime/Exception Requests Panel -->
+                <div class="bg-white rounded-lg shadow-sm">
+                    <div class="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+                        <h4 class="font-medium text-gray-900" data-translate="attendance.daily.overtime_requests">
+                            Overtime Requests</h4>
+                        <button onclick="openOvertimeModal()" class="text-blue-600 hover:text-blue-800 text-sm">
+                            <i class="fas fa-plus mr-1"></i>
+                            <span data-translate="common.add">Add</span>
+                        </button>
+                    </div>
+                    <div id="overtimePanel" class="side-panel p-4 space-y-6">
+                        <div>
+                            <div class="mb-2 text-xs font-semibold text-gray-600"
+                                data-translate="attendance.daily.pending_requests">Pending Requests</div>
+                            <div id="overtimePendingList"></div>
+                            <div id="overtimePendingEmpty" class="text-center py-4 text-gray-400 text-xs hidden"
+                                data-translate="attendance.daily.no_pending_overtime">No pending overtime requests</div>
+                        </div>
+                        <div>
+                            <div class="mb-2 text-xs font-semibold text-gray-600"
+                                data-translate="attendance.daily.approved_rejected">Approved / Rejected</div>
+                            <div id="overtimeHistoryList"></div>
+                            <div id="overtimeHistoryEmpty" class="text-center py-4 text-gray-400 text-xs hidden"
+                                data-translate="attendance.daily.no_history">No history</div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Day Modal -->
+    <div id="editDayModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg max-w-lg w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900" id="editDayTitle"
+                        data-translate="attendance.daily.edit_day_record">Edit Day Record</h3>
+                    <button onclick="closeEditDayModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <form id="editDayForm">
+                    <input type="hidden" id="editDayDate" value="">
+
+                    <!-- Current Status Card -->
+                    <div class="mb-6 bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3 flex items-center">
+                            <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                            <span data-translate="attendance.daily.current_status">Current Status</span>
+                        </h4>
+                        <div id="currentStatusDisplay" class="space-y-2">
+                            <!-- Current status info will be displayed here -->
+                        </div>
+                    </div>
+
+                    <!-- Scheduled Shift Card -->
+                    <div class="mb-6 bg-blue-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3 flex items-center">
+                            <i class="fas fa-clock text-blue-600 mr-2"></i>
+                            <span data-translate="attendance.daily.scheduled_shift">Scheduled Shift</span>
+                        </h4>
+                        <div id="scheduledShiftDisplay" class="text-sm text-gray-700">
+                            <!-- Scheduled shift info will be displayed here -->
+                        </div>
+                    </div>
+
+                    <!-- Pending Case Treatment (shown only for pending cases) -->
+                    <div id="pendingTreatmentSection"
+                        class="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-4 hidden">
+                        <h4 class="font-medium text-gray-900 mb-3 flex items-center">
+                            <i class="fas fa-exclamation-triangle text-orange-600 mr-2"></i>
+                            <span data-translate="attendance.daily.pending_case_treatment">Pending Case Treatment</span>
+                        </h4>
+                        <p class="text-sm text-gray-600 mb-4"
+                            data-translate="attendance.daily.pending_case_description">
+                            This day has a single punch and requires treatment. Choose how to handle this partial
+                            attendance:
+                        </p>
+
+                        <div class="space-y-3">
+                            <label
+                                class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-white cursor-pointer">
+                                <input type="radio" name="pendingAction" value="full_day"
+                                    class="text-blue-600 focus:ring-blue-500" onchange="toggleDeductionInput()">
+                                <div class="ml-3">
+                                    <div class="font-medium text-gray-900"
+                                        data-translate="attendance.daily.full_day_validation">Full Day Validation</div>
+                                    <div class="text-sm text-gray-600"
+                                        data-translate="attendance.daily.full_day_description">Count as full day present
+                                        (full daily pay)</div>
+                                </div>
+                            </label>
+
+                            <label
+                                class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-white cursor-pointer">
+                                <input type="radio" name="pendingAction" value="half_day"
+                                    class="text-blue-600 focus:ring-blue-500" onchange="toggleDeductionInput()">
+                                <div class="ml-3">
+                                    <div class="font-medium text-gray-900"
+                                        data-translate="attendance.daily.half_day_validation">Half Day Validation</div>
+                                    <div class="text-sm text-gray-600"
+                                        data-translate="attendance.daily.half_day_description">Count as present but with
+                                        half daily pay</div>
+                                </div>
+                            </label>
+
+                            <label
+                                class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-white cursor-pointer">
+                                <input type="radio" name="pendingAction" value="refuse"
+                                    class="text-blue-600 focus:ring-blue-500" onchange="toggleDeductionInput()">
+                                <div class="ml-3">
+                                    <div class="font-medium text-gray-900" data-translate="attendance.daily.refuse">
+                                        Refuse</div>
+                                    <div class="text-sm text-gray-600"
+                                        data-translate="attendance.daily.refuse_description">Mark as absent (absent
+                                        deduction applied)</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Deduction Section (only for Full Day) -->
+                        <div id="deductionSection"
+                            class="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4 hidden">
+                            <h5 class="font-medium text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-money-bill-wave text-yellow-600 mr-2"></i>
+                                <span data-translate="attendance.daily.wage_deduction_optional">Wage Deduction
+                                    (Optional)</span>
+                            </h5>
+                            <p class="text-sm text-gray-600 mb-3"
+                                data-translate="attendance.daily.wage_deduction_description">
+                                You can apply a wage deduction for this full day validation:
+                            </p>
+
+                            <div class="flex items-center space-x-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="applyDeduction"
+                                        class="text-blue-600 focus:ring-blue-500">
+                                    <span class="ml-2 text-sm font-medium text-gray-700"
+                                        data-translate="attendance.daily.apply_deduction">Apply deduction</span>
+                                </label>
+
+                                <div id="deductionAmountContainer" class="flex items-center space-x-2 hidden">
+                                    <input type="number" id="deductionAmount" step="0.01" min="0"
+                                        class="w-24 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="0.00">
+                                    <span class="text-sm text-gray-600">DA</span>
+                                </div>
+                            </div>
+
+                            <script>
+                                document.getElementById('applyDeduction').addEventListener('change', function () {
+                                    const container = document.getElementById('deductionAmountContainer');
+                                    if (this.checked) {
+                                        container.classList.remove('hidden');
+                                        document.getElementById('deductionAmount').focus();
+                                    } else {
+                                        container.classList.add('hidden');
+                                        document.getElementById('deductionAmount').value = '';
+                                    }
+                                });
+                            </script>
+                        </div>
+
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2"
+                                data-translate="attendance.daily.reason_optional">
+                                Reason (optional)
+                            </label>
+                            <textarea id="pendingTreatmentReason" rows="2"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                data-translate-placeholder="attendance.daily.reason_placeholder"
+                                placeholder="Add a reason for this treatment..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Action Preview Card -->
+                    <div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3 flex items-center">
+                            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                            <span data-translate="attendance.daily.what_this_will_do">What This Will Do</span>
+                        </h4>
+                        <div id="actionPreviewBox" class="text-sm text-gray-700">
+                            <!-- Action preview will be displayed here -->
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeEditDayModal()"
+                            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                            data-translate="common.cancel">
+                            Cancel
+                        </button>
+                        <button id="treatPendingButton" type="button" onclick="treatPendingCase()"
+                            class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors hidden">
+                            <i class="fas fa-gavel mr-2"></i>
+                            <span data-translate="attendance.daily.treat_pending_case">Treat Pending Case</span>
+                        </button>
+                        <button id="saveValidateButton" type="button" onclick="saveDayRecordAndValidate()"
+                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-save mr-2"></i>
+                            <span data-translate="attendance.daily.save_validate">Save & Validate</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script to hide Save & Validate button when pending treatment is shown -->
+    <script>
+        (function () {
+            const pendingSection = document.getElementById('pendingTreatmentSection');
+            const saveValidateBtn = document.getElementById('saveValidateButton');
+
+            if (pendingSection && saveValidateBtn) {
+                // Check initial state
+                const checkVisibility = function () {
+                    const isPendingVisible = !pendingSection.classList.contains('hidden');
+                    if (isPendingVisible) {
+                        saveValidateBtn.classList.add('hidden');
+                    } else {
+                        saveValidateBtn.classList.remove('hidden');
+                    }
+                };
+
+                // Check immediately
+                checkVisibility();
+
+                // Watch for future changes
+                const observer = new MutationObserver(function (mutations) {
+                    mutations.forEach(function (mutation) {
+                        if (mutation.attributeName === 'class') {
+                            checkVisibility();
+                        }
+                    });
+                });
+
+                observer.observe(pendingSection, { attributes: true });
+            }
+        })();
+    </script>
+
+    <!-- Wage Change Modal -->
+    <div id="wageChangeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg max-w-md w-full mx-4">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900" id="wageChangeModalTitle"
+                        data-translate="attendance.daily.add_wage_change">Add Wage Change</h3>
+                    <button onclick="closeWageChangeModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <form id="wageChangeForm">
+                    <input type="hidden" id="wageChangeId" value="">
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1"
+                                data-translate="common.type">Type</label>
+                            <select id="wageChangeType"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="credit" data-translate="attendance.daily.credit">Credit</option>
+                                <option value="decrease" data-translate="attendance.daily.decrease">Decrease</option>
+                                <option value="raise" data-translate="attendance.daily.raise">Raise</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1"
+                                data-translate="common.amount">Amount</label>
+                            <input type="number" id="wageChangeAmount" step="0.01" min="0"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1"
+                                data-translate="common.date">Date</label>
+                            <input type="date" id="wageChangeDate"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1"
+                                data-translate="common.description">Description</label>
+                            <textarea id="wageChangeDescription" rows="3"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeWageChangeModal()"
+                            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                            data-translate="common.cancel">
+                            Cancel
+                        </button>
+                        <button type="button" onclick="saveWageChange()"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            data-translate="common.save">
+                            Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overtime Request Modal -->
+    <div id="overtimeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg max-w-md w-full mx-4">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900" id="overtimeModalTitle"
+                        data-translate="attendance.daily.add_overtime_request">Add Overtime Request</h3>
+                    <button onclick="closeOvertimeModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <form id="overtimeForm">
+                    <input type="hidden" id="overtimeRequestId" value="">
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1"
+                                data-translate="common.date">Date</label>
+                            <input type="date" id="overtimeDate"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1"
+                                data-translate="attendance.daily.hours_requested">Hours Requested</label>
+                            <input type="number" id="overtimeHours" step="0.5" min="0.5" max="12"
+                                data-translate-placeholder="attendance.daily.hours_placeholder"
+                                placeholder="e.g., 1.5, 2.0, 3.5"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                            <div class="text-xs text-gray-500 mt-1" data-translate="attendance.daily.hours_hint">Enter
+                                hours in increments of 0.5 (e.g., 1.5, 2.0, 3.5)</div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1"
+                                data-translate="common.description">Description</label>
+                            <textarea id="overtimeDescription" rows="3"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                data-translate-placeholder="attendance.daily.overtime_reason_placeholder"
+                                placeholder="Reason for overtime request..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeOvertimeModal()"
+                            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                            data-translate="common.cancel">
+                            Cancel
+                        </button>
+                        <button type="button" onclick="saveOvertimeRequest()"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            data-translate="common.save">
+                            Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg border-l-4 p-4 max-w-sm">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i id="toastIcon" class="text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <p id="toastMessage" class="text-sm font-medium text-gray-900"></p>
+                </div>
+                <div class="ml-auto pl-3">
+                    <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg max-w-md w-full mx-4">
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div id="confirmIcon"
+                        class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mr-4">
+                        <i id="confirmIconClass" class="text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 id="confirmTitle" class="text-lg font-medium text-gray-900"></h3>
+                        <p id="confirmMessage" class="text-sm text-gray-500"></p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button onclick="closeConfirmModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                        data-translate="common.cancel">
+                        Cancel
+                    </button>
+                    <button id="confirmAction" class="px-4 py-2 rounded-lg text-white transition-colors"
+                        data-translate="common.confirm">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/frontend/assets/js/auth.js?v=2"></script>
+    <script src="/frontend/assets/js/translations.js?v=4"></script>
+    <script src="/frontend/components/api.js?v=2"></script>
+    <script src="attendance-api.js?v=3&t=1736934000"></script>
+    <script>
+        // Override API base URL to ensure it points to the correct port
+        if (typeof window !== 'undefined') {
+            window.API_BASE_URL = 'http://localhost:3000';
+            console.log('Force setting API_BASE_URL to:', window.API_BASE_URL);
+        }
+
+        // Check if embedded in iframe
+        const isEmbedded = window.self !== window.top;
+        const urlParams = new URLSearchParams(window.location.search);
+        const isEmbed = urlParams.get('embed') === '1';
+
+        // Show back button if embedded
+        if (isEmbedded || isEmbed) {
+            document.addEventListener('DOMContentLoaded', function () {
+                const backButton = document.getElementById('backButtonContainer');
+                if (backButton) {
+                    backButton.classList.remove('hidden');
+                }
+            });
+        }
+
+        // Function to go back to attendance master
+        function goBack() {
+            if (isEmbedded || isEmbed) {
+                // If embedded, send message to parent to navigate back
+                try {
+                    console.log('Sending back navigation message to parent');
+                    window.parent.postMessage({
+                        type: 'navigateBackToAttendance'
+                    }, '*'); // Use '*' for cross-origin, parent will validate
+                } catch (e) {
+                    console.error('Could not send message to parent:', e);
+                    // Fallback: try direct navigation (might fail due to cross-origin)
+                    try {
+                        window.location.href = 'attendance-master.html';
+                    } catch (e2) {
+                        console.error('Could not navigate:', e2);
+                    }
+                }
+            } else {
+                window.location.href = 'attendance-master.html';
+            }
+        }
+
+        // Global variables
+        let currentEmployeeId = null;
+        let currentYear = null;
+        let currentMonth = null;
+        let dailyAttendanceData = [];
+        let wageChanges = [];
+        let overtimeRequests = [];
+        let hasUnsavedChanges = false;
+        let overtimeHours = [];
+        let pendingExceptions = [];
+        let exceptionsHistory = [];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!requireAuth()) return;
+
+            // Check for language in URL params
+            const embedLang = urlParams.get('lang');
+            if (embedLang && typeof setLanguage === 'function') {
+                setLanguage(embedLang);
+            }
+
+            // Listen for language changes from parent page (when embedded in iframe)
+            window.addEventListener('message', function (event) {
+                // Verify origin for security (allow localhost and 127.0.0.1 on any port)
+                const allowedOrigins = ['localhost', '127.0.0.1'];
+                const isAllowedOrigin = allowedOrigins.some(origin => event.origin.includes(origin));
+                if (!isAllowedOrigin && event.origin !== window.location.origin) {
+                    console.warn('[daily-attendance.html] Rejected message from unauthorized origin:', event.origin);
+                    return;
+                }
+
+                if (event.data && event.data.type === 'languageChange') {
+                    const lang = event.data.language;
+                    console.log('[daily-attendance.html] Received language change from parent:', lang);
+
+                    // Call setLanguage if available
+                    if (typeof setLanguage === 'function') {
+                        setLanguage(lang);
+                    } else {
+                        // Fallback: update localStorage
+                        localStorage.setItem('language', lang);
+                        localStorage.setItem('lang', lang);
+                    }
+                }
+            });
+
+            initializePage();
+
+            // Event listeners
+            const monthSelector = document.getElementById('monthSelector');
+            const yearSelector = document.getElementById('yearSelector');
+            if (monthSelector) {
+                monthSelector.addEventListener('change', loadEmployeeData);
+            }
+            if (yearSelector) {
+                yearSelector.addEventListener('change', loadEmployeeData);
+            }
+
+            // Initialize translations after page loads
+            if (typeof updatePageTranslations === 'function') {
+                setTimeout(function () {
+                    updatePageTranslations();
+                }, 100);
+            }
+
+            // Listen for language changes
+            document.addEventListener('languageChanged', function () {
+                if (typeof updatePageTranslations === 'function') {
+                    updatePageTranslations();
+                }
+                // Reload data to update dynamic content
+                if (currentEmployeeId) {
+                    loadEmployeeData();
+                }
+            });
+
+            // No manual time inputs in modal anymore
+
+            // Unsaved changes warning
+            window.addEventListener('beforeunload', function (e) {
+                if (hasUnsavedChanges) {
+                    e.preventDefault();
+                    const warningMsg = typeof translate === 'function' ? translate('attendance.daily.unsaved_changes_warning') : 'You have unsaved changes. Are you sure you want to leave?';
+                    e.returnValue = warningMsg;
+                }
+            });
+        });
+
+        async function initializePage() {
+            try {
+                // Get parameters from URL
+                console.log('[DEBUG] Full URL:', window.location.href);
+                console.log('[DEBUG] Search string:', window.location.search);
+
+                const urlParams = new URLSearchParams(window.location.search);
+                console.log('[DEBUG] All URL params:', Array.from(urlParams.entries()));
+
+                currentEmployeeId = urlParams.get('employeeId');
+                const yearParam = urlParams.get('year');
+                const monthParam = urlParams.get('month');
+
+                console.log('[DEBUG] Raw params - employeeId:', currentEmployeeId, 'year:', yearParam, 'month:', monthParam);
+
+                // Parse year and month from URL, with fallback to current date
+                currentYear = yearParam ? parseInt(yearParam) : new Date().getFullYear();
+                // Ensure month is between 1 and 12
+                const parsedMonth = monthParam ? parseInt(monthParam) : new Date().getMonth() + 1;
+                currentMonth = (parsedMonth >= 1 && parsedMonth <= 12) ? parsedMonth : new Date().getMonth() + 1;
+                const focusValidation = urlParams.get('focusValidation') === 'true';
+
+                console.log('[DEBUG] Parsed values - currentYear:', currentYear, 'currentMonth:', currentMonth);
+
+                console.log('Initializing page with params:', {
+                    employeeId: currentEmployeeId,
+                    yearParam: yearParam,
+                    monthParam: monthParam,
+                    parsedMonth: parsedMonth,
+                    currentYear: currentYear,
+                    currentMonth: currentMonth,
+                    fullUrl: window.location.href,
+                    search: window.location.search,
+                    allParams: Array.from(urlParams.entries())
+                });
+
+                if (!currentEmployeeId) {
+                    const errorMsg = typeof translate === 'function' ? translate('attendance.daily.no_employee_specified') : 'No employee specified';
+                    showToast('error', errorMsg);
+                    return;
+                }
+
+                // Save the parsed values before loadYears() to prevent them from being reset
+                const targetYear = currentYear;
+                const targetMonth = currentMonth;
+                console.log('[DEBUG] Saved target values - year:', targetYear, 'month:', targetMonth);
+
+                // Setup year selector
+                await loadYears();
+
+                // Restore the target values after loadYears()
+                currentYear = targetYear;
+                currentMonth = targetMonth;
+                console.log('[DEBUG] Restored target values - year:', currentYear, 'month:', currentMonth);
+
+                // Small delay to ensure DOM is updated and month selector options are rendered
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                // Set year selector value (ensure it's a string to match option values)
+                const yearSelector = document.getElementById('yearSelector');
+                if (yearSelector) {
+                    const yearValue = String(currentYear);
+                    yearSelector.value = yearValue;
+
+                    // Force update by triggering change event if value didn't set
+                    if (yearSelector.value !== yearValue) {
+                        // Try to find and select the option manually
+                        const option = Array.from(yearSelector.options).find(opt => opt.value === yearValue || parseInt(opt.value) === currentYear);
+                        if (option) {
+                            option.selected = true;
+                            yearSelector.value = option.value;
+                        } else {
+                            console.warn('Year', currentYear, 'not found in year selector options. Available:', Array.from(yearSelector.options).map(o => o.value));
+                            // If year not found, use the first available year or current year
+                            if (yearSelector.options.length > 0) {
+                                yearSelector.value = yearSelector.options[0].value;
+                                currentYear = parseInt(yearSelector.options[0].value);
+                                console.log('Using first available year:', currentYear);
+                            }
+                        }
+                    }
+                }
+
+                // Set month selector value (ensure it's a string to match option values)
+                const monthSelector = document.getElementById('monthSelector');
+                if (monthSelector) {
+                    const monthValue = String(currentMonth);
+                    console.log('Setting month selector - currentMonth:', currentMonth, 'monthValue:', monthValue);
+                    console.log('Available month options:', Array.from(monthSelector.options).map(o => ({ value: o.value, text: o.textContent })));
+
+                    // Find the correct option first
+                    const targetOption = Array.from(monthSelector.options).find(opt => {
+                        const optValue = parseInt(opt.value);
+                        return opt.value === monthValue || optValue === currentMonth;
+                    });
+
+                    if (targetOption) {
+                        // Clear all selections first
+                        Array.from(monthSelector.options).forEach(opt => opt.selected = false);
+
+                        // Select the target option
+                        targetOption.selected = true;
+                        monthSelector.value = targetOption.value;
+
+                        console.log('Month selector set to:', monthSelector.value, 'Expected:', monthValue);
+
+                        // Verify it was set correctly
+                        if (monthSelector.value !== monthValue && parseInt(monthSelector.value) !== currentMonth) {
+                            console.error('Month selector value mismatch! Set:', monthSelector.value, 'Expected:', monthValue);
+                        } else {
+                            console.log('Month selector value set successfully');
+                        }
+                    } else {
+                        console.error('Month', currentMonth, 'not found in month selector options. Available:', Array.from(monthSelector.options).map(o => o.value));
+                        // Don't update currentMonth if we couldn't set it
+                    }
+                } else {
+                    console.error('Month selector element not found!');
+                }
+
+                // Update currentYear and currentMonth from selectors to ensure consistency
+                // But only if the selector was successfully set
+                if (yearSelector && yearSelector.value) {
+                    const selectedYear = parseInt(yearSelector.value);
+                    if (selectedYear) {
+                        currentYear = selectedYear;
+                    }
+                }
+                if (monthSelector && monthSelector.value) {
+                    const selectedMonth = parseInt(monthSelector.value);
+                    if (selectedMonth) {
+                        // Always use the selected month value from the selector
+                        // This ensures the month from URL params is used
+                        currentMonth = selectedMonth;
+                        console.log('Updated currentMonth to:', currentMonth);
+                    }
+                }
+
+                console.log('Set selectors - Year:', currentYear, 'Month:', currentMonth, 'Year selector value:', yearSelector?.value, 'Month selector value:', monthSelector?.value);
+
+                // Load employee data
+                await loadEmployeeData();
+
+                // If focusValidation is true, scroll to validation section and highlight it
+                if (focusValidation) {
+                    setTimeout(() => {
+                        const validationSection = document.querySelector('.validation-section');
+                        if (validationSection) {
+                            validationSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            validationSection.classList.add('ring-2', 'ring-orange-500', 'ring-opacity-50');
+                            setTimeout(() => {
+                                validationSection.classList.remove('ring-2', 'ring-orange-500', 'ring-opacity-50');
+                            }, 3000);
+                        }
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Initialize page error:', error);
+                const errorMsg = typeof translate === 'function' ? translate('attendance.daily.failed_initialize') : 'Failed to initialize page';
+                showToast('error', errorMsg);
+            }
+        }
+
+        async function loadYears() {
+            try {
+                const result = await API.getAvailableYears();
+                if (result.success) {
+                    const select = document.getElementById('yearSelector');
+                    select.innerHTML = '';
+
+                    // Get the years as an array
+                    let years = result.years || [];
+
+                    // If currentYear is set and not in the list, add it
+                    // Check both number and string comparisons
+                    const yearExists = years.some(y => y == currentYear || parseInt(y) === currentYear);
+                    if (currentYear && !yearExists) {
+                        years.push(currentYear);
+                        years.sort((a, b) => b - a); // Sort descending
+                        console.log('Added currentYear', currentYear, 'to years list');
+                    }
+
+                    years.forEach(year => {
+                        const option = document.createElement('option');
+                        // Ensure value is a string to match how we set it
+                        option.value = String(year);
+                        option.textContent = String(year);
+                        select.appendChild(option);
+                    });
+                    console.log('Loaded years:', years);
+                }
+            } catch (error) {
+                console.error('Load years error:', error);
+            }
+        }
+
+        async function loadEmployeeData() {
+            try {
+                currentYear = parseInt(document.getElementById('yearSelector').value);
+                currentMonth = parseInt(document.getElementById('monthSelector').value);
+
+                if (!currentEmployeeId || !currentYear || !currentMonth) return;
+
+                showAttendanceLoading();
+
+                // Load employee details and daily attendance in parallel
+                const [employeeResult, attendanceResult, wageChangesResult, overtimeResult, overtimeHoursResult, pendingExcResult, historyExcResult] = await Promise.all([
+                    API.getEmployeeDetails(currentEmployeeId),
+                    API.getEmployeeDailyAttendance(currentEmployeeId, currentYear, currentMonth),
+                    API.getEmployeeWageChanges(currentEmployeeId, currentYear, currentMonth),
+                    API.getEmployeeOvertimeRequests(currentEmployeeId, currentYear, currentMonth),
+                    API.getEmployeeOvertimeHours(currentEmployeeId, currentYear, currentMonth),
+                    API.getPendingExceptions({ employee_id: currentEmployeeId, year: currentYear, month: currentMonth }),
+                    API.getExceptionHistory({ employee_id: currentEmployeeId, year: currentYear, month: currentMonth })
+                ]);
+
+                if (employeeResult.success) {
+                    displayEmployeeDetails(employeeResult.employee);
+                }
+
+                if (attendanceResult.success) {
+                    // Use server-provided records as-is
+                    // Hide Day Off rows on the daily table
+                    dailyAttendanceData = (attendanceResult.data.daily_records || []).filter(r => {
+                        const status = (r.display_status || r.status || '').toLowerCase();
+                        return status !== 'day off';
+                    });
+                    displayDailyAttendance(dailyAttendanceData);
+                    displayMonthlyStatistics(attendanceResult.data.monthly_summary);
+                } else {
+                    const errorMsg = typeof translate === 'function' ? translate('attendance.daily.failed_load_attendance') : 'Failed to load attendance data';
+                    throw new Error(attendanceResult.error || errorMsg);
+                }
+
+                if (wageChangesResult.success) {
+                    wageChanges = wageChangesResult.data;
+                    displayWageChanges(wageChangesResult.data);
+                }
+
+                if (overtimeResult.success) {
+                    overtimeRequests = overtimeResult.data;
+                }
+                if (overtimeHoursResult.success) {
+                    overtimeHours = overtimeHoursResult.data;
+                }
+                displayOvertimePanel(overtimeRequests, overtimeHours);
+
+                // Exceptions
+                if (pendingExcResult.success) {
+                    pendingExceptions = pendingExcResult.data || pendingExcResult.exceptions || [];
+                }
+                if (historyExcResult.success) {
+                    exceptionsHistory = historyExcResult.data || historyExcResult.exceptions || [];
+                }
+                displayExceptionsPanel(pendingExceptions, exceptionsHistory);
+            } catch (error) {
+                console.error('Load employee data error:', error);
+                // Try to translate error message if it's a known error
+                let errorMsg = error.message;
+                if (typeof translate === 'function') {
+                    if (error.message.includes('Failed to load attendance data')) {
+                        errorMsg = translate('attendance.daily.failed_load_attendance');
+                    } else if (error.message.includes('Failed to save')) {
+                        errorMsg = translate('attendance.daily.failed_save') || error.message;
+                    } else if (error.message.includes('Failed to delete')) {
+                        errorMsg = translate('attendance.daily.failed_delete') || error.message;
+                    }
+                }
+                showToast('error', errorMsg);
+                showAttendanceEmpty();
+            } finally {
+                hideAttendanceLoading();
+            }
+        }
+
+        function displayEmployeeDetails(employee) {
+            document.getElementById('employeeName').textContent = employee.full_name;
+            document.getElementById('employeePosition').textContent = employee.position_name || (typeof translate === 'function' ? translate('attendance.daily.no_position') : 'No Position');
+            document.getElementById('employeeDepartment').textContent = employee.department_name || (typeof translate === 'function' ? translate('attendance.daily.no_department') : 'No Department');
+        }
+
+        function displayMonthlyStatistics(summary) {
+            document.getElementById('scheduledDays').textContent = summary.scheduled_days || 0;
+            document.getElementById('workedDays').textContent = summary.worked_days || 0;
+            document.getElementById('absenceDays').textContent = summary.absence_days || 0;
+            const pendingEl = document.getElementById('pendingDays');
+            if (pendingEl) pendingEl.textContent = summary.pending_days || 0;
+            const lateCount = (dailyAttendanceData || []).filter(r => (r.late_minutes || 0) > 0 && !r.override_type).length;
+            const earlyCount = (dailyAttendanceData || []).filter(r => (r.early_minutes || 0) > 0 && !r.override_type).length;
+
+            const lateCountEl = document.getElementById('lateCount');
+            const earlyCountEl = document.getElementById('earlyCount');
+            const lateTotalTextEl = document.getElementById('lateTotalText');
+            const earlyTotalTextEl = document.getElementById('earlyTotalText');
+
+            if (lateCountEl) lateCountEl.textContent = lateCount || 0;
+            if (lateTotalTextEl) {
+                const totalText = typeof translate === 'function' ? translate('attendance.daily.total').replace('{value}', formatDuration(summary.late_minutes || 0)) : `Total: ${formatDuration(summary.late_minutes || 0)}`;
+                lateTotalTextEl.textContent = totalText;
+            }
+            if (earlyCountEl) earlyCountEl.textContent = earlyCount || 0;
+            if (earlyTotalTextEl) {
+                const totalText = typeof translate === 'function' ? translate('attendance.daily.total').replace('{value}', formatDuration(summary.early_minutes || 0)) : `Total: ${formatDuration(summary.early_minutes || 0)}`;
+                earlyTotalTextEl.textContent = totalText;
+            }
+            document.getElementById('totalOvertimeHours').textContent = summary.overtime_hours || 0;
+            document.getElementById('wageChanges').textContent = formatCurrency(summary.wage_changes || 0);
+            updateValidationBadge(!!summary.is_validated);
+        }
+
+        function updateValidationBadge(isValidated) {
+            const badge = document.getElementById('validationStatusBadge');
+            if (!badge) return;
+            if (isValidated) {
+                badge.textContent = typeof translate === 'function' ? translate('attendance.daily.validated') : 'Validated';
+                badge.className = 'status-badge bg-green-100 text-green-700';
+            } else {
+                badge.textContent = typeof translate === 'function' ? translate('attendance.daily.not_validated') : 'Not Validated';
+                badge.className = 'status-badge bg-yellow-100 text-yellow-700';
+            }
+        }
+
+        // Reverted: rely entirely on server-provided records/status without client-side adjustments
+
+        function displayDailyAttendance(records) {
+            const tbody = document.getElementById('attendanceTableBody');
+
+            if (records.length === 0) {
+                showAttendanceEmpty();
+                return;
+            }
+
+            tbody.innerHTML = records.map(record => {
+                const rowClass = 'table-row';
+                const datePart = (typeof record.date === 'string' && record.date.includes('T')) ? record.date.split('T')[0] : record.date;
+                const overrideType = record.override_type;
+                return `
+                    <tr class="${rowClass}">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            ${formatDateDisplay(datePart)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="space-y-1">
+                                ${formatScheduledShift(record.scheduled_intervals)}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="${getEntryTimeClass(record)}">
+                                ${record.entry_time ? formatTimeOnly(record.entry_time) : getMissingPunchDisplay('entry', record)}
+                            </div>
+                            ${record.entry_time && record.late_minutes > 0 && !record.override_type ? `<div class="text-xs text-orange-600 font-medium">${(() => {
+                        if (typeof translate === 'function') {
+                            const translated = translate('attendance.daily.min_late');
+                            return translated ? translated.replace('{min}', record.late_minutes) : `${record.late_minutes}min late`;
+                        }
+                        return `${record.late_minutes}min late`;
+                    })()}</div>` : ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="${getExitTimeClass(record)}">
+                                ${record.exit_time ? formatTimeOnly(record.exit_time) : getMissingPunchDisplay('exit', record)}
+                            </div>
+                            ${record.exit_time && record.early_minutes > 0 && !record.override_type ? `<div class="text-xs text-orange-600 font-medium">${(() => {
+                        if (typeof translate === 'function') {
+                            const translated = translate('attendance.daily.min_early');
+                            return translated ? translated.replace('{min}', record.early_minutes) : `${record.early_minutes}min early`;
+                        }
+                        return `${record.early_minutes}min early`;
+                    })()}</div>` : ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${record.overtime_hours || 0}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex flex-col items-center space-y-1">
+                                <span class="status-badge ${getStatusClass(record.status, record)}">${getEnhancedStatusText(record)}</span>
+                                ${getSecondaryStatusText(record) ? `
+                                    <span class="text-xs text-orange-600 font-medium text-center">
+                                        ${getSecondaryStatusText(record)}
+                                    </span>
+                                ` : ''}
+                                ${overrideType ? `
+                                    <span class="text-xs text-green-600 font-medium text-center">
+                                        ${overrideType === 'leave' || overrideType === 'holiday' ?
+                            (typeof translate === 'function' ? translate('attendance.daily.justified') : 'Justified') :
+                            (typeof translate === 'function' ? translate('attendance.daily.overridden') : 'Overridden')}
+                                    </span>
+                                ` : ''}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex items-center space-x-3">
+                                <button onclick="openEditDayModal('${datePart}')" 
+                                        class="text-blue-600 hover:text-blue-900">
+                                    ${(() => {
+                        if (typeof translate === 'function') {
+                            const translated = translate('attendance.daily.edit');
+                            return translated || 'Edit';
+                        }
+                        return 'Edit';
+                    })()}
+                                </button>
+                                ${(overrideType === 'punch_add') ? `
+                                <button onclick="confirmDeleteOverride('${datePart}')" 
+                                        class="text-red-600 hover:text-red-800">
+                                    ${(() => {
+                            if (typeof translate === 'function') {
+                                const translated = translate('attendance.daily.delete_override_button');
+                                return translated || 'Delete Override';
+                            }
+                            return 'Delete Override';
+                        })()}
+                                </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            hideAttendanceEmpty();
+        }
+
+        function displayWageChanges(changes) {
+            const container = document.getElementById('wageChangesList');
+            const emptyState = document.getElementById('wageChangesEmpty');
+
+            if (changes.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            container.innerHTML = changes.map(change => {
+                const adjustmentTypeKey = `attendance.daily.${change.adjustment_type.toLowerCase()}`;
+                const adjustmentTypeText = typeof translate === 'function' ? translate(adjustmentTypeKey) : change.adjustment_type;
+                return `
+                <div class="border-b border-gray-200 pb-3 mb-3 last:border-b-0">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="text-sm font-medium text-gray-900">
+                                ${formatCurrency(change.amount)} 
+                                <span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">${adjustmentTypeText}</span>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">${formatDate(change.effective_date)}</div>
+                            ${change.description ? `<div class="text-xs text-gray-600 mt-1">${change.description}</div>` : ''}
+                        </div>
+                        <div class="flex space-x-1 ml-2">
+                            <button onclick="editWageChange('${change.id}')" class="text-blue-600 hover:text-blue-800 text-xs" title="${typeof translate === 'function' ? translate('attendance.daily.edit') : 'Edit'}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteWageChange('${change.id}')" class="text-red-600 hover:text-red-800 text-xs" title="${typeof translate === 'function' ? translate('attendance.daily.delete') : 'Delete'}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+
+            emptyState.classList.add('hidden');
+        }
+
+        function displayOvertimeRequests(requests) {
+            const container = document.getElementById('overtimeRequestsList');
+            const emptyState = document.getElementById('overtimeEmpty');
+
+            if (requests.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            container.innerHTML = requests.map(request => {
+                const statusLower = (request.status || '').toLowerCase();
+                let statusText = request.status;
+                if (typeof translate === 'function') {
+                    if (statusLower === 'approved') statusText = translate('attendance.daily.approved');
+                    else if (statusLower === 'declined' || statusLower === 'rejected') statusText = translate('attendance.daily.rejected');
+                    else if (statusLower === 'pending') statusText = translate('attendance.daily.pending_status');
+                }
+                const isPending = statusLower === 'pending';
+                return `
+                <div class="border-b border-gray-200 pb-3 mb-3 last:border-b-0">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="text-sm font-medium text-gray-900">
+                                ${request.requested_hours}h 
+                                <span class="text-xs px-2 py-1 ${getOvertimeStatusClass(request.status)} rounded">${statusText}</span>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">${formatDate(request.date)}</div>
+                            ${request.description ? `<div class="text-xs text-gray-600 mt-1">${request.description}</div>` : ''}
+                        </div>
+                        <div class="flex flex-col space-y-1 ml-2">
+                            ${isPending ? `
+                                <button onclick="approveOvertimeRequest('${request.id}')" class="text-green-600 hover:text-green-800 text-xs">
+                                    <i class="fas fa-check mr-1"></i>${typeof translate === 'function' ? translate('attendance.daily.approve') : 'Approve'}
+                                </button>
+                                <button onclick="declineOvertimeRequest('${request.id}')" class="text-red-600 hover:text-red-800 text-xs">
+                                    <i class="fas fa-times mr-1"></i>${typeof translate === 'function' ? translate('attendance.daily.decline') : 'Decline'}
+                                </button>
+                            ` : ''}
+                            <button onclick="deleteOvertimeRequest('${request.id}')" class="text-gray-600 hover:text-gray-800 text-xs" title="${typeof translate === 'function' ? translate('attendance.daily.delete') : 'Delete'}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+
+            emptyState.classList.add('hidden');
+        }
+
+        function displayOvertimePanel(requests, recordedHours) {
+            const pendingList = document.getElementById('overtimePendingList');
+            const pendingEmpty = document.getElementById('overtimePendingEmpty');
+            const historyList = document.getElementById('overtimeHistoryList');
+            const historyEmpty = document.getElementById('overtimeHistoryEmpty');
+
+            const reqs = Array.isArray(requests) ? requests : [];
+            const pendings = reqs.filter(r => (r.status || '').toLowerCase() === 'pending');
+            const history = reqs.filter(r => ['approved', 'declined', 'rejected'].includes((r.status || '').toLowerCase()));
+
+            // Pending
+            if (pendings.length === 0) {
+                pendingList.innerHTML = '';
+                pendingEmpty.classList.remove('hidden');
+            } else {
+                pendingList.innerHTML = pendings.map(request => `
+                    <div class="border-b border-gray-200 pb-3 mb-3 last:border-b-0">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">
+                                    ${request.requested_hours}h 
+                                    <span class="text-xs px-2 py-1 status-pending rounded">${typeof translate === 'function' ? translate('attendance.daily.pending_status') : 'Pending'}</span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">${formatDate(request.date)}</div>
+                                ${request.description ? `<div class="text-xs text-gray-600 mt-1">${request.description}</div>` : ''}
+                            </div>
+                            <div class="flex items-center space-x-2 ml-2">
+                                <button class="text-green-600 hover:text-green-800 text-xs" onclick="approveOvertimeRequest('${request.id}')"><i class="fas fa-check mr-1"></i>${typeof translate === 'function' ? translate('attendance.daily.approve') : 'Approve'}</button>
+                                <button class="text-red-600 hover:text-red-800 text-xs" onclick="declineOvertimeRequest('${request.id}')"><i class="fas fa-times mr-1"></i>${typeof translate === 'function' ? translate('attendance.daily.reject') : 'Reject'}</button>
+                                <button class="text-gray-500 hover:text-gray-700 text-xs" onclick="deleteOvertimeRequest('${request.id}')"><i class="fas fa-trash mr-1"></i>${typeof translate === 'function' ? translate('attendance.daily.delete') : 'Delete'}</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                pendingEmpty.classList.add('hidden');
+            }
+
+            // History
+            if (history.length === 0) {
+                historyList.innerHTML = '';
+                historyEmpty.classList.remove('hidden');
+            } else {
+                historyList.innerHTML = history.map(request => `
+                    <div class="border-b border-gray-200 pb-3 mb-3 last:border-b-0">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">
+                                    ${request.requested_hours}h 
+                                    <span class="text-xs px-2 py-1 ${request.status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} rounded">${request.status === 'Approved' ? (typeof translate === 'function' ? translate('attendance.daily.approved') : 'Approved') : (request.status === 'Declined' || request.status === 'Rejected' ? (typeof translate === 'function' ? translate('attendance.daily.rejected') : request.status) : request.status)}</span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">${formatDate(request.date)}</div>
+                                ${request.description ? `<div class="text-xs text-gray-600 mt-1">${request.description}</div>` : ''}
+                            </div>
+                            <div class="flex items-center space-x-2 ml-2">
+                                <button class="text-gray-500 hover:text-gray-700 text-xs" onclick="deleteOvertimeRequest('${request.id}')"><i class="fas fa-trash mr-1"></i>${typeof translate === 'function' ? translate('attendance.daily.delete') : 'Delete'}</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                historyEmpty.classList.add('hidden');
+            }
+
+            // Recorded hours are removed per request; not shown separately
+        }
+
+        function getExceptionStatusClass(status) {
+            switch ((status || '').toLowerCase()) {
+                case 'approved': return 'bg-green-100 text-green-800';
+                case 'declined': return 'bg-red-100 text-red-800';
+                case 'pending':
+                default:
+                    return 'bg-yellow-100 text-yellow-800';
+            }
+        }
+
+        function displayExceptionsPanel(pendingList, historyList) {
+            const pendingContainer = document.getElementById('pendingExceptionsList');
+            const historyContainer = document.getElementById('exceptionsHistoryList');
+            const emptyState = document.getElementById('exceptionsEmpty');
+
+            const hasPending = Array.isArray(pendingList) && pendingList.length > 0;
+            const hasHistory = Array.isArray(historyList) && historyList.length > 0;
+
+            if (!hasPending && !hasHistory) {
+                pendingContainer.innerHTML = '';
+                historyContainer.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            // Pending/Active exceptions with actions
+            const pendingLabel = typeof translate === 'function' ? translate('attendance.daily.pending_status') : 'Pending';
+            pendingContainer.innerHTML = hasPending ? `
+                <div class="mb-2 text-xs font-semibold text-gray-600">${pendingLabel}</div>
+                ${pendingList.map(ex => `
+                    <div class="border-b border-gray-200 pb-3 mb-3 last:border-b-0">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">
+                                    ${ex.type || (typeof translate === 'function' ? translate('attendance.daily.exception') : 'Exception')}
+                                    <span class="text-xs px-2 py-1 ${getExceptionStatusClass(ex.status)} rounded status-pending">${(() => {
+                    const statusLower = (ex.status || '').toLowerCase();
+                    if (typeof translate === 'function') {
+                        if (statusLower === 'approved') return translate('attendance.daily.approved');
+                        if (statusLower === 'declined' || statusLower === 'rejected') return translate('attendance.daily.rejected');
+                        if (statusLower === 'pending') return translate('attendance.daily.pending_status');
+                    }
+                    return ex.status || (typeof translate === 'function' ? translate('attendance.daily.pending_status') : 'Pending');
+                })()}</span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">${ex.date ? formatDate(ex.date) : ''}</div>
+                                ${ex.payload ? `<div class=\"text-xs text-gray-600 mt-1\">${formatExceptionPayload(ex.type, ex.payload)}</div>` : ''}
+                            </div>
+                            <div class="flex space-x-1 ml-2">
+                                <button onclick="approveExceptionFromDaily('${ex.id}')" class="text-green-600 hover:text-green-800 text-xs" title="${typeof translate === 'function' ? translate('attendance.daily.approve') : 'Approve'}">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button onclick="declineExceptionFromDaily('${ex.id}')" class="text-red-600 hover:text-red-800 text-xs" title="${typeof translate === 'function' ? translate('attendance.daily.decline') : 'Decline'}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            ` : `
+                <div class="mb-2 text-xs font-semibold text-gray-600">${pendingLabel}</div>
+                <div class="text-center py-6 text-gray-500 text-xs border border-dashed border-gray-200 rounded">
+                    <i class="fas fa-check-circle text-green-400 mr-1"></i>
+                    ${typeof translate === 'function' ? translate('attendance.daily.pending_exception_requests') : 'No pending exception requests'}
+                </div>
+            `;
+
+            // History
+            const historyLabel = typeof translate === 'function' ? translate('attendance.daily.history') : 'History';
+            historyContainer.innerHTML = hasHistory ? `
+                <div class="mb-2 text-xs font-semibold text-gray-600">${historyLabel}</div>
+                ${historyList.map(ex => `
+                    <div class="border-b border-gray-200 pb-3 mb-3 last:border-b-0">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">
+                                    ${ex.type || (typeof translate === 'function' ? translate('attendance.daily.exception') : 'Exception')}
+                                    <span class="text-xs px-2 py-1 ${getExceptionStatusClass(ex.status)} rounded">${(() => {
+                    const statusLower = (ex.status || '').toLowerCase();
+                    if (typeof translate === 'function') {
+                        if (statusLower === 'approved') return translate('attendance.daily.approved');
+                        if (statusLower === 'declined' || statusLower === 'rejected') return translate('attendance.daily.rejected');
+                        if (statusLower === 'pending') return translate('attendance.daily.pending_status');
+                    }
+                    return ex.status || '';
+                })()}</span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">${ex.date ? formatDate(ex.date) : ''}</div>
+                                ${ex.payload ? `<div class=\"text-xs text-gray-600 mt-1\">${formatExceptionPayload(ex.type, ex.payload)}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            ` : '';
+        }
+
+        function formatExceptionPayload(type, payload) {
+            let data;
+            try {
+                data = typeof payload === 'string' ? JSON.parse(payload) : payload;
+            } catch (e) {
+                return String(payload);
+            }
+
+            const safe = (v) => (v == null || v === '') ? '-' : String(v);
+            const getLabel = (key) => {
+                if (typeof translate === 'function') {
+                    const labelMap = {
+                        'Fix': translate('attendance.daily.fix') || 'Fix',
+                        'Time': translate('attendance.daily.time') || 'Time',
+                        'Reason': translate('attendance.daily.reason') || 'Reason',
+                        'Leave': translate('attendance.daily.leave') || 'Leave',
+                        'Holiday': translate('attendance.daily.holiday') || 'Holiday',
+                        'Entry': translate('attendance.daily.entry') || 'Entry',
+                        'Exit': translate('attendance.daily.exit') || 'Exit',
+                        'Justification': translate('attendance.daily.justification') || 'Justification',
+                        'Absence': translate('attendance.daily.absent') || 'Absence',
+                        'bulk': translate('attendance.daily.bulk') || '(bulk)',
+                        'validated': translate('attendance.daily.validated') || '(validated)'
+                    };
+                    return labelMap[key] || key;
+                }
+                return key;
+            };
+            const kv = (label, value) => `<span class=\"inline-block mr-3\"><strong>${getLabel(label)}:</strong> ${safe(value)}</span>`;
+
+            switch ((type || '').toLowerCase()) {
+                case 'missingpunchfix':
+                    const bulkTag1 = data.bulk_operation ? `<span class=\"inline-block text-xs text-gray-500\">(${getLabel('bulk')})</span>` : '';
+                    return `${kv('Fix', data.punch_type)}${kv('Time', data.time)}${data.reason ? kv('Reason', data.reason) : ''}${bulkTag1}`;
+                case 'leaverequest':
+                    return `${kv('Leave', data.leave_type)}${data.reason ? kv('Reason', data.reason) : ''}`;
+                case 'holidayassignment':
+                    return `${kv('Holiday', data.holiday_name)}${data.reason ? kv('Reason', data.reason) : ''}`;
+                case 'dayedit':
+                case 'editday':
+                    const validatedTag = data.validated ? `<span class=\"inline-block text-xs text-green-700\">(${getLabel('validated')})</span>` : '';
+                    return `${kv('Entry', data.entry_time)}${kv('Exit', data.exit_time)}${data.justification_reason ? kv('Justification', data.justification_reason) : ''}${data.absence_reason ? kv('Absence', data.absence_reason) : ''}${validatedTag}`;
+                default: {
+                    // Generic pretty-print: title case keys
+                    const parts = [];
+                    Object.keys(data || {}).forEach((key) => {
+                        const title = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                        if (key === 'bulk_operation') return; // show with a small tag instead
+                        parts.push(kv(title, data[key]));
+                    });
+                    const bulk = data && data.bulk_operation ? `<span class=\"inline-block text-xs text-gray-500\">(${getLabel('bulk')})</span>` : '';
+                    return parts.join('') + bulk;
+                }
+            }
+        }
+
+        async function approveExceptionFromDaily(id) {
+            try {
+                const approvalNote = typeof translate === 'function' ? translate('attendance.daily.approved_from_daily') : 'Approved from Daily Attendance';
+                const res = await API.approveException(id, approvalNote);
+                if (res.success) {
+                    const successMsg = typeof translate === 'function' ? translate('attendance.daily.exception_approved') : 'Exception approved';
+                    showToast('success', successMsg);
+                    loadEmployeeData();
+                } else {
+                    const errorMsg = typeof translate === 'function' ? translate('attendance.daily.failed_approve_exception') : 'Failed to approve exception';
+                    throw new Error(res.error || errorMsg);
+                }
+            } catch (e) {
+                console.error('Approve exception error:', e);
+                showToast('error', e.message);
+            }
+        }
+
+        async function declineExceptionFromDaily(id) {
+            try {
+                const declineNote = typeof translate === 'function' ? translate('attendance.daily.declined_from_daily') : 'Declined from Daily Attendance';
+                const res = await API.rejectException(id, declineNote);
+                if (res.success) {
+                    const successMsg = typeof translate === 'function' ? translate('attendance.daily.exception_declined') : 'Exception declined';
+                    showToast('success', successMsg);
+                    loadEmployeeData();
+                } else {
+                    const errorMsg = typeof translate === 'function' ? translate('attendance.daily.failed_decline_exception') : 'Failed to decline exception';
+                    throw new Error(res.error || errorMsg);
+                }
+            } catch (e) {
+                console.error('Decline exception error:', e);
+                showToast('error', e.message);
+            }
+        }
+
+        // Edit Day Modal Functions
+        function openEditDayModal(date) {
+            // Always compare only the YYYY-MM-DD part
+            const datePart = (typeof date === 'string' && date.includes('T')) ? date.split('T')[0] : date;
+            let record = dailyAttendanceData.find(r => {
+                const rDate = (typeof r.date === 'string' && r.date.includes('T')) ? r.date.split('T')[0] : r.date;
+                return rDate === datePart;
+            });
+            if (!record) {
+                console.error('Record not found for date:', date);
+                return;
+            }
+
+            console.log('Opening edit modal for record:', record);
+
+            // Populate modal with record data
+            // Always use YYYY-MM-DD format for date
+            const safeDate = (typeof date === 'string' && date.length > 10 && date.includes('T')) ? date.split('T')[0] : date;
+            const editTitle = typeof translate === 'function' ? translate('attendance.daily.edit_day_record') : 'Edit Day Record';
+            document.getElementById('editDayTitle').textContent = `${editTitle} - ${formatDateDisplay(safeDate)}`;
+            document.getElementById('editDayDate').value = safeDate;
+            document.getElementById('scheduledShiftDisplay').innerHTML = formatScheduledShiftDetailed(record.scheduled_intervals);
+            updateCurrentStatusDisplay(record);
+            updateActionPreview(record);
+
+            // Check if this is a pending case and show/hide appropriate sections
+            const isPending = record.display_status === 'Pending' ||
+                record.status === 'Pending' ||
+                (parseInt(record.punch_count) === 1 && !record.override_type);
+            const pendingSection = document.getElementById('pendingTreatmentSection');
+            const treatButton = document.getElementById('treatPendingButton');
+
+            // DEBUG: Log the record details to help troubleshoot
+            console.log('🔍 PENDING DEBUG:', {
+                date: record.date,
+                display_status: record.display_status,
+                status: record.status,
+                punch_count: record.punch_count,
+                override_type: record.override_type,
+                entry_time: record.entry_time,
+                exit_time: record.exit_time,
+                isPending: isPending
+            });
+
+            if (isPending) {
+                console.log('✅ Showing pending treatment section');
+                pendingSection.classList.remove('hidden');
+                treatButton.classList.remove('hidden');
+                // Clear any previous selections
+                document.querySelectorAll('input[name="pendingAction"]').forEach(radio => radio.checked = false);
+                document.getElementById('pendingTreatmentReason').value = '';
+                // Reset deduction section
+                document.getElementById('deductionSection').classList.add('hidden');
+                document.getElementById('applyDeduction').checked = false;
+                document.getElementById('deductionAmountContainer').classList.add('hidden');
+                document.getElementById('deductionAmount').value = '';
+            } else {
+                console.log('❌ Hiding pending treatment section');
+                pendingSection.classList.add('hidden');
+                treatButton.classList.add('hidden');
+            }
+
+            // Show modal
+            document.getElementById('editDayModal').classList.remove('hidden');
+        }
+
+        function closeEditDayModal() {
+            if (hasUnsavedChanges) {
+                const closeMsg = typeof translate === 'function' ? translate('attendance.daily.unsaved_changes_close') : 'You have unsaved changes. Are you sure you want to close?';
+                if (!confirm(closeMsg)) {
+                    return;
+                }
+            }
+            document.getElementById('editDayModal').classList.add('hidden');
+            hasUnsavedChanges = false;
+        }
+
+        function updateCurrentStatusDisplay(record) {
+            const container = document.getElementById('currentStatusDisplay');
+            if (!container) return;
+
+            const entry = record.entry_time ? formatTimeForInput(record.entry_time) : '';
+            const exitT = record.exit_time ? formatTimeForInput(record.exit_time) : '';
+            let status = record.status || (typeof translate === 'function' ? translate('common.unknown') : 'Unknown');
+            // Translate status if available
+            if (record.status && typeof translate === 'function') {
+                const statusLower = (record.status || '').toLowerCase();
+                if (statusLower === 'present') status = translate('attendance.daily.present');
+                else if (statusLower === 'absent') status = translate('attendance.daily.absent');
+                else if (statusLower === 'pending') status = translate('attendance.daily.pending');
+                else if (statusLower === 'overridden') status = translate('attendance.daily.overridden');
+                else if (statusLower === 'justified') status = translate('attendance.daily.justified');
+            }
+            const punchCount = record.punch_count || 0;
+
+            let statusColor = 'text-gray-600';
+            let statusIcon = 'fas fa-question-circle';
+
+            if (record.override_type) {
+                statusColor = 'text-green-600';
+                statusIcon = 'fas fa-check-circle';
+            } else if (entry && exitT) {
+                statusColor = 'text-blue-600';
+                statusIcon = 'fas fa-clock';
+            } else if (entry || exitT || punchCount > 0) {
+                statusColor = 'text-yellow-600';
+                statusIcon = 'fas fa-exclamation-triangle';
+            } else {
+                statusColor = 'text-red-600';
+                statusIcon = 'fas fa-times-circle';
+            }
+
+            container.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="${statusIcon} ${statusColor} mr-2"></i>
+                        <span class="font-medium ${statusColor}">${status}</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mt-3">
+                    <div class="text-sm">
+                        <span class="text-gray-500">${typeof translate === 'function' ? translate('attendance.daily.entry') : 'Entry'}:</span>
+                        <span class="ml-2 font-medium">${entry || (typeof translate === 'function' ? translate('attendance.daily.missing') : 'Missing')}</span>
+                    </div>
+                    <div class="text-sm">
+                        <span class="text-gray-500">${typeof translate === 'function' ? translate('attendance.daily.exit') : 'Exit'}:</span>
+                        <span class="ml-2 font-medium">${exitT || (typeof translate === 'function' ? translate('attendance.daily.missing') : 'Missing')}</span>
+                    </div>
+                </div>
+                ${record.late_minutes > 0 ? `<div class="text-sm text-orange-600 mt-2"><i class="fas fa-clock mr-1"></i>${typeof translate === 'function' ? translate('attendance.daily.minutes_late').replace('{minutes}', record.late_minutes) : `${record.late_minutes} minutes late`}</div>` : ''}
+                ${record.early_minutes > 0 ? `<div class="text-sm text-orange-600 mt-2"><i class="fas fa-clock mr-1"></i>${typeof translate === 'function' ? translate('attendance.daily.minutes_early').replace('{minutes}', record.early_minutes) : `${record.early_minutes} minutes early`}</div>` : ''}
+            `;
+        }
+
+        function updateActionPreview(record) {
+            const container = document.getElementById('actionPreviewBox');
+            if (!container) return;
+
+            const hasSchedule = Array.isArray(record.scheduled_intervals) && record.scheduled_intervals.length > 0;
+
+            if (!hasSchedule) {
+                const noShiftText = typeof translate === 'function' ? translate('attendance.daily.no_scheduled_shift') : 'No scheduled shift for this day.';
+                container.innerHTML = `<div class="text-gray-600">${noShiftText}</div>`;
+                return;
+            }
+
+            const scheduledStart = record.scheduled_intervals[0].start_time;
+            const scheduledEnd = record.scheduled_intervals[record.scheduled_intervals.length - 1].end_time;
+
+            const entry = record.entry_time ? formatTimeForInput(record.entry_time) : '';
+            const exitT = record.exit_time ? formatTimeForInput(record.exit_time) : '';
+
+            const isMissingEntry = !entry;
+            const isMissingExit = !exitT;
+
+            let actionText = '';
+            let actionIcon = 'fas fa-check-circle';
+            let actionColor = 'text-green-600';
+
+            if (isMissingEntry && isMissingExit) {
+                actionText = typeof translate === 'function' ? translate('attendance.daily.action_preview_mark_present') : 'Mark as present with scheduled times';
+                actionIcon = 'fas fa-user-check';
+            } else if (isMissingEntry || isMissingExit) {
+                actionText = typeof translate === 'function' ? translate('attendance.daily.action_preview_complete_punch') : 'Complete missing punch with scheduled time';
+                actionIcon = 'fas fa-clock';
+            } else {
+                actionText = typeof translate === 'function' ? translate('attendance.daily.action_preview_validate') : 'Validate current attendance record';
+                actionIcon = 'fas fa-check-double';
+            }
+
+            container.innerHTML = `
+                <div class="flex items-center mb-3">
+                    <i class="${actionIcon} ${actionColor} mr-2"></i>
+                    <span class="font-medium ${actionColor}">${actionText}</span>
+                    </div>
+                <div class="text-sm text-gray-600">
+                    ${typeof translate === 'function' ? translate('attendance.daily.action_preview_description') : 'This will ensure the day is marked as present and validated for payroll processing.'}
+                </div>
+            `;
+        }
+
+
+
+        async function saveDayRecord(validate = false) {
+            // Always use the plain string value from the input, never convert to Date object or ISO string
+            const date = document.getElementById('editDayDate').value.trim();
+            // Always use only the YYYY-MM-DD part for all logic
+            const datePart = (typeof date === 'string' && date.includes('T')) ? date.split('T')[0] : date;
+            // Use scheduled times for override preview/save
+            let record = dailyAttendanceData.find(r => {
+                const rDate = (typeof r.date === 'string' && r.date.includes('T')) ? r.date.split('T')[0] : r.date;
+                return rDate === datePart;
+            });
+            const scheduledStart = (record && record.scheduled_intervals && record.scheduled_intervals[0]) ? record.scheduled_intervals[0].start_time : null;
+            const scheduledEnd = (record && record.scheduled_intervals && record.scheduled_intervals.length > 0) ? record.scheduled_intervals[record.scheduled_intervals.length - 1].end_time : null;
+            const entryTime = scheduledStart || '';
+            const exitTime = scheduledEnd || '';
+
+            // Defensive: If date contains 'T', strip time part (should not happen, but just in case)
+            const safeDate = (typeof date === 'string' && date.includes('T')) ? date.split('T')[0] : date;
+
+            // Debug logging
+            console.log('Saving day record:', {
+                date,
+                entryTime,
+                exitTime,
+                validate,
+                currentEmployeeId
+            });
+
+            // Check if there's already an exception for this date
+            record = dailyAttendanceData.find(r => {
+                // Always compare only the YYYY-MM-DD part
+                const rDate = (typeof r.date === 'string' && r.date.includes('T')) ? r.date.split('T')[0] : r.date;
+                return rDate === datePart;
+            });
+            if (record && record.override_type && record.override_type !== 'day_edit' && record.override_type !== 'extra-hour') {
+                const errorMsg = typeof translate === 'function' ? translate('attendance.daily.conflicting_override') : 'This day has a conflicting override type. Cannot apply day edit changes.';
+                showToast('warning', errorMsg);
+                return;
+            }
+
+            try {
+
+                const data = {
+                    employee_id: currentEmployeeId,
+                    date: safeDate, // Always send as YYYY-MM-DD
+                    entry_time: entryTime,
+                    exit_time: exitTime,
+                    validate
+                };
+
+                console.log('Sending data to backend:', data);
+
+                const result = await API.saveDayRecord(data);
+
+                if (result.success) {
+                    const successMsg = validate ?
+                        (typeof translate === 'function' ? translate('attendance.daily.day_record_saved_validated') : 'Day record saved and validated') :
+                        (typeof translate === 'function' ? translate('attendance.daily.day_record_saved') : 'Day record saved');
+                    showToast('success', successMsg);
+                    closeEditDayModal();
+                    loadEmployeeData();
+                } else {
+                    throw new Error(result.error || 'Failed to save day record');
+                }
+            } catch (error) {
+                console.error('Save day record error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        function saveDayRecordAndValidate() {
+            saveDayRecord(true);
+        }
+
+        // Toggle deduction input based on selected action
+        function toggleDeductionInput() {
+            const selectedAction = document.querySelector('input[name="pendingAction"]:checked');
+            const deductionSection = document.getElementById('deductionSection');
+
+            if (selectedAction && selectedAction.value === 'full_day') {
+                deductionSection.classList.remove('hidden');
+            } else {
+                deductionSection.classList.add('hidden');
+                // Reset deduction inputs
+                document.getElementById('applyDeduction').checked = false;
+                document.getElementById('deductionAmountContainer').classList.add('hidden');
+                document.getElementById('deductionAmount').value = '';
+            }
+        }
+
+        // Pending Case Treatment Function
+        async function treatPendingCase() {
+            const selectedAction = document.querySelector('input[name="pendingAction"]:checked');
+            if (!selectedAction) {
+                const errorMsg = typeof translate === 'function' ? translate('attendance.daily.select_treatment_option') : 'Please select a treatment option';
+                showToast('error', errorMsg);
+                return;
+            }
+
+            const reason = document.getElementById('pendingTreatmentReason').value.trim();
+            const date = document.getElementById('editDayDate').value;
+
+            // Get deduction info if full day is selected
+            let deductionAmount = 0;
+            if (selectedAction.value === 'full_day') {
+                const applyDeduction = document.getElementById('applyDeduction').checked;
+                if (applyDeduction) {
+                    deductionAmount = parseFloat(document.getElementById('deductionAmount').value) || 0;
+                }
+            }
+
+            try {
+                const response = await API.treatPendingCase(
+                    currentEmployeeId,
+                    date,
+                    selectedAction.value,
+                    reason,
+                    deductionAmount
+                );
+
+                if (response.success) {
+                    const actionText = selectedAction.value.replace('_', ' ');
+                    let message;
+                    if (deductionAmount > 0) {
+                        message = typeof translate === 'function' ?
+                            translate('attendance.daily.pending_case_treated_deduction').replace('{action}', actionText).replace('{amount}', deductionAmount) :
+                            `Pending case treated as ${actionText} with ${deductionAmount} DA deduction`;
+                    } else {
+                        message = typeof translate === 'function' ?
+                            translate('attendance.daily.pending_case_treated').replace('{action}', actionText) :
+                            `Pending case treated as ${actionText}`;
+                    }
+                    showToast('success', message);
+                    closeEditDayModal();
+
+                    // Reload the employee data to reflect changes
+                    await loadEmployeeData();
+                } else {
+                    throw new Error(response.error || 'Failed to treat pending case');
+                }
+            } catch (error) {
+                console.error('Treat pending case error:', error);
+                showToast('error', 'Failed to treat pending case: ' + error.message);
+            }
+        }
+
+        // Wage Change Modal Functions
+        function openWageChangeModal(id = null) {
+            const isEdit = id !== null;
+            const modal = document.getElementById('wageChangeModal');
+            const title = document.getElementById('wageChangeModalTitle');
+
+            const wageTitle = isEdit ?
+                (typeof translate === 'function' ? translate('attendance.daily.edit_wage_change') : 'Edit Wage Change') :
+                (typeof translate === 'function' ? translate('attendance.daily.add_wage_change') : 'Add Wage Change');
+            title.textContent = wageTitle;
+
+            if (isEdit) {
+                // TODO: Load wage change data for editing
+                // For now, just open the modal empty
+                // In a full implementation, you would fetch the wage change by id and populate the form
+                console.warn('Edit wage change not fully implemented. ID:', id);
+            } else {
+                // Reset form for new wage change
+                document.getElementById('wageChangeForm').reset();
+                document.getElementById('wageChangeId').value = '';
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeWageChangeModal() {
+            document.getElementById('wageChangeModal').classList.add('hidden');
+        }
+
+        async function saveWageChange() {
+            const id = document.getElementById('wageChangeId').value;
+            const type = document.getElementById('wageChangeType').value;
+            const amount = parseFloat(document.getElementById('wageChangeAmount').value);
+            const date = document.getElementById('wageChangeDate').value;
+            const description = document.getElementById('wageChangeDescription').value;
+
+            if (!amount || amount <= 0) {
+                const errorMsg = typeof translate === 'function' ? translate('attendance.daily.please_enter_amount') : 'Please enter a valid amount';
+                showToast('error', errorMsg);
+                return;
+            }
+
+            if (!date) {
+                const errorMsg = typeof translate === 'function' ? translate('attendance.daily.please_select_date') : 'Please select a date';
+                showToast('error', errorMsg);
+                return;
+            }
+
+            try {
+                const data = {
+                    employee_id: currentEmployeeId,
+                    adjustment_type: type,
+                    amount: amount,
+                    effective_date: date,
+                    description: description
+                };
+
+                const result = id ?
+                    await API.updateWageChange(id, data) :
+                    await API.createWageChange(data);
+
+                if (result.success) {
+                    const successMsg = id ?
+                        (typeof translate === 'function' ? translate('attendance.daily.wage_change_updated') : 'Wage change updated') :
+                        (typeof translate === 'function' ? translate('attendance.daily.wage_change_created') : 'Wage change created');
+                    showToast('success', successMsg);
+                    closeWageChangeModal();
+                    loadEmployeeData();
+                } else {
+                    throw new Error(result.error || 'Failed to save wage change');
+                }
+            } catch (error) {
+                console.error('Save wage change error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        function editWageChange(id) {
+            openWageChangeModal(id);
+        }
+
+        async function deleteWageChange(id) {
+            const confirmMsg = typeof translate === 'function' ? translate('attendance.daily.confirm_delete_wage_change') : 'Are you sure you want to delete this wage change?';
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const result = await API.deleteWageChange(id);
+
+                if (result.success) {
+                    const successMsg = typeof translate === 'function' ? translate('attendance.daily.wage_change_deleted') : 'Wage change deleted';
+                    showToast('success', successMsg);
+                    loadEmployeeData();
+                } else {
+                    throw new Error(result.error || 'Failed to delete wage change');
+                }
+            } catch (error) {
+                console.error('Delete wage change error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        // Overtime Request Modal Functions
+        function openOvertimeModal(id = null) {
+            const isEdit = id !== null;
+            const modal = document.getElementById('overtimeModal');
+            const title = document.getElementById('overtimeModalTitle');
+
+            const overtimeTitle = isEdit ?
+                (typeof translate === 'function' ? translate('attendance.daily.edit_overtime_request') : 'Edit Overtime Request') :
+                (typeof translate === 'function' ? translate('attendance.daily.add_overtime_request') : 'Add Overtime Request');
+            title.textContent = overtimeTitle;
+
+            if (isEdit) {
+                const request = overtimeRequests.find(r => r.id === id);
+                if (request) {
+                    document.getElementById('overtimeRequestId').value = request.id;
+                    document.getElementById('overtimeDate').value = request.date;
+                    document.getElementById('overtimeHours').value = request.requested_hours;
+                    document.getElementById('overtimeDescription').value = request.description || '';
+                }
+            } else {
+                document.getElementById('overtimeForm').reset();
+                document.getElementById('overtimeRequestId').value = '';
+            }
+
+            // Add input validation for hours field
+            setupOvertimeHoursValidation();
+
+            modal.classList.remove('hidden');
+        }
+
+        function setupOvertimeHoursValidation() {
+            const hoursInput = document.getElementById('overtimeHours');
+            if (!hoursInput) return;
+
+            // Remove existing listeners to avoid duplicates
+            hoursInput.removeEventListener('input', validateOvertimeHoursInput);
+            hoursInput.removeEventListener('blur', validateOvertimeHoursInput);
+
+            // Add validation listeners
+            hoursInput.addEventListener('input', validateOvertimeHoursInput);
+            hoursInput.addEventListener('blur', validateOvertimeHoursInput);
+        }
+
+        function validateOvertimeHoursInput(event) {
+            const input = event.target;
+            const value = input.value.trim();
+
+            // Remove previous validation styling
+            input.classList.remove('border-red-500', 'border-green-500');
+
+            if (!value) {
+                // Empty input - neutral state
+                return;
+            }
+
+            try {
+                // Replace comma with dot for international number formats
+                const normalizedValue = value.replace(',', '.');
+                const hours = parseFloat(normalizedValue);
+
+                if (isNaN(hours)) {
+                    input.classList.add('border-red-500');
+                    return;
+                }
+
+                // Check decimal places (should be in increments of 0.5)
+                const decimalPart = (hours * 10) % 5;
+                if (decimalPart !== 0) {
+                    input.classList.add('border-red-500');
+                    return;
+                }
+
+                // Validate range
+                if (hours < 0.5 || hours > 12) {
+                    input.classList.add('border-red-500');
+                } else {
+                    input.classList.add('border-green-500');
+                }
+            } catch (error) {
+                input.classList.add('border-red-500');
+            }
+        }
+
+        function closeOvertimeModal() {
+            document.getElementById('overtimeModal').classList.add('hidden');
+        }
+
+        async function saveOvertimeRequest() {
+            const idInput = document.getElementById('overtimeRequestId');
+            const dateInput = document.getElementById('overtimeDate');
+            const hoursInput = document.getElementById('overtimeHours');
+            const descriptionInput = document.getElementById('overtimeDescription');
+
+            if (!idInput || !dateInput || !hoursInput || !descriptionInput) {
+                showToast('error', 'Form inputs not found');
+                return;
+            }
+
+            const id = idInput.value || '';
+            const date = dateInput.value || '';
+            const hoursValue = (hoursInput && typeof hoursInput.value === 'string') ? hoursInput.value.trim() : '';
+            const description = (descriptionInput && typeof descriptionInput.value === 'string') ? descriptionInput.value.trim() : '';
+
+            // Enhanced hours validation
+            if (!hoursValue) {
+                const errorMsg = typeof translate === 'function' ? translate('attendance.daily.please_enter_hours') : 'Please enter the number of hours';
+                showToast('error', errorMsg);
+                hoursInput.focus();
+                return;
+            }
+
+            // Parse hours with better error handling
+            let hours;
+            try {
+                // Replace comma with dot for international number formats
+                const normalizedValue = hoursValue.replace(',', '.');
+                hours = parseFloat(normalizedValue);
+
+                // Check if parsing resulted in a valid number
+                if (isNaN(hours)) {
+                    throw new Error('Invalid number format');
+                }
+
+                // Check decimal places (should be in increments of 0.5)
+                const decimalPart = (hours * 10) % 5;
+                if (decimalPart !== 0) {
+                    const errorMsg = typeof translate === 'function' ? translate('attendance.daily.hours_increment_error') : 'Hours must be in increments of 0.5 (e.g., 1.0, 1.5, 2.0)';
+                    showToast('error', errorMsg);
+                    hoursInput.focus();
+                    return;
+                }
+
+                // Validate range
+                if (hours < 0.5 || hours > 12) {
+                    const errorMsg = typeof translate === 'function' ? translate('attendance.daily.hours_range_error') : 'Hours must be between 0.5 and 12';
+                    showToast('error', errorMsg);
+                    hoursInput.focus();
+                    return;
+                }
+            } catch (error) {
+                console.error('Hours parsing error:', error);
+                const errorMsg = typeof translate === 'function' ? translate('attendance.daily.please_enter_valid_hours') : 'Please enter a valid number of hours (e.g., 1.5, 2.0)';
+                showToast('error', errorMsg);
+                hoursInput.focus();
+                return;
+            }
+
+            if (!date) {
+                const errorMsg = typeof translate === 'function' ? translate('attendance.daily.please_select_date') : 'Please select a date';
+                showToast('error', errorMsg);
+                dateInput.focus();
+                return;
+            }
+
+            if (!description) {
+                const errorMsg = typeof translate === 'function' ? translate('attendance.daily.please_enter_description') : 'Please enter a description for the overtime request';
+                showToast('error', errorMsg);
+                descriptionInput.focus();
+                return;
+            }
+
+            try {
+                const data = {
+                    employee_id: currentEmployeeId,
+                    date: date,
+                    hours: hours,
+                    description: description
+                };
+
+                const result = id ?
+                    await API.updateOvertimeRequest(id, data) :
+                    await API.addOvertimeAdmin(data);
+
+                if (result.success) {
+                    const successMsg = id ?
+                        (typeof translate === 'function' ? translate('attendance.daily.overtime_request_updated') : 'Overtime request updated') :
+                        (typeof translate === 'function' ? translate('attendance.daily.overtime_request_created') : 'Overtime request created and approved');
+                    showToast('success', successMsg);
+                    closeOvertimeModal();
+                    loadEmployeeData();
+                } else {
+                    throw new Error(result.error || 'Failed to save overtime request');
+                }
+            } catch (error) {
+                console.error('Save overtime request error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        async function approveOvertimeRequest(id) {
+            try {
+                const result = await API.approveOvertimeRequest(id);
+
+                if (result.success) {
+                    const successMsg = typeof translate === 'function' ? translate('attendance.daily.overtime_request_approved') : 'Overtime request approved';
+                    showToast('success', successMsg);
+                    await loadEmployeeData();
+                } else {
+                    throw new Error(result.error || 'Failed to approve overtime request');
+                }
+            } catch (error) {
+                console.error('Approve overtime request error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        async function declineOvertimeRequest(id) {
+            try {
+                const result = await API.declineOvertimeRequest(id);
+
+                if (result.success) {
+                    const successMsg = typeof translate === 'function' ? translate('attendance.daily.overtime_request_declined') : 'Overtime request declined';
+                    showToast('success', successMsg);
+                    loadEmployeeData();
+                } else {
+                    throw new Error(result.error || 'Failed to decline overtime request');
+                }
+            } catch (error) {
+                console.error('Decline overtime request error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        async function deleteOvertimeRequest(id) {
+            const confirmMsg = typeof translate === 'function' ? translate('attendance.daily.confirm_delete_overtime') : 'Are you sure you want to delete this overtime request?';
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const result = await API.deleteOvertimeRequest(id);
+
+                if (result.success) {
+                    const successMsg = typeof translate === 'function' ? translate('attendance.daily.overtime_request_deleted') : 'Overtime request deleted';
+                    showToast('success', successMsg);
+                    await loadEmployeeData();
+                } else {
+                    throw new Error(result.error || 'Failed to delete overtime request');
+                }
+            } catch (error) {
+                console.error('Delete overtime request error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        async function deleteRecordedOvertime(id) {
+            if (!confirm('Are you sure you want to delete this recorded overtime?')) return;
+            try {
+                const result = await API.deleteRecordedOvertime(id);
+                if (result.success) {
+                    showToast('success', 'Recorded overtime deleted');
+                    await loadEmployeeData();
+                } else {
+                    throw new Error(result.error || 'Failed to delete recorded overtime');
+                }
+            } catch (error) {
+                console.error('Delete recorded overtime error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        // Main Action Functions
+        async function recalculateMonth() {
+            const confirmMsg = typeof translate === 'function' ? translate('attendance.daily.confirm_recalculate') : 'This will recalculate the entire month from raw punch data. Continue?';
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const result = await API.recalculateEmployeeMonth(currentEmployeeId, currentYear, currentMonth);
+
+                if (result.success) {
+                    const successMsg = typeof translate === 'function' ? translate('attendance.daily.month_recalculated') : 'Month recalculated successfully';
+                    showToast('success', successMsg);
+                    loadEmployeeData();
+                } else {
+                    throw new Error(result.error || 'Failed to recalculate month');
+                }
+            } catch (error) {
+                console.error('Recalculate month error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+
+        async function testAPI() {
+            try {
+                console.log('Testing API connection...');
+                console.log('Current API_BASE_URL:', window.API_BASE_URL);
+
+                // Test years endpoint
+                const response = await fetch('http://localhost:3000/api/attendance/years', {
+                    headers: {
+                        'Authorization': 'Bearer test-token',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('API Test Success:', data);
+                    const successMsg = typeof translate === 'function' ? translate('attendance.daily.api_connection_success') : 'API connection successful!';
+                    showToast('success', successMsg);
+                } else {
+                    console.error('API Test Failed:', response.status, response.statusText);
+                    showToast('error', `API test failed: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('API Test Error:', error);
+                showToast('error', 'API test error: ' + error.message);
+            }
+        }
+
+        async function validateMonth() {
+            const confirmMsg = typeof translate === 'function' ? translate('attendance.daily.confirm_validate') : 'This will validate the entire month and lock the data. Continue?';
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                // Block validation if there are pending exceptions or overtime for this employee/month
+                if (typeof API.checkEmployeeMonthValidation === 'function') {
+                    const validationCheck = await API.checkEmployeeMonthValidation(currentEmployeeId, currentYear, currentMonth);
+                    if (!validationCheck || validationCheck.can_validate === false) {
+                        const errorMsg = (validationCheck && validationCheck.message) ||
+                            (typeof translate === 'function' ? translate('attendance.daily.cannot_validate_pending') : 'Cannot validate: pending items exist for this month. Please resolve them first.');
+                        showToast('error', errorMsg);
+                        return;
+                    }
+                }
+
+                const result = await API.validateEmployeeMonth(currentEmployeeId, currentYear, currentMonth);
+
+                if (result.success) {
+                    const successMsg = typeof translate === 'function' ? translate('attendance.daily.month_validated') : 'Month validated successfully';
+                    showToast('success', successMsg);
+                    loadEmployeeData();
+                } else {
+                    throw new Error(result.error || 'Failed to validate month');
+                }
+            } catch (error) {
+                console.error('Validate month error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        function openSalaryPopup() {
+            // Get the current authentication token
+            const token = localStorage.getItem('token');
+
+            // Try multiple possible frontend URLs
+            const possibleUrls = [
+                `http://127.0.0.1:5502/pages/salary-management.html?employeeId=${currentEmployeeId}&year=${currentYear}&month=${currentMonth}${token ? `&token=${encodeURIComponent(token)}` : ''}`,
+                `http://localhost:5502/pages/salary-management.html?employeeId=${currentEmployeeId}&year=${currentYear}&month=${currentMonth}${token ? `&token=${encodeURIComponent(token)}` : ''}`,
+                `http://127.0.0.1:5503/pages/salary-management.html?employeeId=${currentEmployeeId}&year=${currentYear}&month=${currentMonth}${token ? `&token=${encodeURIComponent(token)}` : ''}`,
+                `http://localhost:5503/pages/salary-management.html?employeeId=${currentEmployeeId}&year=${currentYear}&month=${currentMonth}${token ? `&token=${encodeURIComponent(token)}` : ''}`,
+                `../frontend/pages/salary-management.html?employeeId=${currentEmployeeId}&year=${currentYear}&month=${currentMonth}${token ? `&token=${encodeURIComponent(token)}` : ''}`
+            ];
+
+            console.log('Trying to open salary popup...');
+
+            // Try each URL until one works
+            let success = false;
+            for (let i = 0; i < possibleUrls.length; i++) {
+                try {
+                    console.log(`Trying URL ${i + 1}:`, possibleUrls[i]);
+                    const newWindow = window.open(possibleUrls[i], '_blank');
+
+                    // Check if the window opened successfully
+                    if (newWindow && !newWindow.closed && typeof newWindow.closed !== 'undefined') {
+                        success = true;
+                        console.log('Successfully opened salary popup');
+                        break;
+                    }
+                } catch (error) {
+                    console.log(`URL ${i + 1} failed:`, error.message);
+                    continue;
+                }
+            }
+
+            if (!success) {
+                const errorMsg = typeof translate === 'function' ? translate('attendance.daily.cannot_connect_frontend') : 'Cannot connect to frontend service. Please ensure the frontend is running on port 5502 or 5503. You can start it with: cd frontend && python -m http.server 5502';
+                showToast('error', errorMsg);
+            }
+        }
+
+        // Utility Functions
+        function extractHourMinute(timeString) {
+            if (!timeString) return null;
+            const s = String(timeString).trim();
+            let match = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+            if (match) {
+                const h = parseInt(match[1], 10);
+                const m = parseInt(match[2], 10);
+                return { h, m };
+            }
+            match = s.match(/T(\d{2}):(\d{2})(?::\d{2})?/);
+            if (match) {
+                const h = parseInt(match[1], 10);
+                const m = parseInt(match[2], 10);
+                return { h, m };
+            }
+            return null;
+        }
+
+        function isAfterNoon(timeString) {
+            const hm = extractHourMinute(timeString);
+            if (!hm) return false;
+            return hm.h >= 12;
+        }
+
+        function timesEqual(t1, t2) {
+            const a = extractHourMinute(t1);
+            const b = extractHourMinute(t2);
+            if (!a || !b) return false;
+            return a.h === b.h && a.m === b.m;
+        }
+
+        function formatDateDisplay(dateString) {
+            // Parse YYYY-MM-DD as local to prevent shifting to previous/next day
+            const s = (typeof dateString === 'string' && dateString.includes('T')) ? dateString.split('T')[0] : String(dateString);
+            const [y, m, d] = s.split('-').map(Number);
+            const date = (y && m && d) ? new Date(y, m - 1, d) : new Date(s);
+            return date.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        function formatDate(dateString) {
+            // Parse YYYY-MM-DD as local to avoid timezone-related day shift
+            const s = (typeof dateString === 'string' && dateString.includes('T')) ? dateString.split('T')[0] : String(dateString);
+            const [y, m, d] = s.split('-').map(Number);
+            const date = (y && m && d) ? new Date(y, m - 1, d) : new Date(s);
+            return date.toLocaleDateString();
+        }
+
+        function formatTimeOnly(timeString) {
+            if (!timeString) return '';
+            const s = String(timeString).trim();
+
+            // Handle plain time strings without applying timezone offsets
+            if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(s)) {
+                const [h, m] = s.split(':');
+                return `${h.padStart(2, '0')}:${m.padStart(2, '0')}`;
+            }
+
+            // Handle ISO datetime strings by extracting clock portion without timezone math
+            const isoMatch = s.match(/T(\d{2}):(\d{2})(?::\d{2})?/);
+            if (isoMatch) {
+                const [, hh, mm] = isoMatch;
+                return `${hh}:${mm}`;
+            }
+
+            // Last resort: best-effort substring
+            return s.substring(0, 5);
+        }
+
+        function formatTimeForInput(timeString) {
+            if (!timeString) return '';
+            const s = String(timeString).trim();
+
+            // Accept 'HH:mm' or 'HH:mm:ss'
+            if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(s)) {
+                return s.substring(0, 5);
+            }
+
+            // Handle ISO datetime strings by extracting clock portion without timezone math
+            const isoMatch = s.match(/T(\d{2}):(\d{2})(?::\d{2})?/);
+            if (isoMatch) {
+                const [, hh, mm] = isoMatch;
+                return `${hh}:${mm}`;
+            }
+
+            return '';
+        }
+
+        function formatScheduledShift(intervals) {
+            if (!intervals || intervals.length === 0) {
+                return typeof translate === 'function' ? translate('attendance.daily.no_scheduled_shift_detailed') : 'No Schedule';
+            }
+
+            return intervals.map(interval =>
+                `${interval.start_time} - ${interval.end_time}`
+            ).join('<br>');
+        }
+
+        function formatScheduledShiftDetailed(intervals) {
+            if (!intervals || intervals.length === 0) {
+                const noShiftText = typeof translate === 'function' ? translate('attendance.daily.no_scheduled_shift_detailed') : 'No scheduled shift';
+                return `<div class="text-gray-500">${noShiftText}</div>`;
+            }
+
+            return intervals.map((interval, index) => {
+                const shiftText = typeof translate === 'function' ? translate('attendance.daily.shift').replace('{number}', index + 1) : `Shift ${index + 1}`;
+                const breakText = interval.break_minutes ?
+                    (typeof translate === 'function' ? translate('attendance.daily.break_minutes').replace('{minutes}', interval.break_minutes) : `Break: ${interval.break_minutes} minutes`) :
+                    '';
+                return `
+                    <div class="mb-2">
+                        <strong>${shiftText}:</strong> ${interval.start_time} - ${interval.end_time}
+                        ${breakText ? `<br><small class="text-gray-500">${breakText}</small>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function calculateLateMinutes(actualTime, scheduledTime) {
+            // Implementation for calculating late minutes with grace period
+            const actual = new Date(`2000-01-01 ${actualTime}`);
+            const scheduled = new Date(`2000-01-01 ${scheduledTime}`);
+            const diffMs = actual - scheduled;
+            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+            // Get grace period from settings
+            let graceMinutes = 5; // default fallback
+            try {
+                const settings = await API.getAttendanceSettings();
+                if (settings.success && settings.settings) {
+                    graceMinutes = settings.settings.grace_period_lateness_minutes || 5;
+                }
+            } catch (error) {
+                console.warn('Failed to fetch grace period settings, using default:', error);
+            }
+
+            return Math.max(0, diffMinutes - graceMinutes);
+        }
+
+        async function calculateEarlyMinutes(actualTime, scheduledTime) {
+            // Implementation for calculating early departure minutes with grace period
+            const actual = new Date(`2000-01-01 ${actualTime}`);
+            const scheduled = new Date(`2000-01-01 ${scheduledTime}`);
+            const diffMs = scheduled - actual;
+            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+            // Get grace period from settings
+            let graceMinutes = 5; // default fallback
+            try {
+                const settings = await API.getAttendanceSettings();
+                if (settings.success && settings.settings) {
+                    graceMinutes = settings.settings.grace_period_early_departure_minutes || 5;
+                }
+            } catch (error) {
+                console.warn('Failed to fetch grace period settings, using default:', error);
+            }
+
+            return Math.max(0, diffMinutes - graceMinutes);
+        }
+
+        function getStatusClass(status, record = null) {
+            // Enhanced status classification with Pending support
+            if (record && record.override_type) {
+                return 'status-overridden';
+            }
+
+            if (record) {
+                const hasEntry = record.entry_time;
+                const hasExit = record.exit_time;
+                const punchCount = record.punch_count || 0;
+
+                // Check for Pending status from backend
+                if (record.display_status === 'Pending') {
+                    return 'status-pending';
+                }
+
+                if (hasEntry && hasExit) {
+                    return 'status-present'; // Both punches present
+                }
+
+                if (hasEntry || hasExit || punchCount > 0) {
+                    // Single punch cases should now be handled as Pending by backend
+                    // But keep this as fallback for compatibility
+                    return punchCount === 1 ? 'status-pending' : 'status-present';
+                }
+
+                return 'status-missing-both'; // No punches at all
+            }
+
+            switch (status?.toLowerCase()) {
+                case 'present': return 'status-present';
+                case 'pending': return 'status-pending';
+                case 'absent': return 'status-missing-both';
+                case 'justified': return 'status-justified';
+                case 'overridden': return 'status-overridden';
+                default: return 'status-missing-both';
+            }
+        }
+
+        // New UX functions for better color coding
+        function getEntryTimeClass(record) {
+            if (record.override_type) {
+                return 'text-green-600 font-semibold text-base'; // Overridden - Green, bold, larger
+            }
+            if (record.entry_time) {
+                if (record.late_minutes > 0) {
+                    return 'text-orange-600 font-medium'; // Late - Orange, medium weight
+                }
+                return 'text-gray-900 font-normal'; // On time - Normal gray
+            }
+            return 'text-gray-900 font-normal'; // Default
+        }
+
+        function getExitTimeClass(record) {
+            if (record.override_type) {
+                return 'text-green-600 font-semibold text-base'; // Overridden - Green, bold, larger
+            }
+            if (record.exit_time) {
+                if (record.early_minutes > 0) {
+                    return 'text-orange-600 font-medium'; // Early - Orange, medium weight
+                }
+                return 'text-gray-900 font-normal'; // On time - Normal gray
+            }
+            return 'text-gray-900 font-normal'; // Default
+        }
+
+        function getMissingPunchDisplay(type, record) {
+            const hasEntry = record.entry_time;
+            const hasExit = record.exit_time;
+            const punchCount = record.punch_count || 0;
+
+            let missingText = 'Missing';
+            if (typeof translate === 'function') {
+                const translated = translate('attendance.daily.missing');
+                if (translated) missingText = translated;
+            }
+            // Determine if this is one missing punch or two missing punches (absent)
+            if (type === 'entry' && !hasEntry) {
+                if (hasExit || punchCount > 0) {
+                    // One missing punch (entry) - Subtle yellow
+                    return `<span class="text-yellow-600 text-sm">${missingText}</span>`;
+                } else {
+                    // Two missing punches (absent) - Red but not too bold
+                    return `<span class="text-red-600 text-sm">${missingText}</span>`;
+                }
+            }
+
+            if (type === 'exit' && !hasExit) {
+                if (hasEntry || punchCount > 0) {
+                    // One missing punch (exit) - Subtle yellow
+                    return `<span class="text-yellow-600 text-sm">${missingText}</span>`;
+                } else {
+                    // Two missing punches (absent) - Red but not too bold
+                    return `<span class="text-red-600 text-sm">${missingText}</span>`;
+                }
+            }
+
+            return '<span class="text-gray-500">-</span>';
+        }
+
+        function getEnhancedStatusText(record) {
+            if (record.override_type) {
+                if (typeof translate === 'function') {
+                    const translated = translate('attendance.daily.overridden');
+                    return translated || 'Overridden';
+                }
+                return 'Overridden';
+            }
+
+            // Use backend-provided display status if available
+            if (record.display_status) {
+                console.log('📊 Using backend display_status:', record.display_status, 'for date:', record.date);
+                const statusLower = (record.display_status || '').toLowerCase();
+                if (typeof translate === 'function') {
+                    let translated;
+                    if (statusLower === 'present') {
+                        translated = translate('attendance.daily.present');
+                        if (translated) return translated;
+                    }
+                    if (statusLower === 'absent') {
+                        translated = translate('attendance.daily.absent');
+                        if (translated) return translated;
+                    }
+                    if (statusLower === 'pending') {
+                        translated = translate('attendance.daily.pending');
+                        if (translated) return translated;
+                    }
+                    if (statusLower === 'overridden') {
+                        translated = translate('attendance.daily.overridden');
+                        if (translated) return translated;
+                    }
+                    if (statusLower === 'justified') {
+                        translated = translate('attendance.daily.justified');
+                        if (translated) return translated;
+                    }
+                }
+                return record.display_status;
+            }
+
+            // Fallback to status field if display_status is undefined
+            if (record.status) {
+                console.log('📊 Using backend status:', record.status, 'for date:', record.date);
+                const statusLower = (record.status || '').toLowerCase();
+                if (typeof translate === 'function') {
+                    let translated;
+                    if (statusLower === 'present') {
+                        translated = translate('attendance.daily.present');
+                        if (translated) return translated;
+                    }
+                    if (statusLower === 'absent') {
+                        translated = translate('attendance.daily.absent');
+                        if (translated) return translated;
+                    }
+                    if (statusLower === 'pending') {
+                        translated = translate('attendance.daily.pending');
+                        if (translated) return translated;
+                    }
+                    if (statusLower === 'overridden') {
+                        translated = translate('attendance.daily.overridden');
+                        if (translated) return translated;
+                    }
+                    if (statusLower === 'justified') {
+                        translated = translate('attendance.daily.justified');
+                        if (translated) return translated;
+                    }
+                }
+                return record.status;
+            }
+
+            const hasEntry = record.entry_time;
+            const hasExit = record.exit_time;
+            const punchCount = parseInt(record.punch_count) || 0;
+
+            console.log('📊 Frontend status calculation:', {
+                date: record.date,
+                hasEntry: hasEntry,
+                hasExit: hasExit,
+                punchCount: punchCount
+            });
+
+            if (hasEntry && hasExit) {
+                if (typeof translate === 'function') {
+                    const translated = translate('attendance.daily.present');
+                    return translated || 'Present';
+                }
+                return 'Present';
+            }
+
+            if (hasEntry || hasExit || punchCount > 0) {
+                // Single punch cases should be Pending
+                let status;
+                if (punchCount === 1) {
+                    if (typeof translate === 'function') {
+                        const translated = translate('attendance.daily.pending');
+                        status = translated || 'Pending';
+                    } else {
+                        status = 'Pending';
+                    }
+                } else {
+                    if (typeof translate === 'function') {
+                        const translated = translate('attendance.daily.present');
+                        status = translated || 'Present';
+                    } else {
+                        status = 'Present';
+                    }
+                }
+                console.log('📊 Single punch detected, returning:', status);
+                return status;
+            }
+
+            if (typeof translate === 'function') {
+                const translated = translate('attendance.daily.absent');
+                return translated || 'Absent';
+            }
+            return 'Absent';
+        }
+
+        function getSecondaryStatusText(record) {
+            if (record.override_type) {
+                return null; // No secondary status for overridden
+            }
+
+            const hasEntry = record.entry_time;
+            const hasExit = record.exit_time;
+
+            if (hasEntry && hasExit) {
+                if (record.late_minutes > 0) {
+                    if (typeof translate === 'function') {
+                        const translated = translate('attendance.daily.late');
+                        return translated || 'Late';
+                    }
+                    return 'Late';
+                }
+                if (record.early_minutes > 0) {
+                    if (typeof translate === 'function') {
+                        const translated = translate('attendance.daily.early');
+                        return translated || 'Early';
+                    }
+                    return 'Early';
+                }
+                return null; // No secondary status for on-time
+            }
+
+            if (hasEntry || hasExit) {
+                if (typeof translate === 'function') {
+                    const translated = translate('attendance.daily.partial');
+                    return translated || 'Partial';
+                }
+                return 'Partial';
+            }
+
+            return null; // No secondary status for absent
+        }
+
+        function getOvertimeStatusClass(status) {
+            switch (status?.toLowerCase()) {
+                case 'approved': return 'bg-green-100 text-green-800';
+                case 'declined': return 'bg-red-100 text-red-800';
+                default: return 'bg-yellow-100 text-yellow-800';
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'decimal',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount || 0) + ' DA';
+        }
+
+        function formatDuration(totalMinutes) {
+            if (totalMinutes < 60) {
+                return `${totalMinutes}m`;
+            } else {
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+                return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+            }
+        }
+
+        function showAttendanceLoading() {
+            document.getElementById('attendanceLoading').classList.remove('hidden');
+            document.getElementById('attendanceTableBody').innerHTML = '';
+        }
+
+        function hideAttendanceLoading() {
+            document.getElementById('attendanceLoading').classList.add('hidden');
+        }
+
+        function showAttendanceEmpty() {
+            document.getElementById('attendanceEmpty').classList.remove('hidden');
+            document.getElementById('attendanceTableBody').innerHTML = '';
+        }
+
+        function hideAttendanceEmpty() {
+            document.getElementById('attendanceEmpty').classList.add('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+        }
+
+        // Delete override flow for a specific day
+        function confirmDeleteOverride(date) {
+            const modal = document.getElementById('confirmModal');
+            const icon = document.getElementById('confirmIcon');
+            const iconClass = document.getElementById('confirmIconClass');
+            const title = document.getElementById('confirmTitle');
+            const message = document.getElementById('confirmMessage');
+            const actionBtn = document.getElementById('confirmAction');
+
+            icon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-4';
+            iconClass.className = 'fas fa-trash text-xl text-red-600';
+            title.textContent = typeof translate === 'function' ? translate('attendance.daily.delete_override') : 'Delete Manual Override';
+            const deleteMsg = typeof translate === 'function' ? translate('attendance.daily.delete_override_message').replace('{date}', formatDate(date)) : `Are you sure you want to delete overrides for ${formatDate(date)}? This will revert the day to calculated values.`;
+            message.textContent = deleteMsg;
+            actionBtn.className = 'px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white transition-colors';
+            actionBtn.textContent = typeof translate === 'function' ? translate('attendance.daily.delete') : 'Delete';
+            actionBtn.onclick = async () => {
+                try {
+                    closeConfirmModal();
+                    const result = await API.deleteDayOverrides(currentEmployeeId, date);
+                    if (result && result.success) {
+                        const successMsg = typeof translate === 'function' ? translate('attendance.daily.override_deleted') : 'Overrides deleted successfully';
+                        showToast('success', successMsg);
+                        await loadEmployeeData();
+                    } else {
+                        throw new Error(result && result.error ? result.error : 'Failed to delete overrides');
+                    }
+                } catch (error) {
+                    showToast('error', error.message);
+                }
+            };
+
+            modal.classList.remove('hidden');
+        }
+
+        function showToast(type, message) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const messageEl = document.getElementById('toastMessage');
+
+            let borderColor, iconClass;
+            switch (type) {
+                case 'success':
+                    borderColor = 'border-green-500';
+                    iconClass = 'fas fa-check-circle text-xl text-green-500';
+                    break;
+                case 'warning':
+                    borderColor = 'border-yellow-500';
+                    iconClass = 'fas fa-exclamation-triangle text-xl text-yellow-500';
+                    break;
+                case 'info':
+                    borderColor = 'border-blue-500';
+                    iconClass = 'fas fa-info-circle text-xl text-blue-500';
+                    break;
+                default:
+                    borderColor = 'border-red-500';
+                    iconClass = 'fas fa-exclamation-circle text-xl text-red-500';
+            }
+
+            toast.className = 'fixed top-4 right-4 z-50';
+            toast.firstElementChild.className = `bg-white rounded-lg shadow-lg border-l-4 ${borderColor} p-4 max-w-sm`;
+            icon.className = iconClass;
+            messageEl.textContent = message;
+            toast.classList.remove('hidden');
+
+            setTimeout(hideToast, 5000);
+        }
+
+        function hideToast() {
+            document.getElementById('toast').classList.add('hidden');
+        }
+
+        // Close modals when clicking outside
+        ['editDayModal', 'wageChangeModal', 'overtimeModal', 'confirmModal'].forEach(modalId => {
+            document.getElementById(modalId).addEventListener('click', function (e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

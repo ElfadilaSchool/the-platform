@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title data-translate="attendance.master.title">Monthly Attendance Log - HR Operations Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../frontend/assets/css/style.css" rel="stylesheet">
+    <link href="../frontend/assets/css/rtl.css" rel="stylesheet">
+    <style>
+        .stat-card {
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-validated {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-calculated {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .table-row:hover {
+            background-color: #f9fafb;
+        }
+
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Mobile menu toggle button -->
+    <button id="mobileMenuToggle"
+        class="mobile-menu-toggle md:hidden bg-white border border-gray-300 rounded-lg p-2 shadow-sm fixed top-4 left-4 z-50">
+        <i class="fas fa-bars text-gray-600"></i>
+    </button>
+
+    <!-- Main Content -->
+    <main class="p-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Top Bar with Language Selector -->
+            <div class="flex items-center justify-end mb-4">
+                <!-- Language Selector -->
+                <select id="languageSelector"
+                    class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm hover:border-gray-400 transition-colors">
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                    <option value="ar">العربية</option>
+                </select>
+            </div>
+
+            <!-- Page Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg p-6 mb-6 text-white">
+                <div class="flex items-start">
+                    <div class="p-3 bg-white/20 rounded-lg mr-4 flex-shrink-0">
+                        <i class="fas fa-clock text-2xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h1 class="text-3xl font-bold mb-2" data-translate="attendance.master.title">Monthly Attendance
+                            Log</h1>
+                        <p class="text-blue-100 text-base leading-relaxed"
+                            data-translate="attendance.master.description">Monitor and validate employee attendance
+                            records</p>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button onclick="refreshData()"
+                            class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                            <i class="fas fa-sync-alt mr-2"></i>
+                            <span data-translate="attendance.master.refresh">Refresh</span>
+                        </button>
+                        <button onclick="openExportModal()"
+                            class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                            <i class="fas fa-download mr-2"></i>
+                            <span data-translate="attendance.master.export">Export</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View Toggle Buttons -->
+            <div class="mb-6 flex gap-3">
+                <button id="viewAllBtn" onclick="setViewMode('all')"
+                    class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <i class="fas fa-list mr-2"></i>
+                    <span data-translate="attendance.master.view_all">View All</span>
+                </button>
+                <button id="viewValidatedBtn" onclick="setViewMode('validated')"
+                    class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span data-translate="attendance.master.view_validated">Validated View</span>
+                </button>
+                <button id="viewCalculatedBtn" onclick="setViewMode('calculated')"
+                    class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                    <i class="fas fa-calculator mr-2"></i>
+                    <span data-translate="attendance.master.view_calculated">Calculated View</span>
+                </button>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card bg-white rounded-lg p-6 shadow-sm">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-100">
+                            <i class="fas fa-users text-blue-600 text-lg"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500"
+                                data-translate="attendance.master.total_employees">Total Employees</h3>
+                            <p id="totalEmployees" class="text-2xl font-semibold text-gray-900">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="validatedCard" class="stat-card bg-white rounded-lg p-6 shadow-sm cursor-pointer">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-green-100">
+                            <i class="fas fa-check-circle text-green-600 text-lg"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500"
+                                data-translate="attendance.master.validated_records">Validated Records</h3>
+                            <p id="validatedRecords" class="text-2xl font-semibold text-gray-900">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="pendingCard" class="stat-card bg-white rounded-lg p-6 shadow-sm cursor-pointer">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-yellow-100">
+                            <i class="fas fa-hourglass-half text-yellow-600 text-lg"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500"
+                                data-translate="attendance.master.pending_validation">Pending Validation</h3>
+                            <p id="pendingValidation" class="text-2xl font-semibold text-yellow-600">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="partialCard" class="stat-card bg-white rounded-lg p-6 shadow-sm cursor-pointer">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-orange-100">
+                            <i class="fas fa-clock text-orange-600 text-lg"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500"
+                                data-translate="attendance.master.partial_pending">Partial Pending</h3>
+                            <p id="partialPending" class="text-2xl font-semibold text-orange-600">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters and Actions -->
+            <div class="bg-white rounded-lg shadow-sm mb-6">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="grid grid-cols-1 md:grid-cols-9 gap-4">
+                        <!-- Year Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1"
+                                data-translate="attendance.master.year">Year</label>
+                            <select id="yearFilter"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="" data-translate="attendance.master.all_years">All Years</option>
+                            </select>
+                        </div>
+                        <!-- Month Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1"
+                                data-translate="attendance.master.month">Month</label>
+                            <select id="monthFilter"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="" data-translate="attendance.master.all_months">All Months</option>
+                                <option value="1" data-translate="dashboard.january">January</option>
+                                <option value="2" data-translate="dashboard.february">February</option>
+                                <option value="3" data-translate="dashboard.march">March</option>
+                                <option value="4" data-translate="dashboard.april">April</option>
+                                <option value="5" data-translate="dashboard.may">May</option>
+                                <option value="6" data-translate="dashboard.june">June</option>
+                                <option value="7" data-translate="dashboard.july">July</option>
+                                <option value="8" data-translate="dashboard.august">August</option>
+                                <option value="9" data-translate="dashboard.september">September</option>
+                                <option value="10" data-translate="dashboard.october">October</option>
+                                <option value="11" data-translate="dashboard.november">November</option>
+                                <option value="12" data-translate="dashboard.december">December</option>
+                            </select>
+                        </div>
+
+                        <!-- Department Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1"
+                                data-translate="attendance.master.department">Department</label>
+                            <select id="departmentFilter"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="" data-translate="attendance.master.all_departments">All Departments
+                                </option>
+                            </select>
+                        </div>
+                        <!-- Validation Status Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1"
+                                data-translate="attendance.master.status">Status</label>
+                            <select id="statusFilter"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="" data-translate="attendance.master.all_status">All Status</option>
+                                <option value="Validated" data-translate="attendance.master.validated">Validated
+                                </option>
+                                <option value="Calculated" data-translate="attendance.master.calculated">Calculated
+                                </option>
+                            </select>
+                        </div>
+                        <!-- Search -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1"
+                                data-translate="attendance.master.search_employee">Search Employee</label>
+                            <input type="text" id="searchInput"
+                                data-translate-placeholder="attendance.master.search_placeholder"
+                                placeholder="Search by name..."
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <!-- Apply Filters Button -->
+                        <div class="flex items-end">
+                            <button onclick="applyFilters()"
+                                class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                <i class="fas fa-filter mr-2"></i>
+                                <span data-translate="attendance.master.apply">Apply</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bulk Actions -->
+                <div class="p-4 bg-gray-50">
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="bulkValidate()"
+                            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm disabled:opacity-50">
+                            <i class="fas fa-check-double mr-2"></i>
+                            <span data-translate="attendance.master.bulk_validate">Bulk Validate</span>
+                        </button>
+                        <button onclick="bulkClearLate()"
+                            class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm">
+                            <i class="fas fa-eraser mr-2"></i>
+                            <span data-translate="attendance.master.clear_all_late">Clear All Late</span>
+                        </button>
+                        <button onclick="bulkClearEarly()"
+                            class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm">
+                            <i class="fas fa-eraser mr-2"></i>
+                            <span data-translate="attendance.master.clear_all_early">Clear All Early</span>
+                        </button>
+                        <button onclick="bulkClearMissing()"
+                            class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm">
+                            <i class="fas fa-eraser mr-2"></i>
+                            <span data-translate="attendance.master.clear_missing_punches">Clear Missing Punches</span>
+                        </button>
+                        <span class="text-sm text-gray-500 flex items-center ml-4">
+                            <span id="selectedCount">0</span> <span
+                                data-translate="attendance.master.selected">selected</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Table -->
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left">
+                                    <input type="checkbox" id="selectAll"
+                                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    data-translate="attendance.master.employee">Employee</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    data-translate="attendance.scheduled_days">Scheduled Days</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    data-translate="attendance.worked_days">Worked Days</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    data-translate="attendance.absence_days">Absence Days</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <span class="text-orange-600" data-translate="attendance.pending">Pending</span>
+                                    <i class="fas fa-info-circle text-xs text-gray-400 ml-1"
+                                        title="Partial cases requiring treatment"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    data-translate="attendance.wage_changes">Wage Changes</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    data-translate="attendance.status">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    data-translate="attendance.master.actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Table rows will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="text-center py-12 hidden">
+                    <div class="loading-spinner rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p class="text-gray-500" data-translate="attendance.master.loading">Loading attendance data...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="text-center py-12 hidden">
+                    <i class="fas fa-calendar-times text-6xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500" data-translate="attendance.master.no_data">No attendance data found</p>
+                    <p class="text-sm text-gray-400" data-translate="attendance.master.try_filters">Try adjusting your
+                        search filters</p>
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination"
+                    class="bg-gray-50 px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                    <!-- Pagination will be populated here -->
+                </div>
+            </div>
+        </div>
+    </main>
+    </div>
+
+    <!-- Settings Modal - Grace Period Only -->
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg max-w-md w-full mx-4">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900" data-translate="attendance.master.settings">Grace
+                        Period Settings</h3>
+                    <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <!-- Grace Period Settings Only -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1"
+                            data-translate="attendance.master.lateness_grace">Lateness Grace (minutes)</label>
+                        <input type="number" id="latenessGrace" min="0" max="60"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-xs text-gray-500 mt-1" data-translate="attendance.master.lateness_grace_hint">
+                            Minutes allowed before marking as late</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1"
+                            data-translate="attendance.master.early_grace">Early Departure Grace (minutes)</label>
+                        <input type="number" id="earlyGrace" min="0" max="60"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-xs text-gray-500 mt-1" data-translate="attendance.master.early_grace_hint">
+                            Minutes allowed before marking as early departure</p>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <div class="flex justify-end space-x-3 pt-6 border-t mt-6">
+                    <button onclick="closeSettingsModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                        data-translate="common.cancel">Cancel</button>
+                    <button onclick="saveSettings()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        data-translate="attendance.master.save_settings">Save Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg max-w-md w-full mx-4">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900" data-translate="attendance.master.export_title">Export
+                        Attendance Data</h3>
+                    <button onclick="closeExportModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"
+                            data-translate="attendance.master.export_format">Export Format</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="exportFormat" value="csv"
+                                    class="text-blue-600 focus:ring-blue-500" checked>
+                                <span class="ml-2 text-sm text-gray-700"
+                                    data-translate="attendance.master.csv_format">CSV (Excel compatible)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="exportFormat" value="xlsx"
+                                    class="text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700"
+                                    data-translate="attendance.master.xlsx_format">XLSX (Excel format)</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="includeValidationFlag"
+                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+                            <span class="ml-2 text-sm text-gray-700"
+                                data-translate="attendance.master.include_validation">Include validation status
+                                column</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="includeSourceFlag"
+                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+                            <span class="ml-2 text-sm text-gray-700"
+                                data-translate="attendance.master.include_source">Include data source column</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button onclick="closeExportModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                        data-translate="common.cancel">Cancel</button>
+                    <button onclick="exportData()"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-download mr-2"></i>
+                        <span data-translate="attendance.master.export">Export</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg border-l-4 p-4 max-w-sm">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i id="toastIcon" class="text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <p id="toastMessage" class="text-sm font-medium text-gray-900"></p>
+                </div>
+                <div class="ml-auto pl-3">
+                    <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg max-w-md w-full mx-4">
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div id="confirmIcon"
+                        class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mr-4">
+                        <i id="confirmIconClass" class="text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 id="confirmTitle" class="text-lg font-medium text-gray-900"></h3>
+                        <p id="confirmMessage" class="text-sm text-gray-500"></p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button onclick="closeConfirmModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                        data-translate="common.cancel">Cancel</button>
+                    <button id="confirmAction" class="px-4 py-2 rounded-lg text-white transition-colors"
+                        data-translate="common.confirm">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Cases Modal -->
+    <div id="pendingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        <span data-translate="attendance.master.pending_cases">Pending Cases</span> - <span
+                            id="pendingEmployeeName"></span>
+                    </h3>
+                    <button onclick="closePendingModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <p class="text-sm text-gray-600 mt-2" data-translate="attendance.master.pending_description">
+                    These are partial attendance cases (single punch) that require treatment.
+                </p>
+            </div>
+
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <div id="pendingCasesContainer">
+                    <!-- Pending cases will be loaded here -->
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-gray-200 bg-gray-50">
+                <div class="flex justify-between items-center">
+                    <div class="text-sm text-gray-600">
+                        <i class="fas fa-info-circle text-blue-500 mr-1"></i>
+                        <span data-translate="attendance.master.all_resolved">All pending cases must be resolved before
+                            month validation.</span>
+                    </div>
+                    <button onclick="closePendingModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                        data-translate="common.close">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Case Treatment Modal -->
+    <div id="treatmentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg max-w-md w-full mx-4">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900" data-translate="attendance.master.treat_pending">Treat
+                        Pending Case</h3>
+                    <button onclick="closeTreatmentModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div class="mb-4">
+                    <div class="text-sm text-gray-600">
+                        <strong data-translate="attendance.master.employee">Employee</strong>: <span
+                            id="treatmentEmployeeName"></span><br>
+                        <strong data-translate="attendance.date">Date</strong>: <span id="treatmentDate"></span><br>
+                        <strong data-translate="attendance.punch_time">Punch Time</strong>: <span
+                            id="treatmentPunchTime"></span>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"
+                            data-translate="attendance.master.choose_action">Choose Action:</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="treatmentAction" value="full_day" class="mr-2">
+                                <div>
+                                    <div class="font-medium text-green-600" data-translate="attendance.master.full_day">
+                                        Full Day Validation</div>
+                                    <div class="text-xs text-gray-500" data-translate="attendance.master.full_day_desc">
+                                        Mark as Present (full daily pay)</div>
+                                </div>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="treatmentAction" value="half_day" class="mr-2">
+                                <div>
+                                    <div class="font-medium text-blue-600" data-translate="attendance.master.half_day">
+                                        Half Day Validation</div>
+                                    <div class="text-xs text-gray-500" data-translate="attendance.master.half_day_desc">
+                                        Mark as Present (half daily pay)</div>
+                                </div>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="treatmentAction" value="refuse" class="mr-2">
+                                <div>
+                                    <div class="font-medium text-red-600" data-translate="attendance.master.refuse">
+                                        Refuse</div>
+                                    <div class="text-xs text-gray-500" data-translate="attendance.master.refuse_desc">
+                                        Mark as Absent (absent deduction)</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1"
+                            data-translate="attendance.master.reason">Reason (optional)</label>
+                        <textarea id="treatmentReason" rows="3"
+                            data-translate-placeholder="attendance.master.reason_placeholder"
+                            placeholder="Add a reason for this treatment..."
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-6 border-t mt-6">
+                    <button onclick="closeTreatmentModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                        data-translate="common.cancel">Cancel</button>
+                    <button onclick="submitTreatment()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        data-translate="attendance.master.apply_treatment">Apply Treatment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts - Load in same order as HR system pages -->
+    <script src="../frontend/assets/js/translations.js?v=4"></script>
+    <script src="../frontend/assets/js/auth.js?v=4"></script>
+    <script src="../frontend/components/api.js?v=2"></script>
+    <script src="attendance-api.js?v=3&t=1736934000"></script>
+    <script src="../frontend/assets/js/main.js?v=4"></script>
+    <script>
+        // Language selector and sidebar initialization
+        document.addEventListener('DOMContentLoaded', function () {
+            // Ensure user role is set for sidebar - CRITICAL for navigation
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            let userRole = user.role || localStorage.getItem('userRole');
+
+            // Map admin role to HR_Manager for navigation (admin is part of HR system)
+            if (userRole && (userRole.toLowerCase() === 'admin' || userRole === 'Admin' || userRole === 'ADMIN')) {
+                console.log('Mapping admin role to HR_Manager for navigation');
+                userRole = 'HR_Manager';
+                localStorage.setItem('userRole', userRole);
+            } else if (!userRole) {
+                // Default to HR_Manager for attendance master page if no role found
+                userRole = 'HR_Manager';
+                localStorage.setItem('userRole', userRole);
+            } else if (user.role && user.role !== userRole) {
+                // Update if user object has different role
+                userRole = user.role;
+                // Also map admin to HR_Manager
+                if (userRole && (userRole.toLowerCase() === 'admin' || userRole === 'Admin' || userRole === 'ADMIN')) {
+                    userRole = 'HR_Manager';
+                }
+                localStorage.setItem('userRole', userRole);
+            }
+
+            console.log('Setting user role for sidebar:', userRole);
+
+            // Initialize mobile menu (same as HR dashboard)
+            function initializeMobileMenu() {
+                const mobileToggle = document.getElementById('mobileMenuToggle');
+                const sidebar = document.getElementById('collapsibleSidebar');
+
+                if (mobileToggle && sidebar) {
+                    mobileToggle.addEventListener('click', () => {
+                        sidebar.classList.toggle('mobile-open');
+                        const icon = mobileToggle.querySelector('i');
+                        if (sidebar.classList.contains('mobile-open')) {
+                            icon.classList.remove('fa-bars');
+                            icon.classList.add('fa-times');
+                        } else {
+                            icon.classList.remove('fa-times');
+                            icon.classList.add('fa-bars');
+                        }
+                    });
+
+                    document.addEventListener('click', (e) => {
+                        if (window.innerWidth <= 768 &&
+                            !sidebar.contains(e.target) &&
+                            !mobileToggle.contains(e.target) &&
+                            sidebar.classList.contains('mobile-open')) {
+                            sidebar.classList.remove('mobile-open');
+                            const icon = mobileToggle.querySelector('i');
+                            icon.classList.remove('fa-times');
+                            icon.classList.add('fa-bars');
+                        }
+                    });
+                }
+            }
+
+            // Initialize mobile menu after sidebar is created
+            setTimeout(() => {
+                initializeMobileMenu();
+            }, 500);
+
+            const languageSelector = document.getElementById('languageSelector');
+            if (languageSelector) {
+                languageSelector.value = (typeof currentLanguage !== 'undefined' ? currentLanguage : null) || localStorage.getItem('language') || 'en';
+                languageSelector.addEventListener('change', (e) => {
+                    if (typeof setLanguage === 'function') {
+                        setLanguage(e.target.value);
+                    }
+                });
+            }
+
+            // Listen for language changes from parent page (when embedded in iframe)
+            window.addEventListener('message', function (event) {
+                // Verify origin for security (allow localhost and 127.0.0.1 on any port)
+                // This allows cross-origin communication between frontend (port 5502) and attendance service (port 3000)
+                const allowedOrigins = ['localhost', '127.0.0.1'];
+                const isAllowedOrigin = allowedOrigins.some(origin => event.origin.includes(origin));
+                if (!isAllowedOrigin && event.origin !== window.location.origin) {
+                    console.warn('[attendance-master.html] Rejected message from unauthorized origin:', event.origin);
+                    return;
+                }
+
+                if (event.data && event.data.type === 'languageChange') {
+                    const lang = event.data.language;
+                    console.log('[attendance-master.html] Received language change from parent:', lang);
+
+                    // Update language selector
+                    if (languageSelector && languageSelector.value !== lang) {
+                        languageSelector.value = lang;
+                    }
+
+                    // Call setLanguage if available
+                    if (typeof setLanguage === 'function') {
+                        setLanguage(lang);
+                    } else {
+                        // Fallback: update localStorage and reload if setLanguage not available
+                        localStorage.setItem('language', lang);
+                        localStorage.setItem('lang', lang);
+                        // Optionally reload page if translations don't update automatically
+                        // window.location.reload();
+                    }
+                }
+            });
+
+            // Also check for language in URL params or localStorage on load
+            const urlParams = new URLSearchParams(window.location.search);
+            const embedLang = urlParams.get('lang');
+            if (embedLang && typeof setLanguage === 'function') {
+                setLanguage(embedLang);
+            }
+
+            // Initialize translations
+            if (typeof updatePageTranslations === 'function') {
+                updatePageTranslations();
+            }
+        });
+
+        // Override API base URL to ensure it points to the correct port
+        if (typeof window !== 'undefined') {
+            window.API_BASE_URL = 'http://localhost:3000';
+            console.log('Force setting API_BASE_URL to:', window.API_BASE_URL);
+        }
+
+        // Global variables
+        let currentPage = 1;
+        let currentFilters = {};
+        let activePartialOnly = false;
+        let selectedEmployees = new Set();
+        let attendanceData = [];
+        let currentViewMode = 'all'; // 'all', 'validated', 'calculated'
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!requireAuth()) return;
+            initializePage();
+
+            // Event listeners
+            const selectAllElement = document.getElementById('selectAll');
+            if (selectAllElement) {
+                selectAllElement.addEventListener('change', toggleSelectAll);
+            }
+
+            // Clickable status cards as filters
+            const validatedCard = document.getElementById('validatedCard');
+            const pendingCard = document.getElementById('pendingCard');
+            const partialCard = document.getElementById('partialCard');
+            if (validatedCard) validatedCard.addEventListener('click', () => {
+                document.getElementById('statusFilter').value = 'Validated';
+                activePartialOnly = false;
+                applyFilters();
+            });
+            if (pendingCard) pendingCard.addEventListener('click', () => {
+                document.getElementById('statusFilter').value = 'Calculated';
+                activePartialOnly = false;
+                applyFilters();
+            });
+            if (partialCard) partialCard.addEventListener('click', () => {
+                document.getElementById('statusFilter').value = 'Calculated';
+                activePartialOnly = true;
+                applyFilters();
+            });
+
+            // Listen for language changes
+            window.addEventListener('languageChanged', () => {
+                loadAttendanceData();
+            });
+        });
+
+        async function initializePage() {
+            try {
+                // Set current month and year as default
+                const now = new Date();
+                const defaultYear = now.getFullYear();
+                const defaultMonth = now.getMonth() + 1;
+
+                // Load years first, then set default filters
+                await loadYears();
+
+                // Now set the default filters after years are loaded
+                setDefaultFilters(defaultYear, defaultMonth);
+
+                await Promise.all([
+                    loadDepartments(),
+                    loadSettings(),
+                    loadAttendanceData()
+                ]);
+                updateStatistics();
+            } catch (error) {
+                console.error('Initialize page error:', error);
+                showToast('error', 'Failed to initialize page');
+            }
+        }
+
+        function setDefaultFilters(year, month) {
+            const yearEl = document.getElementById('yearFilter');
+            const monthEl = document.getElementById('monthFilter');
+
+            if (yearEl) {
+                yearEl.value = String(year);
+                // Verify it was set
+                if (yearEl.value !== String(year)) {
+                    // Try to find the option
+                    const option = Array.from(yearEl.options).find(opt => opt.value === String(year) || parseInt(opt.value) === year);
+                    if (option) {
+                        option.selected = true;
+                        yearEl.value = option.value;
+                    } else {
+                        console.warn('Year', year, 'not found in year filter options');
+                    }
+                }
+            }
+
+            if (monthEl) {
+                monthEl.value = String(month);
+                // Verify it was set
+                if (monthEl.value !== String(month)) {
+                    const option = Array.from(monthEl.options).find(opt => opt.value === String(month) || parseInt(opt.value) === month);
+                    if (option) {
+                        option.selected = true;
+                        monthEl.value = option.value;
+                    } else {
+                        console.warn('Month', month, 'not found in month filter options');
+                    }
+                }
+            }
+
+            console.log('setDefaultFilters - Set year:', year, 'month:', month, 'Year selector value:', yearEl?.value, 'Month selector value:', monthEl?.value);
+        }
+
+        async function loadDepartments() {
+            try {
+                const result = await API.getDepartments();
+                if (result.success) {
+                    const select = document.getElementById('departmentFilter');
+                    result.departments.forEach(dept => {
+                        const option = document.createElement('option');
+                        option.value = dept.id;
+                        option.textContent = dept.name;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Load departments error:', error);
+            }
+        }
+
+        async function loadYears() {
+            try {
+                const result = await API.getAvailableYears();
+                if (result.success) {
+                    const select = document.getElementById('yearFilter');
+                    result.years.forEach(year => {
+                        const option = document.createElement('option');
+                        // Ensure value is a string for consistent matching
+                        option.value = String(year);
+                        option.textContent = String(year);
+                        select.appendChild(option);
+                    });
+                    console.log('Loaded years in master:', result.years);
+                }
+            } catch (error) {
+                console.error('Load years error:', error);
+            }
+        }
+
+        async function loadSettings() {
+            try {
+                const result = await API.getAttendanceSettings();
+
+                if (result.success && result.settings) {
+                    const settings = result.settings;
+
+                    // Only load grace period settings
+                    document.getElementById('latenessGrace').value = settings.grace_period_lateness_minutes || 0;
+                    document.getElementById('earlyGrace').value = settings.grace_period_early_departure_minutes || 0;
+                } else {
+                    console.warn('No settings found or API call failed:', result);
+                }
+            } catch (error) {
+                console.error('Load settings error:', error);
+                showToast('error', 'Failed to load attendance settings');
+            }
+        }
+
+        async function loadAttendanceData() {
+            try {
+                showLoading();
+
+                const filters = getFilters();
+                const params = {
+                    page: currentPage,
+                    limit: 50,
+                    ...filters
+                };
+
+                const result = await API.getMonthlyAttendance(params);
+
+                if (result.success) {
+                    attendanceData = result.data;
+                    let rows = attendanceData || [];
+
+                    // Apply view mode filtering
+                    if (currentViewMode === 'validated') {
+                        rows = rows.filter(r => r.validation_status === 'Validated');
+                    } else if (currentViewMode === 'calculated') {
+                        rows = rows.filter(r => r.validation_status === 'Calculated');
+                    }
+
+                    // Apply partial only filter if active
+                    if (activePartialOnly) {
+                        rows = rows.filter(r => (r.pending_days || 0) > 0);
+                    }
+
+                    displayAttendanceData(rows);
+                    displayPagination(result.pagination);
+                    updateStatistics(result.statistics);
+                } else {
+                    throw new Error(result.error || 'Failed to load attendance data');
+                }
+            } catch (error) {
+                console.error('Load attendance data error:', error);
+                showToast('error', error.message);
+                showEmptyState();
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function getFilters() {
+            const yearEl = document.getElementById('yearFilter');
+            const monthEl = document.getElementById('monthFilter');
+            const year = yearEl ? yearEl.value : '';
+            const month = monthEl ? monthEl.value : '';
+            const now = new Date();
+
+            const filters = {
+                year: year || now.getFullYear(),
+                month: month || (now.getMonth() + 1),
+                department: document.getElementById('departmentFilter')?.value || '',
+                status: document.getElementById('statusFilter')?.value || '',
+                search: document.getElementById('searchInput')?.value?.trim() || ''
+            };
+
+            console.log('getFilters - Year selector value:', year, 'Month selector value:', month);
+            console.log('getFilters - Returning:', filters);
+
+            return filters;
+        }
+
+        function displayAttendanceData(data) {
+            const tbody = document.getElementById('attendanceTableBody');
+            const noDept = typeof translate === 'function' ? translate('attendance.master.no_department') : 'No Department';
+            const viewTitle = typeof translate === 'function' ? translate('attendance.master.view') : 'View';
+            const validateTitle = typeof translate === 'function' ? translate('attendance.master.validate') : 'Validate';
+            const notApplicable = typeof translate === 'function' ? translate('common.not_applicable') : 'Not Applicable';
+
+            if (data.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            tbody.innerHTML = data.map(record => {
+                const statusText = record.validation_status || notApplicable;
+                return `
+                <tr class="table-row">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <input type="checkbox" class="employee-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                               value="${record.employee_id}" onchange="updateSelection(this)">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">${record.employee_name}</div>
+                                <div class="text-sm text-gray-500">${record.department_name || noDept}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${record.scheduled_days || 0}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${record.worked_days || 0}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${record.absence_days || 0}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        ${record.pending_days > 0 ?
+                        `<button onclick="openPendingModal('${record.employee_id}', '${record.employee_name.replace(/'/g, "&#39;")}')" 
+                                    class="text-orange-600 hover:text-orange-800 font-medium cursor-pointer bg-orange-50 px-2 py-1 rounded-full border border-orange-200 hover:bg-orange-100 transition-colors">
+                                ${record.pending_days}
+                            </button>` :
+                        '<span class="text-gray-400">0</span>'
+                    }
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${formatCurrency(record.wage_changes || 0)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="status-badge ${getStatusClass(record.validation_status)}">
+                            ${statusText}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="viewEmployeeDetails('${record.employee_id}')"
+                                    class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors" title="${viewTitle}">
+                                <i class="fas fa-eye mr-1"></i>
+                                ${viewTitle}
+                            </button>
+                            ${record.validation_status === 'Calculated' ? `
+                                <button onclick="validateEmployee('${record.employee_id}')"
+                                        class="inline-flex items-center px-3 py-1.5 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-colors" title="${validateTitle}">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    ${validateTitle}
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+
+            hideEmptyState();
+        }
+
+        function displayPagination(pagination) {
+            const container = document.getElementById('pagination');
+
+            if (!pagination || pagination.pages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const prevDisabled = pagination.page <= 1;
+            const nextDisabled = pagination.page >= pagination.pages;
+            const showing = typeof translate === 'function' ? translate('attendance.master.showing') : 'Showing';
+            const to = typeof translate === 'function' ? translate('attendance.master.to') : 'to';
+            const of = typeof translate === 'function' ? translate('attendance.master.of') : 'of';
+            const results = typeof translate === 'function' ? translate('attendance.master.results') : 'results';
+            const page = typeof translate === 'function' ? translate('attendance.master.page') : 'Page';
+            const previous = typeof translate === 'function' ? translate('attendance.master.previous') : 'Previous';
+            const next = typeof translate === 'function' ? translate('attendance.master.next') : 'Next';
+
+            container.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        ${showing} ${((pagination.page - 1) * pagination.limit) + 1} ${to} ${Math.min(pagination.page * pagination.limit, pagination.total)} ${of} ${pagination.total} ${results}
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="changePage(${pagination.page - 1})" 
+                                ${prevDisabled ? 'disabled' : ''} 
+                                class="px-3 py-1 border border-gray-300 rounded text-sm ${prevDisabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'}">
+                            ${previous}
+                        </button>
+                        
+                        <span class="px-3 py-1 text-sm text-gray-700">
+                            ${page} ${pagination.page} ${of} ${pagination.pages}
+                        </span>
+                        
+                        <button onclick="changePage(${pagination.page + 1})" 
+                                ${nextDisabled ? 'disabled' : ''} 
+                                class="px-3 py-1 border border-gray-300 rounded text-sm ${nextDisabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'}">
+                            ${next}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateStatistics(statistics) {
+            if (!statistics) return;
+
+            document.getElementById('totalEmployees').textContent = statistics.total_employees || 0;
+            document.getElementById('validatedRecords').textContent = statistics.validated_records || 0;
+            // Pending Validation: count of months not validated
+            document.getElementById('pendingValidation').textContent = statistics.pending_validation || 0;
+            // Partial Pending: sum of pending days (same logic as daily)
+            document.getElementById('partialPending').textContent = statistics.pending_cases || 0;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            loadAttendanceData();
+        }
+
+        function applyFilters() {
+            currentPage = 1;
+            selectedEmployees.clear();
+            updateSelectionCount();
+            const selectAllElement = document.getElementById('selectAll');
+            if (selectAllElement) {
+                selectAllElement.checked = false;
+            }
+
+            // Sync view mode with status filter
+            const statusFilter = document.getElementById('statusFilter').value;
+            if (statusFilter === 'Validated') {
+                currentViewMode = 'validated';
+                updateViewModeButtons('validated');
+            } else if (statusFilter === 'Calculated') {
+                currentViewMode = 'calculated';
+                updateViewModeButtons('calculated');
+            } else {
+                currentViewMode = 'all';
+                updateViewModeButtons('all');
+            }
+
+            loadAttendanceData();
+        }
+
+        function updateViewModeButtons(activeMode) {
+            document.getElementById('viewAllBtn').className = activeMode === 'all'
+                ? 'px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium'
+                : 'px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium';
+            document.getElementById('viewValidatedBtn').className = activeMode === 'validated'
+                ? 'px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium'
+                : 'px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium';
+            document.getElementById('viewCalculatedBtn').className = activeMode === 'calculated'
+                ? 'px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium'
+                : 'px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium';
+        }
+
+        function refreshData() {
+            loadAttendanceData();
+        }
+
+        function setViewMode(mode) {
+            currentViewMode = mode;
+            currentPage = 1;
+
+            // Update button styles
+            updateViewModeButtons(mode);
+
+            // Update status filter based on view mode
+            if (mode === 'validated') {
+                document.getElementById('statusFilter').value = 'Validated';
+                activePartialOnly = false;
+            } else if (mode === 'calculated') {
+                document.getElementById('statusFilter').value = 'Calculated';
+                activePartialOnly = false;
+            } else {
+                document.getElementById('statusFilter').value = '';
+                activePartialOnly = false;
+            }
+
+            loadAttendanceData();
+        }
+
+        function toggleSelectAll() {
+            const selectAllElement = document.getElementById('selectAll');
+            const selectAll = selectAllElement ? selectAllElement.checked : false;
+            const checkboxes = document.querySelectorAll('.employee-checkbox');
+
+            selectedEmployees.clear();
+
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll;
+                if (selectAll) {
+                    selectedEmployees.add(checkbox.value);
+                }
+            });
+
+            updateSelectionCount();
+        }
+
+        function updateSelection(checkbox) {
+            if (checkbox.checked) {
+                selectedEmployees.add(checkbox.value);
+            } else {
+                selectedEmployees.delete(checkbox.value);
+            }
+            updateSelectionCount();
+        }
+
+        function updateSelectionCount() {
+            document.getElementById('selectedCount').textContent = selectedEmployees.size;
+        }
+
+        function viewEmployeeDetails(employeeId) {
+            const filters = getFilters();
+
+            // Ensure year and month are valid numbers
+            const year = filters.year ? parseInt(filters.year) : new Date().getFullYear();
+            const month = filters.month ? parseInt(filters.month) : new Date().getMonth() + 1;
+
+            const params = new URLSearchParams({
+                employeeId: String(employeeId),
+                year: String(year),
+                month: String(month)
+            });
+
+            console.log('viewEmployeeDetails - Filters:', filters);
+            console.log('viewEmployeeDetails - Year:', year, 'Month:', month);
+            console.log('viewEmployeeDetails - Params string:', params.toString());
+
+            // Check if we're embedded in iframe (from frontend)
+            let isEmbedded = false;
+            try {
+                isEmbedded = window.self !== window.top;
+            } catch (e) {
+                // Cross-origin iframe, assume embedded
+                isEmbedded = true;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const isEmbed = urlParams.get('embed') === '1';
+
+            console.log('viewEmployeeDetails - isEmbedded:', isEmbedded, 'isEmbed:', isEmbed);
+
+            if (isEmbedded || isEmbed) {
+                // If embedded, send message to parent to navigate
+                try {
+                    console.log('Sending navigation message to parent with params:', params.toString());
+                    window.parent.postMessage({
+                        type: 'navigateToDailyAttendance',
+                        params: params.toString()
+                    }, '*'); // Use '*' for cross-origin, parent will validate
+                } catch (e) {
+                    console.error('Could not send message to parent, opening in new window:', e);
+                    window.open(`daily-attendance.html?${params.toString()}`, '_blank');
+                }
+            } else {
+                // Not embedded, open in new window (fallback)
+                console.log('Not embedded, opening in new window');
+                window.open(`daily-attendance.html?${params.toString()}`, '_blank');
+            }
+        }
+
+        async function validateEmployee(employeeId) {
+            try {
+                const filters = getFilters();
+
+                // Check if validation is allowed for this employee (ignores others with pending)
+                const validationCheck = await API.checkEmployeeMonthValidation(employeeId, filters.year, filters.month);
+
+                if (!validationCheck.can_validate) {
+                    showToast('error', validationCheck.message || 'Cannot validate: pending cases must be resolved first');
+                    return;
+                }
+
+                const result = await API.validateEmployeeMonth(employeeId, filters.year, filters.month);
+
+                if (result.success) {
+                    const successMsg = typeof translate === 'function' ? translate('attendance.master.validate_success') : 'Employee data validated successfully';
+                    showToast('success', successMsg);
+                    loadAttendanceData();
+                } else {
+                    throw new Error(result.error || 'Failed to validate employee data');
+                }
+            } catch (error) {
+                console.error('Validate employee error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        async function bulkValidate() {
+            if (selectedEmployees.size === 0) {
+                const msg = typeof translate === 'function' ? translate('attendance.master.select_employees') : 'Please select employees to validate';
+                showToast('warning', msg);
+                return;
+            }
+
+            try {
+                const filters = getFilters();
+
+                // Check if validation is allowed (no pending cases)
+                const validationCheck = await API.checkMonthValidation(filters.year, filters.month);
+
+                if (!validationCheck.can_validate) {
+                    const errorMsg = typeof translate === 'function' ? translate('attendance.master.cannot_validate') : 'Cannot validate: pending cases must be resolved first';
+                    showToast('error', validationCheck.message || errorMsg);
+                    return;
+                }
+
+                const title = typeof translate === 'function' ? translate('attendance.master.bulk_validate') : 'Bulk Validate';
+                const message = typeof translate === 'function' ? translate('attendance.master.validate_confirm').replace('{count}', selectedEmployees.size) : `Validate ${selectedEmployees.size} selected employee(s)?`;
+                const desc = typeof translate === 'function' ? translate('attendance.master.validate_desc') : 'This will mark their attendance data as validated.';
+                showBulkConfirmation(
+                    'bulk-validate',
+                    title,
+                    message,
+                    desc,
+                    'bg-green-100',
+                    'fas fa-check text-green-600',
+                    'bg-green-600 hover:bg-green-700'
+                );
+            } catch (error) {
+                console.error('Bulk validate check error:', error);
+                const errorMsg = typeof translate === 'function' ? translate('attendance.master.check_failed') : 'Failed to check validation status';
+                showToast('error', errorMsg + ': ' + error.message);
+            }
+        }
+
+        async function bulkClearLate() {
+            const scope = selectedEmployees.size > 0 ? 'selected' : 'all';
+            const count = scope === 'selected' ? selectedEmployees.size : 'all';
+            const title = typeof translate === 'function' ? translate('attendance.master.clear_all_late') : 'Clear Late Minutes';
+            const message = typeof translate === 'function' ? translate('attendance.master.clear_late_confirm').replace('{count}', count) : `Clear late minutes for ${count} employee(s)?`;
+            const desc = typeof translate === 'function' ? translate('attendance.master.clear_late_desc') : 'This will set all late minutes to 0.';
+
+            showBulkConfirmation(
+                'bulk-clear-late',
+                title,
+                message,
+                desc,
+                'bg-orange-100',
+                'fas fa-eraser text-orange-600',
+                'bg-orange-600 hover:bg-orange-700'
+            );
+        }
+
+        async function bulkClearEarly() {
+            const scope = selectedEmployees.size > 0 ? 'selected' : 'all';
+            const count = scope === 'selected' ? selectedEmployees.size : 'all';
+            const title = typeof translate === 'function' ? translate('attendance.master.clear_all_early') : 'Clear Early Minutes';
+            const message = typeof translate === 'function' ? translate('attendance.master.clear_early_confirm').replace('{count}', count) : `Clear early departure minutes for ${count} employee(s)?`;
+            const desc = typeof translate === 'function' ? translate('attendance.master.clear_early_desc') : 'This will set all early departure minutes to 0.';
+
+            showBulkConfirmation(
+                'bulk-clear-early',
+                title,
+                message,
+                desc,
+                'bg-purple-100',
+                'fas fa-eraser text-purple-600',
+                'bg-purple-600 hover:bg-purple-700'
+            );
+        }
+
+        async function bulkClearMissing() {
+            const scope = selectedEmployees.size > 0 ? 'selected' : 'all';
+            const count = scope === 'selected' ? selectedEmployees.size : 'all';
+            const title = typeof translate === 'function' ? translate('attendance.master.clear_missing_punches') : 'Clear Missing Punches';
+            const message = typeof translate === 'function' ? translate('attendance.master.clear_missing_confirm').replace('{count}', count) : `Clear missing punches for ${count} employee(s)?`;
+            const desc = typeof translate === 'function' ? translate('attendance.master.clear_missing_desc') : 'This will create override records to mark absent days as justified.';
+
+            showBulkConfirmation(
+                'bulk-clear-missing',
+                title,
+                message,
+                desc,
+                'bg-red-100',
+                'fas fa-eraser text-red-600',
+                'bg-red-600 hover:bg-red-700'
+            );
+        }
+
+        function showBulkConfirmation(action, title, message, description, iconBg, iconClass, buttonClass) {
+            const modal = document.getElementById('confirmModal');
+            const icon = document.getElementById('confirmIcon');
+            const iconClassEl = document.getElementById('confirmIconClass');
+            const titleEl = document.getElementById('confirmTitle');
+            const messageEl = document.getElementById('confirmMessage');
+            const actionBtn = document.getElementById('confirmAction');
+            const confirmText = typeof translate === 'function' ? translate('common.confirm') : 'Confirm';
+
+            icon.className = `flex-shrink-0 w-10 h-10 rounded-full ${iconBg} flex items-center justify-center mr-4`;
+            iconClassEl.className = `${iconClass} text-xl`;
+            titleEl.textContent = title;
+            messageEl.innerHTML = `${message}<br><small class="text-xs">${description}</small>`;
+            actionBtn.className = `px-4 py-2 ${buttonClass} rounded-lg text-white transition-colors`;
+            actionBtn.textContent = confirmText;
+            actionBtn.onclick = () => executeBulkAction(action);
+
+            modal.classList.remove('hidden');
+        }
+
+        async function executeBulkAction(action) {
+            try {
+                closeConfirmModal();
+
+                const filters = getFilters();
+                const params = {
+                    employees: selectedEmployees.size > 0 ? Array.from(selectedEmployees) : null,
+                    year: filters.year,
+                    month: filters.month,
+                    department: filters.department
+                };
+
+                let result;
+                switch (action) {
+                    case 'bulk-validate':
+                        result = await API.bulkValidateEmployees(params);
+                        break;
+                    case 'bulk-clear-late':
+                        result = await API.bulkClearLate(params);
+                        break;
+                    case 'bulk-clear-early':
+                        result = await API.bulkClearEarly(params);
+                        break;
+                    case 'bulk-clear-missing':
+                        result = await API.bulkClearMissingPunches(params);
+                        break;
+                    default:
+                        throw new Error('Unknown bulk action');
+                }
+
+                if (result.success) {
+                    const successMsg = typeof translate === 'function' ? translate('attendance.master.bulk_success') : 'Bulk operation completed successfully';
+                    showToast('success', result.message || successMsg);
+                    selectedEmployees.clear();
+                    updateSelectionCount();
+                    const selectAllElement = document.getElementById('selectAll');
+                    if (selectAllElement) {
+                        selectAllElement.checked = false;
+                    }
+                    loadAttendanceData();
+                } else {
+                    throw new Error(result.error || 'Bulk operation failed');
+                }
+            } catch (error) {
+                console.error('Execute bulk action error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        // Settings Modal Functions - Grace Period Only
+        async function openSettingsModal() {
+            try {
+                await loadSettings(); // Load current settings when opening modal
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                showToast('error', 'Failed to load settings');
+            }
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        async function saveSettings() {
+            try {
+                const settings = {
+                    grace_period_lateness_minutes: parseInt(document.getElementById('latenessGrace').value) || 0,
+                    grace_period_early_departure_minutes: parseInt(document.getElementById('earlyGrace').value) || 0
+                };
+
+                const result = await API.updateAttendanceSettings(settings);
+
+                if (result.success) {
+                    const successMsg = typeof translate === 'function' ? translate('attendance.master.settings_saved') : 'Grace period settings saved successfully';
+                    showToast('success', successMsg);
+                    closeSettingsModal();
+                    loadAttendanceData(); // Refresh data with new settings
+                } else {
+                    throw new Error(result.error || 'Failed to save settings');
+                }
+            } catch (error) {
+                console.error('Save settings error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        // Export Modal Functions
+        function openExportModal() {
+            document.getElementById('exportModal').classList.remove('hidden');
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.add('hidden');
+        }
+
+        async function exportData() {
+            try {
+                const format = document.querySelector('input[name="exportFormat"]:checked').value;
+                const includeValidation = document.getElementById('includeValidationFlag').checked;
+                const includeSource = document.getElementById('includeSourceFlag').checked;
+
+                const filters = getFilters();
+                const params = {
+                    format,
+                    includeValidation,
+                    includeSource,
+                    ...filters
+                };
+
+                // Create download link
+                const queryString = new URLSearchParams(params).toString();
+                const downloadUrl = `/api/attendance/export?${queryString}`;
+
+                // Trigger download
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = `attendance-${new Date().toISOString().split('T')[0]}.${format}`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                const successMsg = typeof translate === 'function' ? translate('attendance.master.export_started') : 'Export started successfully';
+                showToast('success', successMsg);
+                closeExportModal();
+            } catch (error) {
+                console.error('Export data error:', error);
+                showToast('error', 'Failed to export data');
+            }
+        }
+
+        // Utility Functions
+        function getStatusClass(status) {
+            if (status === 'Validated') return 'status-validated';
+            if (status === 'Calculated') return 'status-calculated';
+            return 'bg-gray-200 text-gray-800';
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'decimal',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount) + ' DA';
+        }
+
+        function showLoading() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('attendanceTableBody').innerHTML = '';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingState').classList.add('hidden');
+        }
+
+        function showEmptyState() {
+            document.getElementById('emptyState').classList.remove('hidden');
+            document.getElementById('attendanceTableBody').innerHTML = '';
+        }
+
+        function hideEmptyState() {
+            document.getElementById('emptyState').classList.add('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+        }
+
+        function showToast(type, message) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const messageEl = document.getElementById('toastMessage');
+
+            if (type === 'success') {
+                toast.className = 'fixed top-4 right-4 z-50';
+                toast.firstElementChild.className = 'bg-white rounded-lg shadow-lg border-l-4 border-green-500 p-4 max-w-sm';
+                icon.className = 'fas fa-check-circle text-xl text-green-500';
+            } else if (type === 'warning') {
+                toast.className = 'fixed top-4 right-4 z-50';
+                toast.firstElementChild.className = 'bg-white rounded-lg shadow-lg border-l-4 border-yellow-500 p-4 max-w-sm';
+                icon.className = 'fas fa-exclamation-triangle text-xl text-yellow-500';
+            } else {
+                toast.className = 'fixed top-4 right-4 z-50';
+                toast.firstElementChild.className = 'bg-white rounded-lg shadow-lg border-l-4 border-red-500 p-4 max-w-sm';
+                icon.className = 'fas fa-exclamation-circle text-xl text-red-500';
+            }
+
+            messageEl.textContent = message;
+            toast.classList.remove('hidden');
+
+            setTimeout(hideToast, 5000);
+        }
+
+        function hideToast() {
+            document.getElementById('toast').classList.add('hidden');
+        }
+
+        // Close modals when clicking outside
+        ['settingsModal', 'exportModal', 'confirmModal', 'pendingModal', 'treatmentModal'].forEach(modalId => {
+            document.getElementById(modalId).addEventListener('click', function (e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                }
+            });
+        });
+
+        // ============================================================================
+        // PENDING CASES MANAGEMENT FUNCTIONS (NEW)
+        // ============================================================================
+
+        let currentPendingEmployeeId = null;
+        let currentTreatmentCase = null;
+
+        async function openPendingModal(employeeId, employeeName) {
+            currentPendingEmployeeId = employeeId;
+            document.getElementById('pendingEmployeeName').textContent = employeeName;
+            document.getElementById('pendingModal').classList.remove('hidden');
+
+            await loadPendingCases(employeeId);
+        }
+
+        function closePendingModal() {
+            document.getElementById('pendingModal').classList.add('hidden');
+            currentPendingEmployeeId = null;
+        }
+
+        async function loadPendingCases(employeeId) {
+            try {
+                const year = document.getElementById('yearFilter').value;
+                const month = document.getElementById('monthFilter').value;
+
+                const params = { employeeId };
+                if (year) params.year = year;
+                if (month) params.month = month;
+
+                const response = await API.getPendingCases(params);
+
+                if (response.success) {
+                    displayPendingCases(response.pending_cases);
+                } else {
+                    throw new Error(response.error || 'Failed to load pending cases');
+                }
+            } catch (error) {
+                console.error('Load pending cases error:', error);
+                showToast('error', 'Failed to load pending cases: ' + error.message);
+                document.getElementById('pendingCasesContainer').innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-exclamation-triangle text-4xl mb-2"></i>
+                        <p>Failed to load pending cases</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayPendingCases(cases) {
+            const container = document.getElementById('pendingCasesContainer');
+            const noPending = typeof translate === 'function' ? translate('attendance.master.no_pending') : 'No pending cases found';
+            const allResolved = typeof translate === 'function' ? translate('attendance.master.all_resolved_desc') : 'All partial attendance cases have been resolved';
+            const singlePunch = typeof translate === 'function' ? translate('attendance.master.single_punch') : 'Single punch at';
+            const noDept = typeof translate === 'function' ? translate('attendance.master.no_department') : 'No Department';
+            const noPos = typeof translate === 'function' ? translate('attendance.master.no_position') : 'No Position';
+            const treat = typeof translate === 'function' ? translate('attendance.master.treat') : 'Treat';
+            const unknown = typeof translate === 'function' ? translate('common.unknown') : 'Unknown time';
+
+            if (cases.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-check-circle text-4xl text-green-500 mb-2"></i>
+                        <p>${noPending}</p>
+                        <p class="text-sm">${allResolved}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="space-y-3">
+                    ${cases.map(pendingCase => `
+                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex justify-between items-center">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="text-sm font-medium text-gray-900">
+                                            ${formatDate(pendingCase.punch_date)}
+                                        </div>
+                                        <div class="text-sm text-gray-600">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            ${singlePunch} ${pendingCase.punch_time || unknown}
+                                        </div>
+                                        <div class="text-xs px-2 py-1 bg-orange-100 text-orange-800 rounded-full">
+                                            ${pendingCase.current_status}
+                                        </div>
+                                    </div>
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        ${pendingCase.department_name || noDept} • ${pendingCase.position_name || noPos}
+                                    </div>
+                                </div>
+                                <button onclick="openTreatmentModal('${pendingCase.employee_id}', '${pendingCase.punch_date}', '${pendingCase.employee_name.replace(/'/g, "&#39;")}', '${(pendingCase.punch_time || '').replace(/'/g, "&#39;")}')"
+                                        class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-edit mr-1"></i>
+                                    ${treat}
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function openTreatmentModal(employeeId, date, employeeName, punchTime) {
+            currentTreatmentCase = { employeeId, date, employeeName, punchTime };
+
+            document.getElementById('treatmentEmployeeName').textContent = employeeName;
+            document.getElementById('treatmentDate').textContent = formatDate(date);
+            document.getElementById('treatmentPunchTime').textContent = punchTime || 'Unknown';
+            document.getElementById('treatmentReason').value = '';
+
+            // Clear radio selections
+            document.querySelectorAll('input[name="treatmentAction"]').forEach(radio => {
+                radio.checked = false;
+            });
+
+            document.getElementById('treatmentModal').classList.remove('hidden');
+        }
+
+        function closeTreatmentModal() {
+            document.getElementById('treatmentModal').classList.add('hidden');
+            currentTreatmentCase = null;
+        }
+
+        async function submitTreatment() {
+            if (!currentTreatmentCase) return;
+
+            const selectedAction = document.querySelector('input[name="treatmentAction"]:checked');
+            if (!selectedAction) {
+                showToast('error', 'Please select an action');
+                return;
+            }
+
+            const reason = document.getElementById('treatmentReason').value.trim();
+
+            try {
+                const response = await API.treatPendingCase(
+                    currentTreatmentCase.employeeId,
+                    currentTreatmentCase.date,
+                    selectedAction.value,
+                    reason
+                );
+
+                if (response.success) {
+                    const successMsg = typeof translate === 'function' ? translate('attendance.master.treatment_success') : 'Pending case treated successfully';
+                    showToast('success', successMsg);
+                    closeTreatmentModal();
+
+                    // Reload pending cases and main table
+                    await loadPendingCases(currentPendingEmployeeId);
+                    await loadAttendanceData();
+                } else {
+                    throw new Error(response.error || 'Failed to treat pending case');
+                }
+            } catch (error) {
+                console.error('Submit treatment error:', error);
+                showToast('error', 'Failed to treat pending case: ' + error.message);
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+    </script>
+    </div>
+    </main>
+</body>
+
+</html>

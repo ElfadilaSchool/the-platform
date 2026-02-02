@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - تحليل التقارير</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Director-themed base styles (mirrored from director-dashboard-stats.html for consistency) */
+        :root {
+            --director-indigo: #4338ca;
+            --director-blue: #2563eb;
+            --director-purple: #7c3aed;
+            --director-slate: #0f172a;
+            --director-card-bg: #ffffff;
+            --director-surface: #f8fafc;
+        }
+
+        body {
+            font-family: 'Outfit', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--director-slate);
+            background: transparent;
+        }
+
+        /* KPI cards & panels to visually match Director dashboard */
+        .kpi-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.95));
+            border-radius: 24px;
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: 0 18px 35px rgba(15, 23, 42, 0.07);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 55%);
+            pointer-events: none;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 25px 45px rgba(15, 23, 42, 0.12);
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(99, 102, 241, 0.35));
+            color: #4338ca;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .kpi-card p {
+            position: relative;
+            z-index: 1;
+        }
+
+        .kpi-card h3 {
+            position: relative;
+            z-index: 1;
+        }
+
+        .director-panel {
+            margin-top: 16px;
+            background: var(--director-card-bg);
+            border-radius: 22px;
+            padding: 24px 24px 20px;
+            box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08);
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .director-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg,
+                    rgba(37, 99, 235, 0.12),
+                    rgba(124, 58, 237, 0.08),
+                    rgba(56, 189, 248, 0.08));
+            opacity: 0.25;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .director-panel> * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .director-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .director-panel-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .director-panel-title-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at top left,
+                    rgba(37, 99, 235, 0.22),
+                    rgba(37, 99, 235, 0.05));
+            color: #1d4ed8;
+        }
+
+        .director-section-pill {
+            padding: 0.15rem 0.7rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            background: rgba(15, 23, 42, 0.04);
+            color: #64748b;
+        }
+
+        /* Existing severity styles with director theme integration */
+        .severity-critical {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-color: #dc2626;
+            box-shadow: 0 4px 12px -2px rgba(220, 38, 38, 0.2);
+        }
+        .severity-high {
+            background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+            border-color: #ea580c;
+            box-shadow: 0 4px 12px -2px rgba(234, 88, 12, 0.2);
+        }
+        .severity-medium {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-color: #ca8a04;
+            box-shadow: 0 4px 12px -2px rgba(202, 138, 4, 0.15);
+        }
+        .severity-low {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-color: #2563eb;
+            box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.15);
+        }
+        .severity-routine {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-color: #10b981;
+            box-shadow: 0 4px 12px -2px rgba(16, 185, 129, 0.15);
+        }
+        
+        .card-hover {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-backdrop {
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.2s ease;
+        }
+        
+        .modal-content {
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .7; }
+        }
+        
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Director-themed header styling */
+        .director-header {
+            background: linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%);
+            color: white;
+            border-radius: 28px;
+            padding: 32px;
+            position: sticky;
+            top: 0;
+            box-shadow: 0 25px 60px rgba(67, 56, 202, 0.25);
+            margin-bottom: 2rem;
+            z-index: 40;
+        }
+
+        .director-header::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.25), transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .director-header-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Director-themed buttons */
+        .director-btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.95));
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #475569;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .director-btn:hover {
+            background: linear-gradient(135deg, #e5edff, #dbeafe);
+            border-color: #93c5fd;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .director-btn.active {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border-color: #2563eb;
+            box-shadow: 0 12px 28px rgba(59, 130, 246, 0.35);
+            transform: translateY(-2px);
+        }
+
+        .director-btn.primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .director-btn.primary:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+
+        /* Director-themed form controls */
+        .director-input {
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            background: #ffffff;
+            color: #0f172a;
+            outline: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .director-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            background-color: #f9fafb;
+        }
+
+        .director-input:hover {
+            border-color: #94a3b8;
+            background-color: #f8fafc;
+        }
+
+        /* Report Stat Cards - Matching first tab exactly */
+        .report-stat-card-inline {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .report-stat-card-inline::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 50%);
+            pointer-events: none;
+        }
+
+        .report-stat-card-inline:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+        }
+
+        .report-stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            position: relative;
+            z-index: 1;
+        }
+
+        .report-stat-content {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .report-stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .report-stat-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .report-stat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Reports List Card Styles - Matching first tab exactly */
+        .report-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .report-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .report-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .report-card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 8px 0;
+            line-height: 1.3;
+        }
+
+        .report-card-description {
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .report-card-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .report-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.04));
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 14px;
+        }
+
+        .report-meta-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #3B82F6, #2563EB);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .report-meta-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .report-meta-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #3B82F6;
+            margin: 0 0 4px 0;
+            font-weight: 600;
+        }
+
+        .report-meta-value {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .report-card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .report-action-btn {
+            padding: 8px 12px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.8);
+            color: #64748b;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .report-action-btn:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: #2563eb;
+        }
+
+        .report-action-btn.primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .report-action-btn.primary:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+
+        /* RTL for reports */
+        [dir="rtl"] .report-card-header {
+            flex-direction: row-reverse;
+        }
+
+        [dir="rtl"] .report-card-actions {
+            justify-content: flex-start;
+        }
+
+        [dir="rtl"] .report-meta-item {
+            flex-direction: row-reverse;
+        }
+
+        [dir="rtl"] .report-meta-content {
+            text-align: right;
+        }
+
+        /* RTL Support for Arabic */
+        [dir="rtl"] .director-panel {
+            direction: rtl;
+        }
+
+        [dir="rtl"] .director-panel .flex {
+            flex-direction: row-reverse;
+        }
+
+        [dir="rtl"] .director-btn {
+            direction: rtl;
+        }
+
+        [dir="rtl"] .director-btn i {
+            margin-left: 0.5rem;
+            margin-right: 0;
+        }
+
+        [dir="rtl"] .director-input {
+            direction: rtl;
+            text-align: right;
+        }
+
+        [dir="rtl"] .report-stat-card-inline {
+            flex-direction: row-reverse;
+        }
+
+        [dir="rtl"] .report-stat-content {
+            text-align: right;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-20 w-20 border-4 border-blue-600 border-t-transparent mx-auto mb-6"></div>
+            <p class="text-slate-700 font-bold text-xl mb-2">جاري تحميل التقارير...</p>
+            <p class="text-slate-500 text-sm">الرجاء الانتظار</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-6 py-6">
+        
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-5 gap-4 mb-6" id="statsCards"></div>
+
+        <!-- Filters -->
+        <div class="director-panel" style="margin-bottom: 2rem;">
+            <div class="director-panel-header">
+                <div class="director-panel-title">
+                    <div class="director-panel-title-icon">
+                        <i class="fas fa-filter"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">الفلاتر والعرض</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">قم بتصفية التقارير واختر طريقة العرض</p>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="window.location.href='statistics.html'" class="director-btn" style="display: none;">
+                        <i class="fas fa-chart-line"></i>
+                        الإحصائيات
+                    </button>
+                    <button onclick="setView('recent')" id="btnRecent" class="director-btn active">
+                        <svg class="inline" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        التقارير الحالية (<span id="countRecent">0</span>)
+                    </button>
+                    <button onclick="setView('archived')" id="btnArchived" class="director-btn">
+                        <svg class="inline" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                        </svg>
+                        المعالجة (<span id="countArchived">0</span>)
+                    </button>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="relative">
+                    <svg class="absolute right-4 top-4 text-slate-400" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="بحث في التقارير..."
+                        class="director-input w-full pr-12 pl-4"
+                        oninput="applyFilters()"
+                    />
+                </div>
+
+                <select id="severityFilter" onchange="applyFilters()" class="director-input font-bold">
+                    <option value="all">كل المستويات</option>
+                    <option value="critical">🚨 حرجة للغاية (10)</option>
+                    <option value="very-high">🔴 عالية جداً (8-9)</option>
+                    <option value="high">🟠 عالية (6-7)</option>
+                    <option value="medium">🟡 متوسطة (4-5)</option>
+                    <option value="low">🟢 منخفضة (1-3)</option>
+                </select>
+
+                <select id="categoryFilter" onchange="applyFilters()" class="director-input font-bold">
+                    <option value="all">كل الفئات</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Reports List -->
+        <div id="reportsList" class="space-y-4"></div>
+    </div>
+
+    
+
+    <script src="auth.js"></script>
+    <script>
+        // Align API base with director workspace behavior (supports embed + main app config)
+        const API = (function () {
+            try {
+                // Prefer parent API_BASE when embedded in main app
+                if (window.parent && window.parent !== window && window.parent.API_BASE) {
+                    return window.parent.API_BASE;
+                }
+                // Fallback to window-scoped API_BASE if defined
+                if (window.API_BASE) {
+                    return window.API_BASE;
+                }
+                const origin = (window.location && window.location.origin) || '';
+                const hostname = (window.location && window.location.hostname) || '';
+                const port = window.location.port || '';
+                const portNumber = parseInt(port, 10);
+                const isLiveServerPort = !Number.isNaN(portNumber) && portNumber >= 5500 && portNumber <= 5599;
+                const isLocalHost = /^(127\.0\.0\.1|localhost)$/i.test(hostname || '');
+                if ((isLocalHost && isLiveServerPort) || !origin || !/^https?:\/\//i.test(origin)) {
+                    return 'http://localhost:3020';
+                }
+                return origin;
+            } catch (_) {
+                return 'http://localhost:3020';
+            }
+        })();
+
+        const API_BASE = API + '/api/rapportemp';
+
+        // Helper function to get auth headers
+        function getAuthHeaders() {
+            try {
+                const authToken = (function () {
+                    // First: parent window's authManager (when embedded in main app)
+                    try {
+                        if (window.parent && window.parent !== window && window.parent.authManager) {
+                            const token = window.parent.authManager.getToken();
+                            if (token) {
+                                // Sync to localStorage for fallback
+                                localStorage.setItem('token', token);
+                                return token;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Could not access parent authManager:', e);
+                    }
+
+                    // Second: local authManager (if auth.js is included)
+                    if (typeof authManager !== 'undefined' && authManager && authManager.getToken) {
+                        const token = authManager.getToken();
+                        if (token) return token;
+                    }
+
+                    // Third: localStorage fallback
+                    const localToken = localStorage.getItem('token');
+                    if (localToken) return localToken;
+
+                    return null;
+                })();
+
+                if (!authToken) {
+                    console.warn('No auth token available');
+                    return {};
+                }
+
+                return {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                };
+            } catch (err) {
+                console.error('Error getting auth headers:', err);
+                return {};
+            }
+        }
+
+        let allReports = [];
+        let currentView = 'recent';
+
+        // Note: category filter is populated dynamically from reports' analysis.categories
+
+        window.addEventListener('DOMContentLoaded', fetchReports);
+
+        async function fetchReports() {
+            try {
+                // Use the director endpoint to get all reports with analysis
+                const response = await fetch(`${API}/api/rapportemp/director/all-reports`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error(`Expected JSON, got ${contentType}`);
+                }
+                
+                const data = await response.json();
+                
+                allReports = [];
+                if (data.success && data.reports) {
+                    // The director endpoint returns reports directly
+                    data.reports.forEach(report => {
+                        // Parse analysis if it's a string
+                        let analysis = report.analysis;
+                        if (typeof analysis === 'string') {
+                            try {
+                                analysis = JSON.parse(analysis);
+                            } catch (e) {
+                                console.error('Failed to parse analysis:', e);
+                                analysis = null;
+                            }
+                        }
+                        
+                        allReports.push({
+                            id: report.id,
+                            title: report.title,
+                            subject: report.subject,
+                            content: report.content || '',
+                            status: report.status,
+                            created_at: report.created_at,
+                            pdf_url: report.pdf_url,
+                            employee_name: report.employee_name || '',
+                            department_name: report.department_name || '',
+                            analysis: analysis || {
+                                severity: { score: 0, level: 'منخفض' },
+                                urgency: { score: 0, level: 'منخفض' },
+                                summary: 'لا يوجد ملخص',
+                                keywords: [],
+                                entities: {},
+                                categories: [],
+                                sentiment: { label: 'محايد', score: 0.5 }
+                            }
+                        });
+                    });
+                }
+                
+                updateStats();
+                updateCategoryFilter();
+                applyFilters();
+                
+                document.getElementById('loadingScreen').style.display = 'none';
+            } catch (error) {
+                console.error('Error fetching reports:', error);
+                console.error('API_BASE:', API_BASE);
+                console.error('API:', API);
+                document.getElementById('loadingScreen').innerHTML = `
+                    <div class="text-center">
+                        <svg class="mx-auto mb-4 text-red-500" width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-red-600 font-bold text-xl mb-4">خطأ في تحميل التقارير</p>
+                        <p class="text-slate-600 text-sm mb-4">${error.message}</p>
+                        <p class="text-slate-500 text-xs mb-4">API: ${API_BASE}</p>
+                        <button onclick="location.reload()" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition">
+                            إعادة المحاولة
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function updateStats() {
+            const pending = allReports.filter(r => r.status === 'pending');
+            const stats = {
+                total: allReports.length,
+                pending: pending.length,
+                critical: pending.filter(r => (r.analysis.urgency?.score || 0) >= 10).length,
+                veryHigh: pending.filter(r => {
+                    const s = r.analysis.urgency?.score || 0;
+                    return s >= 8 && s < 10;
+                }).length,
+                high: pending.filter(r => {
+                    const s = r.analysis.urgency?.score || 0;
+                    return s >= 6 && s < 8;
+                }).length,
+                medium: pending.filter(r => {
+                    const s = r.analysis.urgency?.score || 0;
+                    return s >= 4 && s < 6;
+                }).length,
+                low: pending.filter(r => (r.analysis.urgency?.score || 0) < 4).length,
+                archived: allReports.filter(r => r.status === 'acknowledged').length
+            };
+
+            document.getElementById('countRecent').textContent = stats.pending;
+            document.getElementById('countArchived').textContent = stats.archived;
+
+            const statsData = [
+                { title: 'حرجة للغاية', count: stats.critical, color: 'red', icon: '🚨' },
+                { title: 'عالية جداً', count: stats.veryHigh, color: 'red', icon: '🔴' },
+                { title: 'عالية', count: stats.high, color: 'orange', icon: '🟠' },
+                { title: 'متوسطة', count: stats.medium, color: 'yellow', icon: '🟡' },
+                { title: 'منخفضة', count: stats.low, color: 'green', icon: '🟢' }
+            ];
+
+            const colors = {
+                red: 'from-red-500 to-red-600',
+                orange: 'from-orange-500 to-orange-600',
+                yellow: 'from-yellow-500 to-yellow-600',
+                green: 'from-green-500 to-green-600',
+                slate: 'from-slate-600 to-slate-700'
+            };
+
+            document.getElementById('statsCards').innerHTML = statsData.map((stat, index) => {
+                const borderColors = ['border-blue-600', 'border-emerald-500', 'border-yellow-500', 'border-purple-600', 'border-red-600'];
+                const bgColors = ['bg-blue-50', 'bg-emerald-50', 'bg-yellow-50', 'bg-purple-50', 'bg-red-50'];
+                const iconGradients = [
+                    'linear-gradient(135deg, #3b82f6, #2563eb)',
+                    'linear-gradient(135deg, #10b981, #059669)',
+                    'linear-gradient(135deg, #f59e0b, #d97706)',
+                    'linear-gradient(135deg, #a855f7, #7c3aed)',
+                    'linear-gradient(135deg, #ef4444, #dc2626)'
+                ];
+                const valueColors = ['#2563eb', '#059669', '#d97706', '#7c3aed', '#dc2626'];
+                const badgeBgColors = [
+                    'rgba(59, 130, 246, 0.1)',
+                    'rgba(16, 185, 129, 0.1)',
+                    'rgba(245, 158, 11, 0.1)',
+                    'rgba(168, 85, 247, 0.1)',
+                    'rgba(239, 68, 68, 0.1)'
+                ];
+                
+                const borderColor = borderColors[index % borderColors.length];
+                const bgColor = bgColors[index % bgColors.length];
+                const iconGradient = iconGradients[index % iconGradients.length];
+                const valueColor = valueColors[index % valueColors.length];
+                const badgeBgColor = badgeBgColors[index % badgeBgColors.length];
+                
+                return `
+                <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-t-4 ${borderColor} ${bgColor}">
+                    <div class="report-stat-icon" style="background: ${iconGradient};">
+                        ${stat.icon}
+                    </div>
+                    <div class="report-stat-content">
+                        <p class="report-stat-label">${stat.title}</p>
+                        <h3 class="report-stat-value" style="color: ${valueColor};">${stat.count}</h3>
+                        <span class="report-stat-badge" style="background: ${badgeBgColor}; color: ${valueColor};">
+                            ${stat.description || 'إحصائية'}
+                        </span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        }
+
+        function updateCategoryFilter() {
+            const categories = new Set();
+            allReports.forEach(r => {
+                const cats = r.analysis?.categories;
+                if (Array.isArray(cats)) cats.forEach(cat => { if (cat) categories.add(cat); });
+            });
+
+            const select = document.getElementById('categoryFilter');
+            const currentValue = select.value;
+
+            const categoryArray = Array.from(categories).sort((a,b) => a.localeCompare(b));
+            select.innerHTML = '<option value="all">كل الفئات</option>' +
+                categoryArray.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+
+            if (currentValue && (currentValue === 'all' || categories.has(currentValue))) {
+                select.value = currentValue;
+            }
+        }
+
+        function setView(view) {
+            currentView = view;
+            
+            const recentBtn = document.getElementById('btnRecent');
+            const archivedBtn = document.getElementById('btnArchived');
+            
+            if (view === 'recent') {
+                recentBtn.className = 'px-8 py-3 rounded-xl font-bold transition-all text-base bg-blue-600 text-white shadow-lg shadow-blue-200 hover:shadow-xl';
+                archivedBtn.className = 'px-8 py-3 rounded-xl font-bold transition-all text-base bg-slate-100 text-slate-700 hover:bg-slate-200 hover:shadow-md';
+            } else {
+                archivedBtn.className = 'px-8 py-3 rounded-xl font-bold transition-all text-base bg-blue-600 text-white shadow-lg shadow-blue-200 hover:shadow-xl';
+                recentBtn.className = 'px-8 py-3 rounded-xl font-bold transition-all text-base bg-slate-100 text-slate-700 hover:bg-slate-200 hover:shadow-md';
+            }
+            
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const severityFilter = document.getElementById('severityFilter').value;
+            const categoryFilter = document.getElementById('categoryFilter').value;
+
+            let filtered = allReports.filter(report => {
+                const analysis = report.analysis;
+                const matchesView = currentView === 'recent' 
+                    ? report.status === 'pending' 
+                    : report.status === 'acknowledged';
+                
+                const matchesSearch = !searchTerm || 
+                    report.title.toLowerCase().includes(searchTerm) ||
+                    report.subject.toLowerCase().includes(searchTerm) ||
+                    (analysis.summary && analysis.summary.toLowerCase().includes(searchTerm));
+                
+                const score = analysis.urgency?.score || 0;
+                const matchesSeverity = severityFilter === 'all' || 
+                    (severityFilter === 'critical' && score >= 10) ||
+                    (severityFilter === 'very-high' && score >= 8 && score < 10) ||
+                    (severityFilter === 'high' && score >= 6 && score < 8) ||
+                    (severityFilter === 'medium' && score >= 4 && score < 6) ||
+                    (severityFilter === 'low' && score < 4);
+                
+                const matchesCategory = categoryFilter === 'all' || 
+                    (analysis.categories && analysis.categories.some(cat => cat.includes(categoryFilter)));
+                
+                return matchesView && matchesSearch && matchesSeverity && matchesCategory;
+            });
+
+            filtered.sort((a, b) => {
+                const scoreA = a.analysis.urgency?.score || 0;
+                const scoreB = b.analysis.urgency?.score || 0;
+                return scoreB - scoreA;
+            });
+
+            renderReports(filtered);
+        }
+
+        function getSeverityClass(score) {
+            if (score >= 10) return 'severity-critical border-l-red-700';
+            if (score >= 8) return 'severity-critical border-l-red-600';
+            if (score >= 6) return 'severity-high border-l-orange-500';
+            if (score >= 4) return 'severity-medium border-l-yellow-500';
+            if (score >= 1) return 'severity-low border-l-blue-500';
+            return 'severity-routine border-l-green-500';
+        }
+
+        function getSeverityBadge(score) {
+            if (score >= 10) return 'bg-gradient-to-r from-red-700 to-red-800 text-white shadow-md shadow-red-200';
+            if (score >= 8) return 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md shadow-red-200';
+            if (score >= 6) return 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-200';
+            if (score >= 4) return 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-md shadow-yellow-200';
+            if (score >= 1) return 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-200';
+            return 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-200';
+        }
+
+        function getUrgencyIcon(score) {
+            if (score >= 10) return '🚨';
+            if (score >= 8) return '🔴';
+            if (score >= 6) return '🟠';
+            if (score >= 4) return '🟡';
+            return '🟢';
+        }
+
+        function getUrgencyLabel(score) {
+            if (score >= 10) return 'حرجة جداً';
+            if (score >= 8) return 'عالية جداً';
+            if (score >= 6) return 'عالية';
+            if (score >= 4) return 'متوسطة';
+            return 'منخفضة';
+        }
+
+        function renderReports(reports) {
+            const container = document.getElementById('reportsList');
+            
+            if (reports.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-4"></i>
+                        <p>لا توجد تقارير مطابقة للفلاتر</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = reports.map((report, index) => {
+                const analysis = report.analysis;
+                const severityScore = analysis.severity?.score || 0;
+                const urgencyScore = analysis.urgency?.score || 0;
+                const maxScore = Math.max(severityScore, urgencyScore);
+                
+                const formattedDate = new Date(report.created_at).toLocaleDateString('ar-MA', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const getStatusColor = (status) => {
+                    switch(status) {
+                        case 'pending': return 'linear-gradient(135deg, #f59e0b, #d97706)';
+                        case 'acknowledged': return 'linear-gradient(135deg, #10b981, #059669)';
+                        default: return 'linear-gradient(135deg, #6b7280, #4b5563)';
+                    }
+                };
+
+                const getStatusText = (status) => {
+                    switch(status) {
+                        case 'pending': return 'قيد الانتظار';
+                        case 'acknowledged': return 'تم الاعتراف';
+                        default: return 'غير معروف';
+                    }
+                };
+
+                return `
+                <div class="report-card">
+                    <div class="report-card-header">
+                        <div style="flex: 1; min-width: 0;">
+                            <h4 class="report-card-title">${report.title || 'تقرير'}</h4>
+                            <p class="report-card-description">${analysis.summary || 'لا يوجد ملخص'}</p>
+                        </div>
+                        <span style="display: inline-block; padding: 6px 14px; font-size: 0.75rem; font-weight: 600; border-radius: 999px; white-space: nowrap; background: ${getStatusColor(report.status)}; color: white;">
+                            ${getStatusText(report.status)}
+                        </span>
+                    </div>
+                    
+                    <div class="report-card-meta">
+                        <div class="report-meta-item">
+                            <div class="report-meta-icon">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="report-meta-content">
+                                <p class="report-meta-label">الموظف</p>
+                                <p class="report-meta-value">${report.employee_name || 'غير محدد'}</p>
+                            </div>
+                        </div>
+                        <div class="report-meta-item">
+                            <div class="report-meta-icon">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="report-meta-content">
+                                <p class="report-meta-label">القسم</p>
+                                <p class="report-meta-value">${report.department_name || 'غير محدد'}</p>
+                            </div>
+                        </div>
+                        <div class="report-meta-item">
+                            <div class="report-meta-icon">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                            <div class="report-meta-content">
+                                <p class="report-meta-label">التاريخ</p>
+                                <p class="report-meta-value">${formattedDate}</p>
+                            </div>
+                        </div>
+                        <div class="report-meta-item">
+                            <div class="report-meta-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="report-meta-content">
+                                <p class="report-meta-label">الأولوية</p>
+                                <p class="report-meta-value">${maxScore}/10</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="report-card-actions">
+                        ${report.pdf_url ? `
+                        <a href="${report.pdf_url}" target="_blank" class="report-action-btn">
+                            <i class="fas fa-download"></i>
+                            تحميل PDF
+                        </a>
+                        ` : ''}
+                        ${report.status === 'pending' ? `
+                            <button onclick="markAsProcessed('${report.id}')" class="report-action-btn primary">
+                                <i class="fas fa-check"></i>
+                                معالجة
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        async function markAsProcessed(reportId) {
+            try {
+                await fetch(`${API}/api/rapportemp/director/${reportId}/acknowledge`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ director_id: '79f034a9-ee01-4de2-9238-549e53bb794f' })
+                });
+                
+                const report = allReports.find(r => r.id === reportId);
+                if (report) report.status = 'acknowledged';
+                
+                updateStats();
+                applyFilters();
+                
+                showNotification('✅ تم تأكيد معالجة التقرير بنجاح', 'success');
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('❌ حدث خطأ أثناء المعالجة', 'error');
+            }
+        }
+
+        // Modal and detailed view removed as per request
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600';
+            
+            notification.className = `fixed top-24 left-1/2 transform -translate-x-1/2 ${bgColor} text-white px-8 py-4 rounded-xl shadow-2xl font-bold text-lg z-50 animate-pulse`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transition = 'opacity 0.5s';
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
+        }
+
+        // No modal keyboard handling needed
+    </script>
+</body>
+</html>

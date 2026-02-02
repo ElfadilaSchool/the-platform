@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Responsible Dashboard - HR Operations Platform</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+	<link href="../assets/css/style.css" rel="stylesheet">
+	<style>
+		/* Ensure header is positioned at the top without overlapping */
+		#dashboardHeader {
+			position: relative !important;
+			top: 0 !important;
+			left: 0 !important;
+			right: 0 !important;
+			width: 100% !important;
+			margin: 0 !important;
+			padding: 0 !important;
+			z-index: 10;
+			flex-shrink: 0;
+		}
+		
+		#dashboardHeaderContainer,
+		.main-content > #dashboardHeader {
+			margin: 0 !important;
+			padding: 0 !important;
+			width: 100% !important;
+			flex-shrink: 0 !important;
+		}
+		
+		/* Ensure main-content positions header correctly */
+		.main-content {
+			display: flex !important;
+			flex-direction: column !important;
+		}
+		
+		/* Ensure header container/header is at the very top */
+		.main-content > #dashboardHeaderContainer,
+		.main-content > #dashboardHeader {
+			order: -1;
+		}
+		
+		/* Ensure main content flows below header */
+		.main-content > main {
+			flex: 1 1 auto !important;
+			overflow-y: auto !important;
+			min-height: 0 !important;
+			width: 100% !important;
+		}
+		
+		/* Remove any margin/padding that might cause overlap */
+		body.bg-gray-50 {
+			margin: 0 !important;
+			padding-top: 0 !important;
+			padding-bottom: 0 !important;
+		}
+		
+		/* Ensure body height is correct */
+		html, body {
+			height: 100%;
+			overflow-x: hidden;
+		}
+		
+		/* Main content should fill available space */
+		.main-content {
+			height: 100vh;
+			margin-top: 0 !important;
+		}
+		
+		/* Account for sidebar width - more compatible approach */
+		body #collapsibleSidebar ~ .main-content,
+		body:has(#collapsibleSidebar) .main-content {
+			margin-left: 4rem; /* 64px for collapsed sidebar */
+		}
+		
+		[dir="rtl"] body #collapsibleSidebar ~ .main-content,
+		[dir="rtl"] body:has(#collapsibleSidebar) .main-content {
+			margin-left: 0;
+			margin-right: 4rem;
+		}
+		
+		/* Fix header layout for RTL (Arabic) - prevents rectangle shape */
+		[dir="rtl"] #dashboardHeader {
+			position: relative !important;
+			top: 0 !important;
+			left: 0 !important;
+			right: 0 !important;
+			margin: 0 !important;
+			padding: 0 !important;
+		}
+		
+		[dir="rtl"] #dashboardHeader > .flex.items-center.justify-between {
+			flex-direction: row !important;
+			direction: ltr;
+		}
+		
+		/* Keep header right controls in LTR order */
+		[dir="rtl"] #dashboardHeader > .flex.items-center.justify-between > div:last-child {
+			flex-direction: row !important;
+			direction: ltr;
+		}
+		
+		/* Fix space-x-4 spacing in header controls for RTL */
+		[dir="rtl"] #dashboardHeader .space-x-4 > * + * {
+			margin-left: 1rem !important;
+			margin-right: 0 !important;
+		}
+		
+		/* Fix space-x-2 spacing in header for RTL */
+		[dir="rtl"] #dashboardHeader .space-x-2 > * + * {
+			margin-left: 0.5rem !important;
+			margin-right: 0 !important;
+		}
+		
+		/* Ensure header maintains proper width */
+		[dir="rtl"] #dashboardHeader > .flex.items-center.justify-between {
+			width: 100%;
+			max-width: 100%;
+		}
+		
+		/* Dashboard card styles */
+		.stat-card {
+			transition: all 0.3s ease;
+			border: 2px solid transparent;
+		}
+		
+		.stat-card:hover {
+			transform: translateY(-4px);
+			box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+		}
+		
+		.gradient-bg-blue {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		}
+		
+		.gradient-bg-green {
+			background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+		}
+		
+		.gradient-bg-orange {
+			background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+		}
+		
+		.gradient-bg-purple {
+			background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+		}
+		
+		.gradient-bg-yellow {
+			background: linear-gradient(135deg, #fad961 0%, #f76b1c 100%);
+		}
+		
+		.gradient-bg-indigo {
+			background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+		}
+		
+		.loading-skeleton {
+			background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+			background-size: 200% 100%;
+			animation: loading 1.5s infinite;
+		}
+		
+		@keyframes loading {
+			0% { background-position: 200% 0; }
+			100% { background-position: -200% 0; }
+		}
+		
+		.responsible-info-card {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		}
+	</style>
+</head>
+<body class="bg-gray-50">
+    <!-- The reusable navbar will be automatically inserted here -->
+    
+    <!-- Main Content -->
+    <div class="main-content flex-1 flex flex-col overflow-hidden">
+        <!-- Header will be inserted here after sidebar initialization -->
+        <div id="dashboardHeaderContainer" class="flex-shrink-0"></div>
+
+        <!-- Content -->
+	<main class="flex-1 overflow-y-auto p-6 rtl:mr-16 ltr:ml-16">
+		<div class="max-w-7xl mx-auto px-4 py-6">
+			<!-- Page Header with Filter -->
+			<div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+				<div>
+					<h1 class="text-3xl font-bold text-gray-900 mb-2" data-translate="nav.dashboard">Responsible Dashboard</h1>
+					<p class="text-gray-600" data-translate="dashboard.welcome_responsible">View your department statistics and manage your team</p>
+				</div>
+				<div class="flex items-center gap-3">
+					<label class="text-sm font-medium text-gray-700" data-translate="common.filter">Filter:</label>
+					<select id="periodFilter" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+						<option value="current" data-translate="dashboard.current_month">Current Month</option>
+						<option value="last" data-translate="dashboard.last_month">Last Month</option>
+						<option value="week" data-translate="dashboard.last_week">Last Week</option>
+						<option value="year" data-translate="dashboard.this_year">This Year</option>
+					</select>
+				</div>
+			</div>
+
+			<!-- Responsible Info Card -->
+			<div id="responsibleInfoCard" class="responsible-info-card rounded-xl shadow-lg p-6 mb-6 text-white">
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-4">
+						<div class="h-16 w-16 rounded-full bg-white/20 flex items-center justify-center">
+							<i class="fas fa-user-tie text-2xl"></i>
+						</div>
+						<div>
+							<h2 id="responsibleName" class="text-2xl font-bold mb-1">Loading...</h2>
+							<div class="flex flex-wrap gap-4 text-sm">
+								<span id="responsibleDepartment" class="flex items-center gap-2">
+									<i class="fas fa-building"></i>
+									<span>Loading...</span>
+								</span>
+								<span id="departmentEmployeesCount" class="flex items-center gap-2">
+									<i class="fas fa-users"></i>
+									<span>Loading...</span>
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Statistics Grid -->
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+				<!-- Tasks Statistics -->
+				<div class="stat-card bg-white rounded-xl shadow-lg p-6 gradient-bg-blue text-white">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="text-lg font-semibold" data-translate="tasks.department_tasks">Department Tasks</h3>
+						<i class="fas fa-tasks text-2xl opacity-80"></i>
+					</div>
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="tasks.created_by_me">Created by Me</p>
+							<p id="tasksCreated" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="tasks.completed_created">Completed</p>
+							<p id="tasksCreatedCompleted" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="tasks.received_by_dept">Received by Dept</p>
+							<p id="tasksReceived" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="tasks.completed_received">Completed</p>
+							<p id="tasksReceivedCompleted" class="text-2xl font-bold">0</p>
+						</div>
+					</div>
+					<a href="tasks.html" class="mt-4 inline-flex items-center text-white/90 hover:text-white text-sm font-medium">
+						<span data-translate="common.view_all">View All</span>
+						<i class="fas fa-arrow-right ml-2"></i>
+					</a>
+				</div>
+
+				<!-- Reports Statistics -->
+				<div class="stat-card bg-white rounded-xl shadow-lg p-6 gradient-bg-purple text-white">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="text-lg font-semibold" data-translate="reports.department_reports">Department Reports</h3>
+						<i class="fas fa-file-alt text-2xl opacity-80"></i>
+					</div>
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="reports.total">Total</p>
+							<p id="reportsTotal" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="reports.read">Read</p>
+							<p id="reportsRead" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="reports.pending">Pending</p>
+							<p id="reportsPending" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="reports.today">Today</p>
+							<p id="reportsToday" class="text-2xl font-bold">0</p>
+						</div>
+					</div>
+					<a href="rapportemp.html" class="mt-4 inline-flex items-center text-white/90 hover:text-white text-sm font-medium">
+						<span data-translate="common.view_all">View All</span>
+						<i class="fas fa-arrow-right ml-2"></i>
+					</a>
+				</div>
+
+				<!-- Requests Statistics -->
+				<div class="stat-card bg-white rounded-xl shadow-lg p-6 gradient-bg-indigo text-gray-800">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="text-lg font-semibold" data-translate="requests.department_requests">Department Requests</h3>
+						<i class="fas fa-paper-plane text-2xl text-indigo-600"></i>
+					</div>
+					<div class="space-y-4">
+						<!-- Exceptions Section -->
+						<div class="border-b border-gray-200 pb-3">
+							<p class="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide" data-translate="requests.exceptions">Exceptions</p>
+							<div class="grid grid-cols-2 gap-3">
+								<div>
+									<p class="text-xs text-gray-500 mb-1" data-translate="requests.pending">Pending</p>
+									<p id="exceptionsPending" class="text-xl font-bold text-yellow-600">0</p>
+								</div>
+								<div>
+									<p class="text-xs text-gray-500 mb-1" data-translate="requests.accepted_this_month">Accepted This Month</p>
+									<p id="exceptionsAccepted" class="text-xl font-bold text-green-600">0</p>
+								</div>
+							</div>
+						</div>
+						<!-- Extra Hours Section -->
+						<div>
+							<p class="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide" data-translate="requests.extra_hours">Extra Hours</p>
+							<div class="grid grid-cols-2 gap-3">
+								<div>
+									<p class="text-xs text-gray-500 mb-1" data-translate="requests.pending">Pending</p>
+									<p id="extraHoursPending" class="text-xl font-bold text-yellow-600">0</p>
+								</div>
+								<div>
+									<p class="text-xs text-gray-500 mb-1" data-translate="requests.accepted_this_month">Accepted This Month</p>
+									<p id="extraHoursAccepted" class="text-xl font-bold text-green-600">0</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<a href="submit-exception.html" class="mt-4 inline-flex items-center text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+						<span data-translate="common.view_all">View All</span>
+						<i class="fas fa-arrow-right ml-2"></i>
+					</a>
+				</div>
+
+				<!-- Attendance Summary -->
+				<div class="stat-card bg-white rounded-xl shadow-lg p-6 gradient-bg-green text-white">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="text-lg font-semibold" data-translate="attendance.department_summary">Department Attendance</h3>
+						<i class="fas fa-calendar-check text-2xl opacity-80"></i>
+					</div>
+					<div>
+						<p class="text-xs opacity-80 mb-1" data-translate="attendance.total_employees">Total Employees</p>
+						<p id="attendanceTotalEmployees" class="text-2xl font-bold">0</p>
+						<p id="attendanceSummary" class="text-sm mt-2 opacity-80">Loading...</p>
+					</div>
+					<a href="attendance-overview.html" class="mt-4 inline-flex items-center text-white/90 hover:text-white text-sm font-medium">
+						<span data-translate="common.view_all">View All</span>
+						<i class="fas fa-arrow-right ml-2"></i>
+					</a>
+				</div>
+			</div>
+
+			<!-- Signals and Complaints Statistics -->
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+				<!-- Signals Statistics (for signals responsible is assigned to) -->
+				<div class="stat-card bg-white rounded-xl shadow-lg p-6 gradient-bg-orange text-white">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="text-lg font-semibold" data-translate="signals.assigned_signals">Assigned Signals</h3>
+						<i class="fas fa-exclamation-triangle text-2xl opacity-80"></i>
+					</div>
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="signals.total">Total</p>
+							<p id="signalsTotal" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="signals.pending">Pending</p>
+							<p id="signalsPending" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="signals.treated">Treated</p>
+							<p id="signalsTreated" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="signals.high_priority">High Priority</p>
+							<p id="signalsHighPriority" class="text-2xl font-bold">0</p>
+						</div>
+					</div>
+					<a href="signals-responsible.html" class="mt-4 inline-flex items-center text-white/90 hover:text-white text-sm font-medium">
+						<span data-translate="common.view_all">View All</span>
+						<i class="fas fa-arrow-right ml-2"></i>
+					</a>
+				</div>
+
+				<!-- Complaints Statistics (own complaints) -->
+				<div class="stat-card bg-white rounded-xl shadow-lg p-6 gradient-bg-yellow text-white">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="text-lg font-semibold" data-translate="complaints.my_complaints">My Complaints</h3>
+						<i class="fas fa-comments text-2xl opacity-80"></i>
+					</div>
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="complaints.total">Total</p>
+							<p id="complaintsTotal" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="complaints.pending">Pending</p>
+							<p id="complaintsPending" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="complaints.completed">Completed</p>
+							<p id="complaintsCompleted" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="complaints.overdue">Overdue</p>
+							<p id="complaintsOverdue" class="text-2xl font-bold">0</p>
+						</div>
+					</div>
+					<a href="complaints-employee.html" class="mt-4 inline-flex items-center text-white/90 hover:text-white text-sm font-medium">
+						<span data-translate="common.view_all">View All</span>
+						<i class="fas fa-arrow-right ml-2"></i>
+					</a>
+				</div>
+			</div>
+
+			<!-- Attendance Summary -->
+			<div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+				<div class="flex items-center justify-between mb-6">
+					<h3 class="text-xl font-semibold text-gray-900" data-translate="attendance.department_summary">Department Attendance Summary</h3>
+					<i class="fas fa-calendar-check text-blue-600 text-2xl"></i>
+				</div>
+				<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+					<div class="text-center p-4 bg-blue-50 rounded-lg">
+						<p class="text-xs text-gray-600 mb-2" data-translate="attendance.total_worked_days">Total Work Days</p>
+						<p id="attendanceWorkDays" class="text-2xl font-bold text-blue-600">0</p>
+						<p class="text-xs text-gray-500 mt-1" data-translate="attendance.days">days</p>
+					</div>
+					<div class="text-center p-4 bg-red-50 rounded-lg">
+						<p class="text-xs text-gray-600 mb-2" data-translate="attendance.total_absent_days">Total Absent Days</p>
+						<p id="attendanceAbsentDays" class="text-2xl font-bold text-red-600">0</p>
+						<p class="text-xs text-gray-500 mt-1" data-translate="attendance.days">days</p>
+					</div>
+					<div class="text-center p-4 bg-green-50 rounded-lg">
+						<p class="text-xs text-gray-600 mb-2" data-translate="attendance.total_overtime_hours">Total Overtime Hours</p>
+						<p id="attendanceOvertime" class="text-2xl font-bold text-green-600">0.0h</p>
+					</div>
+					<div class="text-center p-4 bg-yellow-50 rounded-lg">
+						<p class="text-xs text-gray-600 mb-2" data-translate="attendance.total_late_minutes">Total Late</p>
+						<p id="attendanceLate" class="text-2xl font-bold text-yellow-600">0m</p>
+					</div>
+					<div class="text-center p-4 bg-orange-50 rounded-lg">
+						<p class="text-xs text-gray-600 mb-2" data-translate="attendance.total_early_leave">Total Early Leave</p>
+						<p id="attendanceEarly" class="text-2xl font-bold text-orange-600">0m</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- No Data Message -->
+			<div id="noDataMessage" class="hidden text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+				<i class="fas fa-info-circle text-gray-400 text-4xl mb-4"></i>
+				<p class="text-gray-600 font-medium" data-translate="message.no_data">No data available for the selected period</p>
+			</div>
+		</div>
+	</main>
+    </div>
+
+	<script src="../assets/js/auth.js"></script>
+	<script src="../assets/js/translations.js"></script>
+	<script src="../assets/js/main.js"></script>
+	<script src="../components/api.js"></script>
+	<script>
+		let currentResponsibleId = null;
+		let currentDepartmentId = null;
+		let currentDepartmentEmployees = [];
+		let currentPeriod = 'current';
+
+		document.addEventListener('DOMContentLoaded', async function() {
+			if (!requireAuth()) return;
+			const role = authManager.getUserRole();
+			if (role !== 'Department_Responsible') {
+				authManager.redirectToDashboard();
+				return;
+			}
+			
+			// Initialize sidebar first
+			initializeCollapsibleSidebar();
+			
+			// Wait a bit for sidebar to initialize, then add header
+			setTimeout(() => {
+				createDashboardHeader();
+				syncLanguageSelector();
+				updateDashboardUserDisplayName();
+				setupDashboardNotificationsUI();
+			}, 100);
+			
+			// Load dashboard data
+			await loadResponsibleProfile();
+			await loadDepartmentEmployees();
+			await loadDashboardData();
+			
+			// Setup period filter
+			const periodFilter = document.getElementById('periodFilter');
+			if (periodFilter) {
+				periodFilter.addEventListener('change', async function() {
+					currentPeriod = this.value;
+					await loadDashboardData();
+				});
+			}
+		});
+		
+		// Function to create the dashboard header after sidebar initialization
+		function createDashboardHeader() {
+			const container = document.getElementById('dashboardHeaderContainer');
+			if (!container) return;
+			
+			// Check if header already exists
+			if (document.getElementById('dashboardHeader')) return;
+			
+			const headerHTML = `
+				<header id="dashboardHeader" class="bg-white shadow-sm border-b">
+					<div class="flex items-center justify-between px-6 py-4">
+						<div class="flex items-center">
+						</div>
+						<div class="flex items-center space-x-4">
+							<select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+								<option value="en">English</option>
+								<option value="fr">Français</option>
+								<option value="ar">العربية</option>
+							</select>
+							<!-- Notifications bell -->
+							<div class="relative">
+								<button id="empNotifBell" class="relative w-10 h-10 rounded-full bg-white hover:bg-gray-50 border border-gray-200 flex items-center justify-center transition-all shadow-sm hover:shadow-md">
+									<i class="fas fa-bell text-gray-700 text-base"></i>
+									<span id="empNotifBadge" class="hidden absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white"></span>
+								</button>
+								<div id="empNotifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-50 border border-gray-200 transform transition-all duration-200 ease-out opacity-0 translate-y-2">
+									<div class="flex items-center justify-between p-3 border-b border-gray-100 bg-white">
+										<span class="text-sm font-semibold text-gray-800">Notifications</span>
+										<div class="flex items-center gap-3">
+											<button id="empNotifMarkAll" class="text-xs text-indigo-600 hover:text-indigo-700 font-medium px-3 py-1.5 rounded-md hover:bg-indigo-50 transition-colors border border-indigo-100">
+												Tout lire
+											</button>
+											<button id="empNotifClearAll" class="text-xs text-gray-600 hover:text-gray-800 font-medium px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors border border-gray-200">
+												Effacer
+											</button>
+										</div>
+									</div>
+									<div id="empNotifList" class="max-h-80 overflow-y-auto">
+										<div class="p-4 text-center text-sm text-gray-500">
+											<i class="fas fa-bell text-gray-300 text-lg mb-2 block"></i>
+											<span>Aucune notification</span>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="flex items-center space-x-2">
+								<img class="h-8 w-8 rounded-full object-cover" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='100%25' height='100%25' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23737486' font-size='16' font-family='Arial'%3EJD%3C/text%3E%3C/svg%3E" alt="Profile">
+								<span class="text-sm text-gray-700" id="userDisplayName">User</span>
+							</div>
+						</div>
+					</div>
+				</header>
+			`;
+			
+			// Insert header directly, replacing the container
+			const headerElement = document.createElement('div');
+			headerElement.innerHTML = headerHTML;
+			const header = headerElement.firstElementChild;
+			container.replaceWith(header);
+		}
+		
+		// Load responsible profile to get responsible ID and department info
+		async function loadResponsibleProfile() {
+			try {
+				const usersApiBase = window.API_SERVICES?.users || 'http://localhost:3002';
+				const response = await fetch(`${usersApiBase}/profile`, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				if (response.ok) {
+					const profile = await response.json();
+					
+					// Get employee ID for responsible
+					let employeeId = profile.id || profile.employee_id;
+					if (!employeeId && profile.user_id) {
+						try {
+							const empResponse = await fetch(`${usersApiBase}/employees/by-user/${profile.user_id}`, {
+								headers: {
+									'Authorization': `Bearer ${authManager.getToken()}`,
+									'Content-Type': 'application/json'
+								}
+							});
+							if (empResponse.ok) {
+								const empData = await empResponse.json();
+								if (empData.success && empData.employee) {
+									employeeId = empData.employee.id;
+								}
+							}
+						} catch (e) {
+							console.warn('Could not get employee ID from by-user endpoint:', e);
+						}
+					}
+					
+					currentResponsibleId = employeeId;
+					
+					// Find department where this employee is responsible
+					const deptApiBase = window.API_SERVICES?.departments || 'http://localhost:3003';
+					const deptResponse = await fetch(`${deptApiBase}/departments`, {
+						headers: {
+							'Authorization': `Bearer ${authManager.getToken()}`,
+							'Content-Type': 'application/json'
+						}
+					});
+					
+					if (deptResponse.ok) {
+						const departments = await deptResponse.json();
+						const deptList = Array.isArray(departments) ? departments : (departments.departments || []);
+						const responsibleDept = deptList.find(d => String(d.responsible_id) === String(employeeId));
+						
+						if (responsibleDept) {
+							currentDepartmentId = responsibleDept.id;
+							
+							// Update responsible info card
+							const nameEl = document.getElementById('responsibleName');
+							const deptEl = document.getElementById('responsibleDepartment');
+							
+							if (nameEl && profile.first_name && profile.last_name) {
+								nameEl.textContent = `${profile.first_name} ${profile.last_name}`;
+							}
+							if (deptEl) {
+								deptEl.querySelector('span').textContent = responsibleDept.name;
+							}
+						}
+					}
+				}
+			} catch (error) {
+				console.error('Error loading responsible profile:', error);
+			}
+		}
+		
+		// Load department employees
+		async function loadDepartmentEmployees() {
+			if (!currentResponsibleId) {
+				await loadResponsibleProfile();
+			}
+			
+			if (!currentResponsibleId) {
+				console.warn('No responsible ID found');
+				return;
+			}
+			
+			try {
+				// Get employees in the department
+				const hrTasksApiBase = window.API_SERVICES?.hr_tasks || 'http://localhost:3020';
+				const response = await fetch(`${hrTasksApiBase}/employees?responsible_id=${currentResponsibleId}`, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				if (response.ok) {
+					const employees = await response.json();
+					currentDepartmentEmployees = Array.isArray(employees) ? employees : [];
+					
+					// Update employee count in info card
+					const countEl = document.getElementById('departmentEmployeesCount');
+					if (countEl) {
+						countEl.querySelector('span').textContent = `${currentDepartmentEmployees.length} Employees`;
+					}
+					
+					// Update attendance total employees
+					document.getElementById('attendanceTotalEmployees').textContent = currentDepartmentEmployees.length;
+				}
+			} catch (error) {
+				console.error('Error loading department employees:', error);
+			}
+		}
+		
+		// Get date range based on period filter
+		function getDateRange(period) {
+			const now = new Date();
+			let startDate, endDate;
+			
+			switch(period) {
+				case 'week':
+					startDate = new Date(now);
+					startDate.setDate(now.getDate() - 7);
+					endDate = now;
+					break;
+				case 'last':
+					const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+					const lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+					startDate = new Date(lastMonthYear, lastMonth, 1);
+					endDate = new Date(lastMonthYear, lastMonth + 1, 0);
+					break;
+				case 'year':
+					startDate = new Date(now.getFullYear(), 0, 1);
+					endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+					break;
+				case 'current':
+				default:
+					startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+					endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+					break;
+			}
+			
+			return {
+				start: startDate,
+				end: endDate,
+				year: endDate.getFullYear(),
+				month: endDate.getMonth() + 1
+			};
+		}
+		
+		// Load all dashboard data
+		async function loadDashboardData() {
+			if (!currentResponsibleId) {
+				await loadResponsibleProfile();
+			}
+			if (!currentDepartmentEmployees.length) {
+				await loadDepartmentEmployees();
+			}
+			
+			const dateRange = getDateRange(currentPeriod);
+			const hasData = await Promise.all([
+				loadTasksStatistics(dateRange),
+				loadReportsStatistics(dateRange),
+				loadRequestsStatistics(dateRange),
+				loadAttendanceStatistics(dateRange),
+				loadSignalsStatistics(dateRange),
+				loadComplaintsStatistics(dateRange)
+			]);
+			
+			// Show/hide no data message
+			const noDataMsg = document.getElementById('noDataMessage');
+			if (noDataMsg) {
+				const hasAnyData = hasData.some(h => h);
+				if (!hasAnyData && currentPeriod !== 'current') {
+					noDataMsg.classList.remove('hidden');
+				} else {
+					noDataMsg.classList.add('hidden');
+				}
+			}
+		}
+		
+		// Load tasks statistics - aggregated for department
+		async function loadTasksStatistics(dateRange) {
+			try {
+				if (!currentResponsibleId) {
+					await loadResponsibleProfile();
+					if (!currentResponsibleId) return false;
+				}
+				
+				const tasksApiBase = window.API_SERVICES?.hr_tasks || 'http://localhost:3020';
+				const token = localStorage.getItem('jwt_token') || localStorage.getItem('token') || authManager.getToken();
+				
+				if (!token) {
+					console.warn('No token found for tasks API');
+					return false;
+				}
+				
+				// Get all tasks visible to responsible (tasks they created + tasks for their department)
+				const tasksResponse = await fetch(`${tasksApiBase}/tasks`, {
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				if (!tasksResponse.ok) {
+					console.error('Tasks API response not OK:', tasksResponse.status);
+					return false;
+				}
+				
+				const tasksData = await tasksResponse.json();
+				let allTasks = Array.isArray(tasksData) ? tasksData : [];
+				if (!Array.isArray(tasksData) && tasksData.tasks) {
+					allTasks = Array.isArray(tasksData.tasks) ? tasksData.tasks : [];
+				}
+				
+				// Separate tasks created by responsible vs received by department
+				const tasksCreated = allTasks.filter(t => String(t.assigned_by) === String(currentResponsibleId));
+				const tasksReceived = allTasks.filter(t => {
+					// Task is received if assigned to any department employee
+					if (!t.assignees || !Array.isArray(t.assignees)) return false;
+					return t.assignees.some(assignee => 
+						currentDepartmentEmployees.some(emp => String(emp.id) === String(assignee.id))
+					);
+				});
+				
+				// Count completed tasks
+				const tasksCreatedCompleted = tasksCreated.filter(t => 
+					(t.status || '').toLowerCase() === 'completed'
+				).length;
+				
+				const tasksReceivedCompleted = tasksReceived.filter(t => {
+					// Check if all assignees completed (for multi-assignee tasks)
+					if (!t.assignees || !Array.isArray(t.assignees)) return false;
+					const deptAssignees = t.assignees.filter(a => 
+						currentDepartmentEmployees.some(emp => String(emp.id) === String(a.id))
+					);
+					return deptAssignees.every(a => (a.status || '').toLowerCase() === 'completed');
+				}).length;
+				
+				// Update display
+				document.getElementById('tasksCreated').textContent = tasksCreated.length;
+				document.getElementById('tasksCreatedCompleted').textContent = tasksCreatedCompleted;
+				document.getElementById('tasksReceived').textContent = tasksReceived.length;
+				document.getElementById('tasksReceivedCompleted').textContent = tasksReceivedCompleted;
+				
+				return tasksCreated.length > 0 || tasksReceived.length > 0;
+			} catch (error) {
+				console.error('Error loading tasks statistics:', error);
+				return false;
+			}
+		}
+		
+		// Load reports statistics - aggregated for department
+		async function loadReportsStatistics(dateRange) {
+			try {
+				if (!currentDepartmentEmployees.length) {
+					await loadDepartmentEmployees();
+					if (!currentDepartmentEmployees.length) return false;
+				}
+				
+				const reportsApiBase = window.API_SERVICES?.hr_tasks || 'http://localhost:3020';
+				
+				// Get reports for all department employees
+				const reportPromises = currentDepartmentEmployees.map(emp => 
+					fetch(`${reportsApiBase}/api/rapportemp/employee/${emp.id}/reports?period=all`, {
+						headers: {
+							'Authorization': `Bearer ${authManager.getToken()}`,
+							'Content-Type': 'application/json'
+						}
+					}).then(r => r.ok ? r.json() : null).catch(() => null)
+				);
+				
+				const reportsResults = await Promise.all(reportPromises);
+				let allReports = [];
+				
+				reportsResults.forEach(result => {
+					if (!result) return;
+					let reports = [];
+					if (Array.isArray(result)) {
+						reports = result;
+					} else if (result.reports && Array.isArray(result.reports)) {
+						reports = result.reports;
+					} else if (result.data && Array.isArray(result.data)) {
+						reports = result.data;
+					}
+					allReports = [...allReports, ...reports];
+				});
+				
+				// Filter by date range if needed
+				if (currentPeriod !== 'current') {
+					allReports = allReports.filter(r => {
+						if (!r.created_at) return false;
+						const reportDate = new Date(r.created_at);
+						const startDateOnly = new Date(dateRange.start.getFullYear(), dateRange.start.getMonth(), dateRange.start.getDate());
+						const endDateOnly = new Date(dateRange.end.getFullYear(), dateRange.end.getMonth(), dateRange.end.getDate());
+						const reportDateOnly = new Date(reportDate.getFullYear(), reportDate.getMonth(), reportDate.getDate());
+						return reportDateOnly >= startDateOnly && reportDateOnly <= endDateOnly;
+					});
+				}
+				
+				// Calculate statistics
+				const stats = {
+					total: allReports.length,
+					acknowledged: 0,
+					pending: 0,
+					today: 0
+				};
+				
+				const now = new Date();
+				const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+				
+				allReports.forEach(r => {
+					const status = (r.status || '').toLowerCase();
+					if (status === 'acknowledged' || status === 'read') {
+						stats.acknowledged++;
+					} else {
+						stats.pending++;
+					}
+					
+					if (r.created_at) {
+						const reportDate = new Date(r.created_at);
+						reportDate.setHours(0, 0, 0, 0);
+						if (reportDate.getTime() === today.getTime()) {
+							stats.today++;
+						}
+					}
+				});
+				
+				document.getElementById('reportsTotal').textContent = stats.total;
+				document.getElementById('reportsRead').textContent = stats.acknowledged;
+				document.getElementById('reportsPending').textContent = stats.pending;
+				document.getElementById('reportsToday').textContent = stats.today;
+				
+				return stats.total > 0;
+			} catch (error) {
+				console.error('Error loading reports statistics:', error);
+				return false;
+			}
+		}
+		
+		// Load requests statistics - aggregated for department
+		async function loadRequestsStatistics(dateRange) {
+			try {
+				if (!currentDepartmentId) {
+					await loadResponsibleProfile();
+					if (!currentDepartmentId) {
+						console.error('❌ No department ID available for responsible');
+						return false;
+					}
+				}
+				
+				const attendanceApiBase = window.API_SERVICES?.attendance || 'http://localhost:3000';
+				
+				// Get current month for accepted requests
+				const now = new Date();
+				const currentMonth = now.getMonth() + 1;
+				const currentYear = now.getFullYear();
+				
+				console.log(`📊 [Responsible Dashboard] Loading requests for department ${currentDepartmentId}, month ${currentMonth}/${currentYear}`);
+				
+				// Get PENDING exceptions
+				const pendingExceptionsParams = new URLSearchParams();
+				pendingExceptionsParams.append('departmentId', currentDepartmentId);
+				pendingExceptionsParams.append('page', '1');
+				pendingExceptionsParams.append('limit', '1000');
+				
+				const pendingExceptionsUrl = `${attendanceApiBase}/api/exceptions/pending?${pendingExceptionsParams.toString()}`;
+				console.log(`📊 [Responsible Dashboard] Fetching pending exceptions: ${pendingExceptionsUrl}`);
+				
+				const pendingExceptionsResponse = await fetch(pendingExceptionsUrl, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				let pendingExceptions = [];
+				if (pendingExceptionsResponse.ok) {
+					const pendingExceptionsData = await pendingExceptionsResponse.json();
+					console.log(`📊 [Responsible Dashboard] Pending exceptions response:`, pendingExceptionsData);
+					
+					// API returns { success: true, exceptions: [...] }
+					if (pendingExceptionsData.success && pendingExceptionsData.exceptions) {
+						pendingExceptions = Array.isArray(pendingExceptionsData.exceptions) ? pendingExceptionsData.exceptions : [];
+					} else if (pendingExceptionsData.success && pendingExceptionsData.data) {
+						pendingExceptions = Array.isArray(pendingExceptionsData.data) ? pendingExceptionsData.data : [];
+					} else if (Array.isArray(pendingExceptionsData)) {
+						pendingExceptions = pendingExceptionsData;
+					}
+					console.log(`✅ [Responsible Dashboard] Found ${pendingExceptions.length} pending exceptions`);
+				} else {
+					const errorText = await pendingExceptionsResponse.text();
+					console.error(`❌ [Responsible Dashboard] Failed to fetch pending exceptions: ${pendingExceptionsResponse.status} - ${errorText}`);
+				}
+				
+				// Get ACCEPTED exceptions for current month
+				const acceptedExceptionsParams = new URLSearchParams();
+				acceptedExceptionsParams.append('departmentId', currentDepartmentId);
+				acceptedExceptionsParams.append('status', 'Approved');
+				acceptedExceptionsParams.append('year', currentYear.toString());
+				acceptedExceptionsParams.append('month', currentMonth.toString());
+				acceptedExceptionsParams.append('page', '1');
+				acceptedExceptionsParams.append('limit', '1000');
+				
+				const acceptedExceptionsUrl = `${attendanceApiBase}/api/exceptions/history?${acceptedExceptionsParams.toString()}`;
+				console.log(`📊 [Responsible Dashboard] Fetching accepted exceptions: ${acceptedExceptionsUrl}`);
+				
+				const acceptedExceptionsResponse = await fetch(acceptedExceptionsUrl, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				let acceptedExceptions = [];
+				if (acceptedExceptionsResponse.ok) {
+					const acceptedExceptionsData = await acceptedExceptionsResponse.json();
+					console.log(`📊 [Responsible Dashboard] Accepted exceptions response:`, acceptedExceptionsData);
+					
+					// API returns { success: true, exceptions: [...] }
+					if (acceptedExceptionsData.success && acceptedExceptionsData.exceptions) {
+						acceptedExceptions = Array.isArray(acceptedExceptionsData.exceptions) ? acceptedExceptionsData.exceptions : [];
+					} else if (acceptedExceptionsData.success && acceptedExceptionsData.data) {
+						acceptedExceptions = Array.isArray(acceptedExceptionsData.data) ? acceptedExceptionsData.data : [];
+					} else if (Array.isArray(acceptedExceptionsData)) {
+						acceptedExceptions = acceptedExceptionsData;
+					}
+					console.log(`✅ [Responsible Dashboard] Found ${acceptedExceptions.length} accepted exceptions for this month`);
+				} else {
+					const errorText = await acceptedExceptionsResponse.text();
+					console.error(`❌ [Responsible Dashboard] Failed to fetch accepted exceptions: ${acceptedExceptionsResponse.status} - ${errorText}`);
+				}
+				
+				// Get PENDING overtime requests
+				const pendingOvertimeParams = new URLSearchParams();
+				pendingOvertimeParams.append('departmentId', currentDepartmentId);
+				pendingOvertimeParams.append('page', '1');
+				pendingOvertimeParams.append('limit', '1000');
+				
+				const pendingOvertimeUrl = `${attendanceApiBase}/api/attendance/overtime/pending?${pendingOvertimeParams.toString()}`;
+				console.log(`📊 [Responsible Dashboard] Fetching pending overtime: ${pendingOvertimeUrl}`);
+				
+				const pendingOvertimeResponse = await fetch(pendingOvertimeUrl, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				let pendingOvertime = [];
+				if (pendingOvertimeResponse.ok) {
+					const pendingOvertimeData = await pendingOvertimeResponse.json();
+					console.log(`📊 [Responsible Dashboard] Pending overtime response:`, pendingOvertimeData);
+					
+					// API returns { success: true, data: [...] }
+					if (pendingOvertimeData.success && pendingOvertimeData.data) {
+						pendingOvertime = Array.isArray(pendingOvertimeData.data) ? pendingOvertimeData.data : [];
+					} else if (pendingOvertimeData.success && pendingOvertimeData.requests) {
+						pendingOvertime = Array.isArray(pendingOvertimeData.requests) ? pendingOvertimeData.requests : [];
+					} else if (Array.isArray(pendingOvertimeData)) {
+						pendingOvertime = pendingOvertimeData;
+					}
+					console.log(`✅ [Responsible Dashboard] Found ${pendingOvertime.length} pending overtime requests`);
+				} else {
+					const errorText = await pendingOvertimeResponse.text();
+					console.error(`❌ [Responsible Dashboard] Failed to fetch pending overtime: ${pendingOvertimeResponse.status} - ${errorText}`);
+				}
+				
+				// Get ACCEPTED overtime requests for current month
+				const acceptedOvertimeParams = new URLSearchParams();
+				acceptedOvertimeParams.append('departmentId', currentDepartmentId);
+				acceptedOvertimeParams.append('status', 'Approved');
+				acceptedOvertimeParams.append('year', currentYear.toString());
+				acceptedOvertimeParams.append('month', currentMonth.toString());
+				acceptedOvertimeParams.append('page', '1');
+				acceptedOvertimeParams.append('limit', '1000');
+				
+				const acceptedOvertimeUrl = `${attendanceApiBase}/api/attendance/overtime/history?${acceptedOvertimeParams.toString()}`;
+				console.log(`📊 [Responsible Dashboard] Fetching accepted overtime: ${acceptedOvertimeUrl}`);
+				
+				const acceptedOvertimeResponse = await fetch(acceptedOvertimeUrl, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				let acceptedOvertime = [];
+				if (acceptedOvertimeResponse.ok) {
+					const acceptedOvertimeData = await acceptedOvertimeResponse.json();
+					console.log(`📊 [Responsible Dashboard] Accepted overtime response:`, acceptedOvertimeData);
+					
+					// API returns { success: true, data: [...] }
+					if (acceptedOvertimeData.success && acceptedOvertimeData.data) {
+						acceptedOvertime = Array.isArray(acceptedOvertimeData.data) ? acceptedOvertimeData.data : [];
+					} else if (acceptedOvertimeData.success && acceptedOvertimeData.requests) {
+						acceptedOvertime = Array.isArray(acceptedOvertimeData.requests) ? acceptedOvertimeData.requests : [];
+					} else if (Array.isArray(acceptedOvertimeData)) {
+						acceptedOvertime = acceptedOvertimeData;
+					}
+					console.log(`✅ [Responsible Dashboard] Found ${acceptedOvertime.length} accepted overtime requests for this month`);
+				} else {
+					const errorText = await acceptedOvertimeResponse.text();
+					console.error(`❌ [Responsible Dashboard] Failed to fetch accepted overtime: ${acceptedOvertimeResponse.status} - ${errorText}`);
+				}
+				
+				// Update display with separate counts
+				document.getElementById('exceptionsPending').textContent = pendingExceptions.length;
+				document.getElementById('exceptionsAccepted').textContent = acceptedExceptions.length;
+				document.getElementById('extraHoursPending').textContent = pendingOvertime.length;
+				document.getElementById('extraHoursAccepted').textContent = acceptedOvertime.length;
+				
+				console.log(`✅ [Responsible Dashboard] Final counts - Exceptions: ${pendingExceptions.length} pending, ${acceptedExceptions.length} accepted this month | Overtime: ${pendingOvertime.length} pending, ${acceptedOvertime.length} accepted this month`);
+				
+				return pendingExceptions.length > 0 || acceptedExceptions.length > 0 || pendingOvertime.length > 0 || acceptedOvertime.length > 0;
+			} catch (error) {
+				console.error('❌ [Responsible Dashboard] Error loading requests statistics:', error);
+				console.error('Error stack:', error.stack);
+				// Set zeros on error
+				document.getElementById('exceptionsPending').textContent = '0';
+				document.getElementById('exceptionsAccepted').textContent = '0';
+				document.getElementById('extraHoursPending').textContent = '0';
+				document.getElementById('extraHoursAccepted').textContent = '0';
+				return false;
+			}
+		}
+		
+		// Load attendance statistics - aggregated for department
+		async function loadAttendanceStatistics(dateRange) {
+			try {
+				if (!currentDepartmentEmployees.length) {
+					await loadDepartmentEmployees();
+					if (!currentDepartmentEmployees.length) return false;
+				}
+				
+				const attendanceApiBase = window.API_SERVICES?.attendance || 'http://localhost:3000';
+				const isYearFilter = currentPeriod === 'year';
+				
+				let totalWorkDays = 0;
+				let totalAbsentDays = 0;
+				let totalOvertimeHours = 0;
+				let totalLateMinutes = 0;
+				let totalEarlyMinutes = 0;
+				
+				// Load attendance for all department employees
+				const monthPromises = [];
+				const monthsToLoad = isYearFilter ? 12 : 1;
+				const startMonth = dateRange.month;
+				
+				for (let monthOffset = 0; monthOffset < monthsToLoad; monthOffset++) {
+					const targetMonth = isYearFilter ? monthOffset + 1 : startMonth;
+					const targetYear = dateRange.year;
+					
+					monthPromises.push(
+						fetch(`${attendanceApiBase}/api/attendance/monthly?year=${targetYear}&month=${targetMonth}&page=1&limit=1000`, {
+							headers: {
+								'Authorization': `Bearer ${authManager.getToken()}`,
+								'Content-Type': 'application/json'
+							}
+						}).then(response => {
+							if (response.ok) {
+								return response.json().then(data => {
+									let attendanceRecords = [];
+									if (Array.isArray(data)) {
+										attendanceRecords = data;
+									} else if (data.data && Array.isArray(data.data)) {
+										attendanceRecords = data.data;
+									}
+									
+									// Filter to only department employees
+									const deptAttendance = attendanceRecords.filter(record => 
+										currentDepartmentEmployees.some(emp => String(emp.id) === String(record.employee_id))
+									);
+									
+									deptAttendance.forEach(attendance => {
+										totalWorkDays += parseInt(attendance.worked_days) || 0;
+										totalAbsentDays += parseInt(attendance.absence_days) || 0;
+										totalOvertimeHours += parseFloat(attendance.overtime_hours) || 0;
+										totalLateMinutes += parseInt(attendance.late_minutes) || 0;
+										totalEarlyMinutes += parseInt(attendance.early_minutes) || 0;
+									});
+									
+									return null;
+								}).catch(() => null);
+							}
+							return null;
+						}).catch(() => null)
+					);
+				}
+				
+				await Promise.all(monthPromises);
+				
+				document.getElementById('attendanceWorkDays').textContent = totalWorkDays;
+				document.getElementById('attendanceAbsentDays').textContent = totalAbsentDays;
+				document.getElementById('attendanceOvertime').textContent = totalOvertimeHours.toFixed(1) + 'h';
+				document.getElementById('attendanceLate').textContent = totalLateMinutes + 'm';
+				document.getElementById('attendanceEarly').textContent = totalEarlyMinutes + 'm';
+				
+				// Update summary
+				const summaryEl = document.getElementById('attendanceSummary');
+				if (summaryEl) {
+					const avgWorkDays = currentDepartmentEmployees.length > 0 
+						? (totalWorkDays / currentDepartmentEmployees.length).toFixed(1) 
+						: '0';
+					summaryEl.textContent = `Avg ${avgWorkDays} work days per employee`;
+				}
+				
+				return totalWorkDays > 0 || totalAbsentDays > 0;
+			} catch (error) {
+				console.error('Error loading attendance statistics:', error);
+				return false;
+			}
+		}
+		
+		// Function to update user display name in dashboard header
+		async function updateDashboardUserDisplayName() {
+			const userDisplayNameEl = document.getElementById('userDisplayName');
+			if (!userDisplayNameEl) return;
+			
+			try {
+				const user = authManager.getUser();
+				if (user && (user.firstName || user.first_name) && (user.lastName || user.last_name)) {
+					const firstName = user.firstName || user.first_name || '';
+					const lastName = user.lastName || user.last_name || '';
+					if (firstName.toLowerCase() !== 'prenom' && lastName.toLowerCase() !== 'nom') {
+						userDisplayNameEl.textContent = `${firstName} ${lastName}`.trim();
+						return;
+					}
+				}
+				
+				const usersApiBase = window.API_SERVICES?.users || 'http://localhost:3002';
+				const response = await fetch(`${usersApiBase}/profile`, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				if (response.ok) {
+					const profile = await response.json();
+					if (profile.first_name && profile.last_name) {
+						const firstName = profile.first_name;
+						const lastName = profile.last_name;
+						if (firstName.toLowerCase() !== 'prenom' && lastName.toLowerCase() !== 'nom') {
+							userDisplayNameEl.textContent = `${firstName} ${lastName}`.trim();
+							return;
+						}
+					}
+				}
+			} catch (error) {
+				console.warn('Failed to update user display name:', error);
+			}
+			
+			if (userDisplayNameEl.textContent === 'User') {
+				const user = authManager.getUser();
+				if (user && user.username) {
+					userDisplayNameEl.textContent = user.username;
+				}
+			}
+		}
+		
+		// Sync language selector with current app language
+		function syncLanguageSelector() {
+			const languageSelector = document.getElementById('languageSelector');
+			if (!languageSelector) return;
+			
+			const currentLang = localStorage.getItem('language') || 
+			                   localStorage.getItem('lang') || 
+			                   (typeof window !== 'undefined' && window.currentLanguage) || 
+			                   'en';
+			
+			languageSelector.value = currentLang;
+			
+			if (!languageSelector.hasAttribute('data-listener-added')) {
+				languageSelector.addEventListener('change', function() {
+					const newLang = this.value;
+					localStorage.setItem('language', newLang);
+					localStorage.setItem('lang', newLang);
+					if (typeof window !== 'undefined') {
+						window.currentLanguage = newLang;
+					}
+					if (typeof setLanguage === 'function') {
+						setLanguage(newLang);
+					}
+				});
+				
+				languageSelector.setAttribute('data-listener-added', 'true');
+			}
+		}
+		
+		// Load signals statistics (for signals responsible is assigned to)
+		async function loadSignalsStatistics(dateRange) {
+			try {
+				if (!currentResponsibleId) {
+					await loadResponsibleProfile();
+					if (!currentResponsibleId) return false;
+				}
+				
+				const signalsApiBase = window.API_SERVICES?.hr_tasks || 'http://localhost:3020';
+				const from = dateRange.start.toISOString().split('T')[0];
+				const to = dateRange.end.toISOString().split('T')[0];
+				
+				const response = await fetch(`${signalsApiBase}/api/signals/responsible/${currentResponsibleId}/statistics?from=${from}&to=${to}`, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				if (response.ok) {
+					const data = await response.json();
+					const overview = data.overview || {};
+					
+					document.getElementById('signalsTotal').textContent = overview.total || 0;
+					document.getElementById('signalsPending').textContent = overview.pending || 0;
+					document.getElementById('signalsTreated').textContent = overview.treated || 0;
+					document.getElementById('signalsHighPriority').textContent = overview.high_priority || 0;
+					
+					return (overview.total || 0) > 0;
+				} else {
+					console.warn('Signals statistics API response not OK:', response.status);
+					document.getElementById('signalsTotal').textContent = '0';
+					document.getElementById('signalsPending').textContent = '0';
+					document.getElementById('signalsTreated').textContent = '0';
+					document.getElementById('signalsHighPriority').textContent = '0';
+					return false;
+				}
+			} catch (error) {
+				console.error('Error loading signals statistics:', error);
+				document.getElementById('signalsTotal').textContent = '0';
+				document.getElementById('signalsPending').textContent = '0';
+				document.getElementById('signalsTreated').textContent = '0';
+				document.getElementById('signalsHighPriority').textContent = '0';
+				return false;
+			}
+		}
+		
+		// Load complaints statistics (own complaints)
+		async function loadComplaintsStatistics(dateRange) {
+			try {
+				if (!currentResponsibleId) {
+					await loadResponsibleProfile();
+					if (!currentResponsibleId) return false;
+				}
+				
+				const complaintsApiBase = window.API_SERVICES?.hr_tasks || 'http://localhost:3020';
+				const from = dateRange.start.toISOString().split('T')[0];
+				const to = dateRange.end.toISOString().split('T')[0];
+				
+				const response = await fetch(`${complaintsApiBase}/api/complaints/employee/${currentResponsibleId}/statistics?from=${from}&to=${to}`, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				if (response.ok) {
+					const data = await response.json();
+					const overview = data.overview || {};
+					
+					document.getElementById('complaintsTotal').textContent = overview.total || 0;
+					document.getElementById('complaintsPending').textContent = overview.pending || 0;
+					document.getElementById('complaintsCompleted').textContent = overview.completed || 0;
+					document.getElementById('complaintsOverdue').textContent = overview.overdue || 0;
+					
+					return (overview.total || 0) > 0;
+				} else {
+					console.warn('Complaints statistics API response not OK:', response.status);
+					document.getElementById('complaintsTotal').textContent = '0';
+					document.getElementById('complaintsPending').textContent = '0';
+					document.getElementById('complaintsCompleted').textContent = '0';
+					document.getElementById('complaintsOverdue').textContent = '0';
+					return false;
+				}
+			} catch (error) {
+				console.error('Error loading complaints statistics:', error);
+				document.getElementById('complaintsTotal').textContent = '0';
+				document.getElementById('complaintsPending').textContent = '0';
+				document.getElementById('complaintsCompleted').textContent = '0';
+				document.getElementById('complaintsOverdue').textContent = '0';
+				return false;
+			}
+		}
+		
+		// Setup notifications UI for dashboard
+		function setupDashboardNotificationsUI() {
+			try {
+				const bell = document.getElementById('empNotifBell');
+				const dd = document.getElementById('empNotifDropdown');
+				const markAll = document.getElementById('empNotifMarkAll');
+				const clearAll = document.getElementById('empNotifClearAll');
+				
+				if (bell && dd) {
+					bell.addEventListener('click', (e) => {
+						e.stopPropagation();
+						if (dd.classList.contains('hidden')) {
+							dd.classList.remove('hidden');
+							setTimeout(() => {
+								dd.classList.remove('opacity-0', 'translate-y-2');
+								dd.classList.add('opacity-100', 'translate-y-0');
+							}, 10);
+						} else {
+							dd.classList.remove('opacity-100', 'translate-y-0');
+							dd.classList.add('translate-y-2');
+							setTimeout(() => {
+								dd.classList.add('hidden');
+							}, 200);
+						}
+					});
+					
+					document.addEventListener('click', (e) => {
+						if (!dd.contains(e.target) && e.target !== bell && !bell.contains(e.target)) {
+							dd.classList.remove('opacity-100', 'translate-y-0');
+							dd.classList.add('translate-y-2');
+							setTimeout(() => {
+								dd.classList.add('hidden');
+							}, 200);
+						}
+					});
+				}
+				
+				if (markAll) {
+					markAll.addEventListener('click', async () => {
+						console.log('Mark all notifications as read');
+					});
+				}
+				
+				if (clearAll) {
+					clearAll.addEventListener('click', async () => {
+						console.log('Clear all notifications');
+					});
+				}
+			} catch (error) {
+				console.error('Error setting up notifications UI:', error);
+			}
+		}
+	</script>
+	<script src="../assets/js/navbar.js"></script>
+</body>
+</html>

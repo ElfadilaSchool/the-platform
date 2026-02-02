@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="employee.add_employee">Add Employee - HR Operations Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <style>
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        .form-section:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f3f4f6;
+        }
+        .section-header-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+        .section-header.account {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .section-header-icon.account {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .section-header-icon.personal {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        .section-header-icon.work {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        .section-header-icon.compensation {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+        .section-header-icon.address {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+        .section-header-icon.documents {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+            color: white;
+        }
+        .input-group {
+            position: relative;
+        }
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            pointer-events: none;
+        }
+        .input-with-icon {
+            padding-left: 40px;
+        }
+        .select-with-icon {
+            padding-left: 40px;
+        }
+        .form-label {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .required-indicator {
+            color: #ef4444;
+            margin-left: 4px;
+        }
+        .form-input {
+            transition: all 0.2s ease;
+        }
+        .form-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .file-upload-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        .file-upload-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            background: #f9fafb;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .file-upload-label:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .file-upload-label i {
+            font-size: 2rem;
+            color: #9ca3af;
+            margin-right: 0.75rem;
+        }
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+        }
+        .checkbox-wrapper:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+        }
+        .submit-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+        }
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+        .cancel-button {
+            transition: all 0.2s ease;
+        }
+        .cancel-button:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+        }
+        .alert-message {
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .loading-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- The reusable navbar will be automatically inserted here -->
+    
+    <!-- Main Content -->
+    <div class="main-content flex-1 overflow-y-auto">
+
+            <!-- Content -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Top Bar with Language Selector and Back Button -->
+                    <div class="flex items-center justify-between mb-4">
+                        <a href="employees-simple.html" class="flex items-center text-gray-600 hover:text-gray-900 transition-colors group" data-translate="common.back_to_employees">
+                            <i class="fas fa-arrow-left mr-2 group-hover:-translate-x-1 transition-transform"></i>
+                            <span class="font-medium" data-translate="common.back_to_employees">Back to Employees</span>
+                        </a>
+                        <!-- Language Selector -->
+                        <select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm hover:border-gray-400 transition-colors">
+                            <option value="en">English</option>
+                            <option value="fr">Français</option>
+                            <option value="ar">العربية</option>
+                        </select>
+                    </div>
+
+                    <!-- Page Header -->
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg p-6 mb-6 text-white">
+                        <div class="flex items-start">
+                            <div class="p-3 bg-white/20 rounded-lg mr-4 flex-shrink-0">
+                                <i class="fas fa-user-plus text-2xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h1 class="text-3xl font-bold mb-2" id="pageTitle" data-translate="employee.add_new_employee">Add New Employee</h1>
+                                <p class="text-blue-100 text-base leading-relaxed" id="pageDescription" data-translate="employee.add_employee_description">Create a new employee account with complete information including personal details, position, and access credentials.</p>
+                            </div>
+                        </div>
+                    </div>
+                        
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                        <form id="addEmployeeForm" class="p-8" enctype="multipart/form-data">
+                            <!-- Account Information -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <div class="section-header-icon account">
+                                        <i class="fas fa-user-shield"></i>
+                                    </div>
+                                    <h4 class="text-xl font-bold text-gray-900" data-translate="employee.account_information">Account Information</h4>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div class="input-group">
+                                        <label for="username" class="form-label" data-translate="employee.username">
+                                            <i class="fas fa-user text-gray-400 mr-2 text-sm"></i>
+                                            Username <span class="required-indicator">*</span>
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-user input-icon"></i>
+                                        <input type="text" id="username" name="username" required 
+                                                   class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="password" class="form-label" data-translate="employee.password">
+                                            <i class="fas fa-lock text-gray-400 mr-2 text-sm"></i>
+                                            Password <span class="required-indicator">*</span>
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-lock input-icon"></i>
+                                        <input type="password" id="password" name="password" required 
+                                                   class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="role" class="form-label" data-translate="employee.role">
+                                            <i class="fas fa-user-tag text-gray-400 mr-2 text-sm"></i>
+                                            Role <span class="required-indicator">*</span>
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-user-tag input-icon"></i>
+                                        <select id="role" name="role" required 
+                                                    class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none">
+                                            <option value="Employee" data-translate="role.employee">Employee</option>
+                                            <option value="Department_Responsible" data-translate="role.department_responsible">Department Responsible</option>
+                                            <option value="HR_Manager" data-translate="role.hr_manager">HR Manager</option>
+                                            <option value="Director" data-translate="role.director">Director</option>
+                                        </select>
+                                            <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Personal Information -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <div class="section-header-icon personal">
+                                        <i class="fas fa-id-card"></i>
+                                    </div>
+                                    <h4 class="text-xl font-bold text-gray-900" data-translate="employee.personal_information">Personal Information</h4>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="input-group">
+                                        <label for="first_name" class="form-label" data-translate="employee.first_name">
+                                            <i class="fas fa-signature text-gray-400 mr-2 text-sm"></i>
+                                            First Name <span class="required-indicator">*</span>
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-signature input-icon"></i>
+                                        <input type="text" id="first_name" name="first_name" required 
+                                                   class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="last_name" class="form-label" data-translate="employee.last_name">
+                                            <i class="fas fa-signature text-gray-400 mr-2 text-sm"></i>
+                                            Last Name <span class="required-indicator">*</span>
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-signature input-icon"></i>
+                                        <input type="text" id="last_name" name="last_name" required 
+                                                   class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="foreign_name" class="form-label" data-translate="employee.foreign_first_name">
+                                            <i class="fas fa-language text-gray-400 mr-2 text-sm"></i>
+                                            Foreign First Name
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-language input-icon"></i>
+                                        <input type="text" id="foreign_name" name="foreign_name" 
+                                                   class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="foreign_last_name" class="form-label" data-translate="employee.foreign_last_name">
+                                            <i class="fas fa-language text-gray-400 mr-2 text-sm"></i>
+                                            Foreign Last Name
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-language input-icon"></i>
+                                        <input type="text" id="foreign_last_name" name="foreign_last_name" 
+                                                   class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="email" class="form-label" data-translate="employee.email">
+                                            <i class="fas fa-envelope text-gray-400 mr-2 text-sm"></i>
+                                            Email <span class="required-indicator">*</span>
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-envelope input-icon"></i>
+                                        <input type="email" id="email" name="email" required 
+                                                   class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="phone" class="form-label" data-translate="employee.phone">
+                                            <i class="fas fa-phone text-gray-400 mr-2 text-sm"></i>
+                                            Phone
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-phone input-icon"></i>
+                                        <input type="tel" id="phone" name="phone" 
+                                                   class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="gender" class="form-label" data-translate="employee.gender">
+                                            <i class="fas fa-venus-mars text-gray-400 mr-2 text-sm"></i>
+                                            Gender
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-venus-mars input-icon"></i>
+                                        <select id="gender" name="gender" 
+                                                    class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none">
+                                            <option value="" data-translate="employee.select_gender">Select Gender</option>
+                                            <option value="Male" data-translate="employee.male">Male</option>
+                                            <option value="Female" data-translate="employee.female">Female</option>
+                                            <option value="Other" data-translate="employee.other">Other</option>
+                                        </select>
+                                            <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="birth_date" class="form-label" data-translate="employee.birth_date">
+                                            <i class="fas fa-calendar-alt text-gray-400 mr-2 text-sm"></i>
+                                            Birth Date
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-calendar-alt input-icon"></i>
+                                        <input type="date" id="birth_date" name="birth_date" 
+                                                   class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="nationality" class="form-label" data-translate="employee.nationality">
+                                            <i class="fas fa-flag text-gray-400 mr-2 text-sm"></i>
+                                            Nationality
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-flag input-icon"></i>
+                                        <input type="text" id="nationality" name="nationality" 
+                                                   class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="marital_status" class="form-label" data-translate="employee.marital_status">
+                                            <i class="fas fa-heart text-gray-400 mr-2 text-sm"></i>
+                                            Marital Status
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-heart input-icon"></i>
+                                        <select id="marital_status" name="marital_status" 
+                                                    class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none">
+                                            <option value="" data-translate="employee.select_status">Select Status</option>
+                                            <option value="Single" data-translate="employee.single">Single</option>
+                                            <option value="Married" data-translate="employee.married">Married</option>
+                                            <option value="Divorced" data-translate="employee.divorced">Divorced</option>
+                                            <option value="Widowed" data-translate="employee.widowed">Widowed</option>
+                                        </select>
+                                            <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Work Information -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <div class="section-header-icon work">
+                                        <i class="fas fa-briefcase"></i>
+                                    </div>
+                                    <h4 class="text-xl font-bold text-gray-900" data-translate="employee.work_information">Work Information</h4>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="input-group">
+                                        <label for="position_id" class="form-label" data-translate="employee.position">
+                                            <i class="fas fa-user-tie text-gray-400 mr-2 text-sm"></i>
+                                            Position
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-user-tie input-icon"></i>
+                                        <select id="position_id" name="position_id" 
+                                                    class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none">
+                                            <option value="" data-translate="employee.select_position">Select Position</option>
+                                        </select>
+                                            <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="institution" class="form-label" data-translate="employee.institution">
+                                            <i class="fas fa-building text-gray-400 mr-2 text-sm"></i>
+                                            Institution
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-building input-icon"></i>
+                                        <select id="institution" name="institution" 
+                                                    class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none">
+                                                <option value="" data-translate="employee.select_institution">Select Institution</option>
+                                        </select>
+                                            <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="join_date" class="form-label" data-translate="employee.join_date">
+                                            <i class="fas fa-calendar-check text-gray-400 mr-2 text-sm"></i>
+                                            Join Date
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-calendar-check input-icon"></i>
+                                        <input type="date" id="join_date" name="join_date" 
+                                                   class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="education_level" class="form-label" data-translate="employee.education_level">
+                                            <i class="fas fa-graduation-cap text-gray-400 mr-2 text-sm"></i>
+                                            Education Level
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-graduation-cap input-icon"></i>
+                                        <select id="education_level" name="education_level" 
+                                                    class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none">
+                                                <option value="" data-translate="employee.select_level">Select Level</option>
+                                        </select>
+                                            <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Compensation (Optional) -->
+                            <div class="form-section bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+                                <div class="section-header">
+                                    <div class="section-header-icon compensation">
+                                        <i class="fas fa-dollar-sign"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xl font-bold text-gray-900" data-translate="employee.compensation_optional">Compensation (Optional)</h4>
+                                        <p class="text-sm text-gray-600 mt-1" data-translate="employee.compensation_override_note">If provided, these override position rates for this employee as of the effective date.</p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    <div class="input-group">
+                                        <label for="base_salary" class="form-label" data-translate="employee.base_salary_monthly">
+                                            <i class="fas fa-money-bill-wave text-gray-400 mr-2 text-sm"></i>
+                                            Base Salary (Monthly)
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-money-bill-wave input-icon"></i>
+                                            <input type="number" id="base_salary" name="base_salary" step="0.01" min="0"
+                                                   class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="hourly_rate" class="form-label" data-translate="employee.hourly_rate">
+                                            <i class="fas fa-clock text-gray-400 mr-2 text-sm"></i>
+                                            Hourly Rate
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-clock input-icon"></i>
+                                        <input type="number" id="hourly_rate" name="hourly_rate" step="0.01" min="0"
+                                                   class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="overtime_rate" class="form-label" data-translate="employee.overtime_rate">
+                                            <i class="fas fa-hourglass-half text-gray-400 mr-2 text-sm"></i>
+                                            Overtime Rate
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-hourglass-half input-icon"></i>
+                                        <input type="number" id="overtime_rate" name="overtime_rate" step="0.01" min="0"
+                                                   class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="effective_date" class="form-label" data-translate="employee.effective_date">
+                                            <i class="fas fa-calendar-day text-gray-400 mr-2 text-sm"></i>
+                                            Effective Date
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fas fa-calendar-day input-icon"></i>
+                                        <input type="date" id="effective_date" name="effective_date"
+                                                   class="form-input w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Address Information -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <div class="section-header-icon address">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </div>
+                                    <h4 class="text-xl font-bold text-gray-900" data-translate="employee.address_information">Address Information</h4>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="input-group">
+                                        <label for="address" class="form-label" data-translate="employee.address">
+                                            <i class="fas fa-home text-gray-400 mr-2 text-sm"></i>
+                                            Address
+                                        </label>
+                                        <textarea id="address" name="address" rows="4" 
+                                                  class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="foreign_address" class="form-label" data-translate="employee.foreign_address">
+                                            <i class="fas fa-globe text-gray-400 mr-2 text-sm"></i>
+                                            Foreign Address
+                                        </label>
+                                        <textarea id="foreign_address" name="foreign_address" rows="4" 
+                                                  class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- File Uploads -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <div class="section-header-icon documents">
+                                        <i class="fas fa-file-upload"></i>
+                                    </div>
+                                    <h4 class="text-xl font-bold text-gray-900" data-translate="employee.documents">Documents</h4>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="profile_picture" class="form-label mb-3" data-translate="employee.profile_picture">
+                                            <i class="fas fa-image text-gray-400 mr-2 text-sm"></i>
+                                            Profile Picture
+                                        </label>
+                                        <div class="file-upload-wrapper">
+                                            <input type="file" id="profile_picture" name="profile_picture" accept="image/*" class="file-upload-input">
+                                            <label for="profile_picture" class="file-upload-label">
+                                                <i class="fas fa-cloud-upload-alt"></i>
+                                                <div class="text-center">
+                                                    <p class="text-sm font-medium text-gray-700" data-translate="employee.upload_profile_picture">Click to upload profile picture</p>
+                                                    <p class="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <p id="profile_picture_name" class="text-sm text-gray-600 mt-2 hidden"></p>
+                                    </div>
+                                    <div>
+                                        <label for="cv" class="form-label mb-3" data-translate="employee.cv_resume">
+                                            <i class="fas fa-file-pdf text-gray-400 mr-2 text-sm"></i>
+                                            CV/Resume
+                                        </label>
+                                        <div class="file-upload-wrapper">
+                                            <input type="file" id="cv" name="cv" accept=".pdf,image/*" class="file-upload-input">
+                                            <label for="cv" class="file-upload-label">
+                                                <i class="fas fa-file-upload"></i>
+                                                <div class="text-center">
+                                                    <p class="text-sm font-medium text-gray-700" data-translate="employee.upload_cv">Click to upload CV/Resume</p>
+                                                    <p class="text-xs text-gray-500 mt-1">PDF, Images up to 10MB</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <p id="cv_name" class="text-sm text-gray-600 mt-2 hidden"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Options -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <div class="section-header-icon account">
+                                        <i class="fas fa-cog"></i>
+                                    </div>
+                                    <h4 class="text-xl font-bold text-gray-900" data-translate="employee.additional_options">Additional Options</h4>
+                                </div>
+                                <div class="checkbox-wrapper">
+                                    <input type="checkbox" id="visible_to_parents_in_chat" name="visible_to_parents_in_chat" 
+                                           class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                                    <label for="visible_to_parents_in_chat" class="ml-3 block text-sm font-medium text-gray-700 cursor-pointer" data-translate="employee.visible_to_parents_in_chat">
+                                        <i class="fas fa-comments text-blue-500 mr-2"></i>
+                                        Visible to parents in chat
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Error Message -->
+                            <div id="errorMessage" class="hidden alert-message bg-red-50 border-l-4 border-red-500 text-red-700 mb-6" data-translate="common.error_message">
+                                <div class="flex items-center">
+                                    <i class="fas fa-exclamation-circle text-red-500 text-xl mr-3"></i>
+                                    <div>
+                                        <p class="font-semibold">Error</p>
+                                        <span id="errorText" class="text-sm"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Success Message -->
+                            <div id="successMessage" class="hidden alert-message bg-green-50 border-l-4 border-green-500 text-green-700 mb-6" data-translate="common.success_message">
+                                <div class="flex items-center">
+                                    <i class="fas fa-check-circle text-green-500 text-xl mr-3"></i>
+                                    <div>
+                                        <p class="font-semibold">Success</p>
+                                        <span id="successText" class="text-sm"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                                <a href="employees-simple.html" class="cancel-button px-8 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all flex items-center" data-translate="common.cancel">
+                                    <i class="fas fa-times mr-2"></i>
+                                    <span data-translate="common.cancel">Cancel</span>
+                                </a>
+                                <button type="submit" id="submitButton" 
+                                        class="submit-button px-8 py-3 text-white rounded-lg font-semibold flex items-center shadow-lg">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    <span data-translate="employee.add_employee">Add Employee</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/translations.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script>
+        // Check authentication
+        if (!requireAuth()) {
+            // Redirect handled by requireAuth
+        }
+
+        let positions = [];
+        let editMode = false;
+        let employeeId = null;
+
+        // Load positions on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            const user = authManager.getUser();
+            const nameEl = document.getElementById('userDisplayName');
+            if (nameEl && user && user.firstName && user.lastName) {
+                nameEl.textContent = `${user.firstName} ${user.lastName}`;
+            }
+
+            await loadPositions();
+            await Promise.all([loadBranches(), loadLevels()]);
+            
+            // Language selector
+            const languageSelector = document.getElementById('languageSelector');
+            if (languageSelector) {
+                languageSelector.value = currentLanguage || 'en';
+                languageSelector.addEventListener('change', (e) => {
+                    if (typeof setLanguage === 'function') {
+                        setLanguage(e.target.value);
+                        // Update dropdowns with translated text
+                        populatePositionDropdown();
+                        loadBranches();
+                        loadLevels();
+                        
+                        // Update page title and description if in edit mode
+                        if (editMode) {
+                            const titleEl = document.getElementById('pageTitle');
+                            if (titleEl && typeof translate === 'function') {
+                                titleEl.textContent = translate('employee.edit_employee');
+                            }
+                            const descriptionEl = document.getElementById('pageDescription');
+                            if (descriptionEl && typeof translate === 'function') {
+                                descriptionEl.textContent = translate('employee.edit_employee_description');
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Listen for language change events
+            document.addEventListener('languageChanged', function() {
+                // Update dropdowns with translated text
+                populatePositionDropdown();
+                loadBranches();
+                loadLevels();
+                
+                // Update page title and description if in edit mode
+                if (editMode) {
+                    const titleEl = document.getElementById('pageTitle');
+                    if (titleEl && typeof translate === 'function') {
+                        titleEl.textContent = translate('employee.edit_employee');
+                    }
+                    const descriptionEl = document.getElementById('pageDescription');
+                    if (descriptionEl && typeof translate === 'function') {
+                        descriptionEl.textContent = translate('employee.edit_employee_description');
+                    }
+                }
+            });
+            
+            // Initialize translations
+            if (typeof updatePageTranslations === 'function') {
+                updatePageTranslations();
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            employeeId = urlParams.get('id');
+
+            if (employeeId) {
+                editMode = true;
+                await loadEmployeeForEdit();
+            }
+
+            // Default effective date to today
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const eff = document.getElementById('effective_date');
+            if (eff) eff.value = `${yyyy}-${mm}-${dd}`;
+
+            // File upload handlers
+            const profilePictureInput = document.getElementById('profile_picture');
+            const cvInput = document.getElementById('cv');
+            const profilePictureName = document.getElementById('profile_picture_name');
+            const cvName = document.getElementById('cv_name');
+
+            if (profilePictureInput) {
+                profilePictureInput.addEventListener('change', function(e) {
+                    if (e.target.files && e.target.files[0]) {
+                        profilePictureName.textContent = e.target.files[0].name;
+                        profilePictureName.classList.remove('hidden');
+                    }
+                });
+            }
+
+            if (cvInput) {
+                cvInput.addEventListener('change', function(e) {
+                    if (e.target.files && e.target.files[0]) {
+                        cvName.textContent = e.target.files[0].name;
+                        cvName.classList.remove('hidden');
+                    }
+                });
+            }
+        });
+
+        async function loadPositions() {
+            try {
+                positions = await APIService.request('users', '/positions');
+                populatePositionDropdown();
+            } catch (error) {
+                console.error('Error loading positions:', error);
+            }
+        }
+
+        async function loadBranches() {
+            try {
+                const branches = await APIService.request('departments', '/branches');
+                const select = document.getElementById('institution');
+                if (!select) return;
+                const selectInstitutionText = typeof translate === 'function' ? translate('employee.select_institution') : 'Select Institution';
+                select.innerHTML = `<option value="" data-translate="employee.select_institution">${selectInstitutionText}</option>`;
+                branches.forEach(b => {
+                    const option = document.createElement('option');
+                    option.value = b.name;
+                    option.textContent = b.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading branches:', error);
+            }
+        }
+
+        async function loadLevels() {
+            try {
+                const levels = await APIService.request('departments', '/levels');
+                const select = document.getElementById('education_level');
+                if (!select) return;
+                const selectLevelText = typeof translate === 'function' ? translate('employee.select_level') : 'Select Level';
+                select.innerHTML = `<option value="" data-translate="employee.select_level">${selectLevelText}</option>`;
+                levels.forEach(l => {
+                    const option = document.createElement('option');
+                    option.value = l.name;
+                    option.textContent = l.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading levels:', error);
+            }
+        }
+
+        function populatePositionDropdown() {
+            const select = document.getElementById('position_id');
+            const selectPositionText = typeof translate === 'function' ? translate('employee.select_position') : 'Select Position';
+            select.innerHTML = `<option value="" data-translate="employee.select_position">${selectPositionText}</option>`;
+            
+            positions.forEach(pos => {
+                const option = document.createElement('option');
+                option.value = pos.id;
+                option.textContent = pos.name;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadEmployeeForEdit() {
+            try {
+                const employee = await APIService.getEmployee(employeeId);
+                
+                // Populate form fields
+                document.getElementById('username').value = employee.username || '';
+                document.getElementById('username').disabled = true; // Don't allow username change
+                document.getElementById('password').required = false; // Password not required for edit
+                document.getElementById('role').value = employee.role || 'Employee';
+                document.getElementById('first_name').value = employee.first_name || '';
+                document.getElementById('last_name').value = employee.last_name || '';
+                document.getElementById('foreign_name').value = employee.foreign_name || '';
+                document.getElementById('foreign_last_name').value = employee.foreign_last_name || '';
+                document.getElementById('email').value = employee.email || '';
+                document.getElementById('phone').value = employee.phone || '';
+                document.getElementById('gender').value = employee.gender || '';
+                document.getElementById('birth_date').value = employee.birth_date ? employee.birth_date.split('T')[0] : '';
+                document.getElementById('nationality').value = employee.nationality || '';
+                document.getElementById('marital_status').value = employee.marital_status || '';
+                document.getElementById('position_id').value = employee.position_id || '';
+                const instEl = document.getElementById('institution');
+                if (instEl) instEl.value = employee.institution || '';
+                document.getElementById('join_date').value = employee.join_date ? employee.join_date.split('T')[0] : '';
+                const eduEl = document.getElementById('education_level');
+                if (eduEl) eduEl.value = employee.education_level || '';
+                document.getElementById('address').value = employee.address || '';
+                document.getElementById('foreign_address').value = employee.foreign_address || '';
+                document.getElementById('visible_to_parents_in_chat').checked = employee.visible_to_parents_in_chat;
+
+                // Update UI for edit mode
+                const titleEl = document.getElementById('pageTitle');
+                if (titleEl) {
+                    const editEmployeeText = typeof translate === 'function' ? translate('employee.edit_employee') : 'Edit Employee';
+                    titleEl.textContent = editEmployeeText;
+                    titleEl.setAttribute('data-translate', 'employee.edit_employee');
+                }
+
+                const descriptionEl = document.getElementById('pageDescription');
+                if (descriptionEl) {
+                    const editDescriptionText = typeof translate === 'function' ? translate('employee.edit_employee_description') : 'Update employee information, modify personal details, position, and access credentials.';
+                    descriptionEl.textContent = editDescriptionText;
+                    descriptionEl.setAttribute('data-translate', 'employee.edit_employee_description');
+                }
+
+                const submitTextEl = document.querySelector('#submitButton span');
+                if (submitTextEl) {
+                    const saveChangesText = typeof translate === 'function' ? translate('common.save_changes') : 'Save Changes';
+                    submitTextEl.textContent = saveChangesText;
+                }
+
+                const submitIconEl = document.querySelector('#submitButton i');
+                if (submitIconEl) submitIconEl.classList.replace('fa-plus', 'fa-save');
+
+            } catch (error) {
+                console.error('Error loading employee for edit:', error);
+                const errorText = typeof translate === 'function' ? translate('employee.failed_to_load_employee') : 'Failed to load employee data.';
+                document.getElementById('errorText').textContent = errorText;
+                document.getElementById('errorMessage').classList.remove('hidden');
+            }
+        }
+
+        // Form submission
+        document.getElementById('addEmployeeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitButton = document.getElementById('submitButton');
+            const errorDiv = document.getElementById('errorMessage');
+            const errorTextElement = document.getElementById('errorText');
+            const successDiv = document.getElementById('successMessage');
+            const successTextElement = document.getElementById('successText');
+            const loadingDiv = document.getElementById('loadingSpinner');
+            
+            if (submitButton) submitButton.disabled = true;
+            if (errorDiv) errorDiv.classList.add('hidden');
+            if (successDiv) successDiv.classList.add('hidden');
+            if (loadingDiv) loadingDiv.classList.remove('hidden');
+            
+            try {
+                const formData = new FormData(this);
+
+                if (editMode) {
+                    // Don't send password if it's empty
+                    if (!formData.get('password')) {
+                        formData.delete('password');
+                    }
+                    
+                    // Convert FormData to plain object for JSON request
+                    const data = {};
+                    formData.forEach((value, key) => {
+                        data[key] = value;
+                    });
+                    
+                    // Debug: Log what we're sending
+                    console.log('📤 [Edit Employee] Sending update data:', {
+                        employeeId: employeeId,
+                        role: data.role,
+                        allData: data
+                    });
+                    
+                    const result = await APIService.updateEmployee(employeeId, data);
+                    
+                    // Debug: Log response
+                    console.log('📥 [Edit Employee] Update response:', result);
+                    if (successTextElement) {
+                        const successText = typeof translate === 'function' ? translate('employee.employee_updated_successfully') : 'Employee updated successfully!';
+                        successTextElement.textContent = successText;
+                    }
+                } else {
+                    const result = await APIService.createEmployee(formData);
+                    if (successTextElement) {
+                        const successText = typeof translate === 'function' ? translate('employee.employee_created_successfully') : 'Employee created successfully!';
+                        successTextElement.textContent = successText;
+                    }
+                }
+                if (successDiv) successDiv.classList.remove('hidden');
+                
+                // Reset form
+                this.reset();
+                
+                // Redirect to employees list after 2 seconds
+                setTimeout(() => {
+                    window.location.href = 'employees-simple.html';
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error creating employee:', error);
+                const defaultErrorText = typeof translate === 'function' ? translate('employee.error_creating_employee') : 'An error occurred while creating the employee.';
+                const errorMessage = error.message || defaultErrorText;
+                if (errorTextElement) {
+                    errorTextElement.textContent = errorMessage;
+                } else {
+                    console.error('Error text element not found');
+                    // Fallback: show alert if element doesn't exist
+                    alert('Error: ' + errorMessage);
+                }
+                if (errorDiv) {
+                    errorDiv.classList.remove('hidden');
+                }
+            } finally {
+                if (submitButton) submitButton.disabled = false;
+                if (loadingDiv) loadingDiv.classList.add('hidden');
+            }
+        });
+    </script>
+    <script src="../assets/js/navbar.js"></script>
+</body>
+</html>
+

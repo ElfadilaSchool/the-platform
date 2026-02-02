@@ -1,0 +1,2872 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نظام الشكاوي - الموظف</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1e40af;
+      --secondary: #8b5cf6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #06b6d4;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      --radius-sm: 0.375rem;
+      --radius: 0.5rem;
+      --radius-md: 0.75rem;
+      --radius-lg: 1rem;
+      --radius-xl: 1.5rem;
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8f9fa;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      line-height: 1.6;
+    }
+
+    .notification-button {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: white;
+      border: none;
+      border-radius: 999px;
+      box-shadow: var(--shadow-lg);
+      padding: 0.5rem 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+      font-weight: 600;
+      z-index: 1200;
+      transition: var(--transition);
+    }
+
+    .notification-button:hover {
+      transform: translateY(-2px);
+    }
+
+    .notification-button .notification-count {
+      min-width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--danger);
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+    }
+
+    .notification-button:not(.has-notifications) .notification-count {
+      background: var(--gray-200);
+      color: var(--gray-600);
+    }
+
+    .notification-button.pulse {
+      animation: badgePulse 0.6s ease-in-out 2;
+    }
+
+    @keyframes badgePulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 rgba(37, 99, 235, 0); }
+      50% { transform: scale(1.08); box-shadow: 0 0 18px rgba(37, 99, 235, 0.3); }
+      100% { transform: scale(1); box-shadow: 0 0 0 rgba(37, 99, 235, 0); }
+    }
+
+    .notification-item {
+      width: 100%;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+      text-align: right;
+      background: white;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-bottom: 0.5rem;
+    }
+
+    .notification-item:hover {
+      background: var(--gray-50);
+      border-color: var(--primary);
+    }
+
+    .notification-item .notification-date {
+      font-size: 0.75rem;
+      color: var(--gray-500);
+      margin-top: 0.25rem;
+    }
+
+    .complaint-card.highlight {
+      position: relative;
+      animation: highlightPulse 1.2s ease-in-out 2;
+      border-color: var(--primary);
+    }
+
+    @keyframes highlightPulse {
+      0% { box-shadow: 0 0 0 rgba(37,99,235,0); transform: scale(1); }
+      50% { box-shadow: 0 0 20px rgba(37,99,235,0.45); transform: scale(1.02); }
+      100% { box-shadow: 0 0 0 rgba(37,99,235,0); transform: scale(1); }
+    }
+
+    .app-container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .page-header {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-xl);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+
+    .page-header h1 {
+      font-size: 2rem;
+      color: var(--gray-900);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .page-header p {
+      color: var(--gray-600);
+      font-size: 1rem;
+    }
+
+    /* Alert System */
+    .alert-container {
+      position: fixed;
+      top: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      min-width: 320px;
+      max-width: 500px;
+    }
+
+    .alert {
+      background: white;
+      padding: 1rem 1.5rem;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      display: none;
+      align-items: center;
+      gap: 1rem;
+      animation: slideDown 0.3s ease-out;
+      border-right: 4px solid;
+    }
+
+    .alert.show {
+      display: flex;
+    }
+
+    .alert.success {
+      border-color: var(--success);
+    }
+
+    .alert.error {
+      border-color: var(--danger);
+    }
+
+    .alert-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .alert-message {
+      flex: 1;
+      color: var(--gray-800);
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-lg);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--gradient);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .stat-card.total::before {
+      background: linear-gradient(90deg, #06b6d4, #0891b2);
+    }
+
+    .stat-card.pending::before {
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+
+    .stat-card.completed::before {
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: var(--gray-600);
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+
+    /* Card Component */
+    .card {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 2rem;
+    }
+
+    .card-header {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--gray-100);
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    /* Form Styles */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .form-label .required {
+      color: var(--danger);
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      transition: var(--transition);
+      background: white;
+      color: var(--gray-900);
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-textarea {
+      min-height: 120px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .form-file {
+      padding: 0.5rem;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem;
+      background: var(--gray-50);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .checkbox-group:hover {
+      background: var(--gray-100);
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 1.25rem;
+      height: 1.25rem;
+      cursor: pointer;
+    }
+
+    .checkbox-label {
+      font-size: 0.95rem;
+      color: var(--gray-700);
+      font-weight: 500;
+    }
+
+    .form-hint {
+      font-size: 0.8rem;
+      color: var(--gray-500);
+      margin-top: 0.25rem;
+    }
+
+    /* Button Styles */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.875rem 1.75rem;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(37, 99, 235, 0.4);
+    }
+
+    /* Complaints Grid */
+    .complaints-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .view-controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .view-toggle {
+      display: inline-flex;
+      padding: 0.25rem;
+      background: var(--gray-200);
+      border-radius: 999px;
+      gap: 0.25rem;
+    }
+
+    .view-toggle button {
+      border: none;
+      background: transparent;
+      padding: 0.45rem 1.25rem;
+      border-radius: 999px;
+      font-weight: 600;
+      color: var(--gray-700);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .view-toggle button.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: var(--shadow);
+    }
+
+    #myComplaints[data-view-mode="table"] {
+      display: block;
+    }
+
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table.complaints-table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+    }
+
+    table.complaints-table th,
+    table.complaints-table td {
+      text-align: right;
+      padding: 0.85rem;
+      border-bottom: 1px solid var(--gray-200);
+      vertical-align: top;
+      font-size: 0.9rem;
+    }
+
+    table.complaints-table thead {
+      background: var(--gray-100);
+    }
+
+    table.complaints-table th {
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    table.complaints-table th.sortable:hover {
+      background: var(--gray-200);
+    }
+
+    table.complaints-table th .sort-icon {
+      display: inline-block;
+      margin-right: 0.25rem;
+      font-size: 0.75rem;
+      opacity: 0.5;
+    }
+
+    table.complaints-table th.sort-asc .sort-icon::after {
+      content: '▲';
+      opacity: 1;
+    }
+
+    table.complaints-table th.sort-desc .sort-icon::after {
+      content: '▼';
+      opacity: 1;
+    }
+
+    table.complaints-table tbody tr {
+      background: white;
+    }
+
+    table.complaints-table tbody tr:nth-child(even) {
+      background: var(--gray-50);
+    }
+
+    table.complaints-table tbody tr:hover {
+      background: var(--gray-100);
+    }
+
+    .status-pending {
+      color: #f59e0b;
+      font-weight: 600;
+    }
+
+    .status-completed {
+      color: #10b981;
+      font-weight: 600;
+    }
+
+    .status-pending {
+      color: #f59e0b;
+      font-weight: 600;
+    }
+
+    .status-rejected {
+      color: #ef4444;
+      font-weight: 600;
+    }
+
+    table.complaints-table th.actions-header {
+      text-align: center;
+      min-width: 400px;
+    }
+
+    table.complaints-table td.actions-cell {
+      text-align: center;
+    }
+
+    table.complaints-table .table-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: nowrap;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .table-filters {
+      background: white;
+      padding: 1rem;
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      box-shadow: var(--shadow);
+    }
+
+    .table-filters input,
+    .table-filters select {
+      padding: 0.5rem;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+    }
+
+    .create-complaint-btn {
+      background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .create-complaint-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(16, 185, 129, 0.4);
+    }
+
+    .section-toggle {
+      background:white;
+      border-radius:var(--radius-xl);
+      padding:0.35rem;
+      margin-bottom:2rem;
+      box-shadow:var(--shadow-lg);
+      display:inline-flex;
+      gap:0.35rem;
+    }
+
+    .section-btn {
+      border:none;
+      background:transparent;
+      padding:0.65rem 1.75rem;
+      border-radius:var(--radius-lg);
+      font-weight:600;
+      cursor:pointer;
+      color:var(--gray-700);
+      transition:var(--transition);
+    }
+
+    .section-btn.active {
+      background:white;
+      color:var(--primary);
+      box-shadow:var(--shadow);
+    }
+
+    .section-btn:not(.active):hover {
+      background:var(--gray-100);
+    }
+
+    .section-content {
+      display:none;
+    }
+
+    .section-content.active {
+      display:block;
+    }
+
+    tr.highlight {
+      background: #dbeafe !important;
+      animation: highlightPulse 1.2s ease-in-out 2;
+    }
+
+    .photo-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1600;
+      padding: 1rem;
+    }
+
+    .photo-modal.show {
+      display: flex;
+    }
+
+    .photo-modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      max-width: 90vw;
+      max-height: 90vh;
+      box-shadow: var(--shadow-xl);
+      position: relative;
+    }
+
+    .photo-modal-content img {
+      max-width: 80vw;
+      max-height: 80vh;
+      object-fit: contain;
+      border-radius: 8px;
+      display: block;
+    }
+
+    .photo-modal-close {
+      position: absolute;
+      top: 0.25rem;
+      left: 0.5rem;
+      border: none;
+      background: transparent;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--gray-600);
+    }
+
+    .complaint-card {
+      background: white;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .complaint-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      width: 4px;
+      border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    }
+
+    .complaint-card.pending::before {
+      background: var(--warning);
+    }
+
+    .complaint-card.completed::before {
+      background: var(--success);
+    }
+
+    .complaint-card:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .complaint-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      gap: 0.75rem;
+    }
+
+    .complaint-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .badge-type {
+      background: #eff6ff;
+      color: #1e40af;
+    }
+
+    .badge-status {
+      background: #ecfccb;
+      color: #166534;
+    }
+
+    .badge-status.pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-priority {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-priority.medium {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-priority.low {
+      background: #f0fdf4;
+      color: #166534;
+    }
+
+    .badge-anon {
+      background: #ede9fe;
+      color: #6b21a8;
+    }
+
+    .complaint-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+    }
+
+    .complaint-description {
+      color: var(--gray-600);
+      margin-bottom: 1rem;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .complaint-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--gray-100);
+      font-size: 0.875rem;
+      color: var(--gray-500);
+    }
+
+    .complaint-attachment {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .complaint-attachment:hover {
+      color: var(--primary-dark);
+    }
+
+    .manager-response {
+      margin-top: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfccb 100%);
+      border-radius: 999px;
+      border-right: 2px solid var(--success);
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .response-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--gray-400);
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-state-text {
+      font-size: 1.125rem;
+      font-weight: 500;
+    }
+
+    /* Loading State */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      color: var(--gray-500);
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--gray-200);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      .page-header h1 {
+        font-size: 1.5rem;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .complaints-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+      }
+    }
+  </style>
+  <script src="vendor/string-direction.min.js"></script>
+  <script src="vendor/arabic-reshaper.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Alert Container -->
+    <div class="alert-container">
+      <div id="alert" class="alert">
+        <span class="alert-icon">✓</span>
+        <span class="alert-message"></span>
+      </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1>
+        <span>📨</span>
+        نظام إدارة الشكاوي والاقتراحات
+      </h1>
+      <p>قم بإرسال شكاويك واقتراحاتك ومتابعة حالتها بكل سهولة</p>
+    </div>
+
+    <div class="section-toggle" id="sectionToggle">
+      <button class="section-btn active" data-section="complaints">📋 الشكاوي</button>
+      <button class="section-btn" data-section="suggestions">💡 الاقتراحات</button>
+    </div>
+
+    <!-- Complaints Tab Content -->
+    <div id="complaintsTab" class="section-content active">
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <div class="stat-label">إجمالي الشكاوي</div>
+        <div class="stat-value" id="statTotal">0</div>
+      </div>
+      <div class="stat-card pending">
+        <div class="stat-label">قيد المتابعة</div>
+        <div class="stat-value" id="statPending">0</div>
+      </div>
+      <div class="stat-card completed">
+        <div class="stat-label">تمت المعالجة</div>
+        <div class="stat-value" id="statTreated">0</div>
+      </div>
+    </div>
+
+    <!-- My Complaints -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">
+          <span>📋</span>
+          شكاويي
+        </h2>
+      </div>
+      <div class="view-controls">
+        <div class="view-toggle">
+          <button type="button" class="toggle-btn" data-view-mode="card">🗂️ عرض البطاقات</button>
+          <button type="button" class="toggle-btn" data-view-mode="table">📋 عرض الجدول</button>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="button" class="create-complaint-btn" onclick="openEmployeeCreateComplaintModal()">➕ إنشاء شكوى جديدة</button>
+          <button type="button" class="btn btn-primary" id="exportPdfView">📝 تصدير العرض PDF</button>
+        </div>
+      </div>
+      <div id="myComplaints" class="complaints-grid">
+        <div class="loading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for messages -->
+    <div id="messagesModal" style="position:fixed;inset:0;background:rgba(15,23,42,0.5);display:none;align-items:center;justify-content:center;z-index:1100;">
+      <div style="background:white;border-radius:16px;max-width:600px;width:95%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+        <div style="padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+          <h3 style="font-size:1.125rem;font-weight:700;color:#111827;">الردود</h3>
+          <button onclick="closeMessagesModal()" style="border:none;background:none;font-size:1.25rem;cursor:pointer;">✕</button>
+        </div>
+        <div id="messagesList" style="padding:1rem 1.5rem;overflow-y:auto;flex:1;"></div>
+        <div style="padding:1rem 1.5rem;border-top:1px solid #e5e7eb;">
+          <label class="form-label">إضافة رد</label>
+          <div id="templatePicker" style="margin-bottom:0.5rem;"></div>
+          <textarea id="newMessageBody" class="form-textarea" placeholder="اكتب ردك هنا..."></textarea>
+          <button class="btn btn-primary" style="margin-top:0.75rem;" onclick="sendEmployeeMessage()">إرسال الرد</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="photoModal" class="photo-modal" onclick="event.target.id === 'photoModal' && closePhotoModal()">
+      <div class="photo-modal-content">
+        <button class="photo-modal-close" onclick="closePhotoModal()">✕</button>
+        <img id="photoPreview" src="" alt="صورة الشكوى">
+      </div>
+    </div>
+
+    <!-- Create Complaint Modal -->
+    <div id="employeeCreateComplaintModal" style="position:fixed;inset:0;background:rgba(15,23,42,0.5);display:none;align-items:center;justify-content:center;z-index:1100;">
+      <div style="background:white;border-radius:16px;max-width:700px;width:95%;max-height:90vh;overflow-y:auto;padding:2rem;box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+          <h3 style="font-size:1.5rem;font-weight:700;color:#111827;">➕ إنشاء شكوى جديدة</h3>
+          <button onclick="closeEmployeeCreateComplaintModal()" style="border:none;background:none;font-size:1.5rem;cursor:pointer;color:#6b7280;">✕</button>
+        </div>
+        <form id="employeeNewComplaintForm" onsubmit="submitEmployeeNewComplaint(event)">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));gap:1rem;margin-bottom:1rem;">
+            <div>
+              <label style="display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">
+                نوع الشكوى <span style="color:#ef4444;">*</span>
+              </label>
+              <select id="employeeNewComplaintTypeId" name="typeId" class="form-select" required style="width:100%;padding:0.625rem;border:1px solid #d1d5db;border-radius:8px;">
+                <option value="">اختر النوع</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">
+                الأولوية
+              </label>
+              <select name="priority" style="width:100%;padding:0.625rem;border:1px solid #d1d5db;border-radius:8px;">
+                <option value="low">منخفضة</option>
+                <option value="medium" selected>متوسطة</option>
+                <option value="high">مرتفعة</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-bottom:1rem;">
+            <label style="display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">
+              عنوان الشكوى <span style="color:#ef4444;">*</span>
+            </label>
+            <input type="text" name="title" required style="width:100%;padding:0.625rem;border:1px solid #d1d5db;border-radius:8px;" placeholder="أدخل عنواناً واضحاً للشكوى">
+          </div>
+          <div style="margin-bottom:1rem;">
+            <label style="display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">
+              الوصف التفصيلي
+            </label>
+            <textarea name="description" style="width:100%;padding:0.625rem;border:1px solid #d1d5db;border-radius:8px;min-height:120px;resize:vertical;" placeholder="اشرح تفاصيل الشكوى بوضوح..."></textarea>
+          </div>
+          <div style="margin-bottom:1rem;">
+            <label style="display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">
+              ملف مرفق (اختياري)
+            </label>
+            <input type="file" id="employeeModalAttachment" class="form-input form-file" accept="image/*,.pdf,.doc,.docx" multiple>
+            <div id="employeeModalAttachmentsList" style="margin-top:0.5rem;display:flex;flex-direction:column;gap:0.5rem;"></div>
+          </div>
+          <div style="margin-bottom:1rem;">
+            <label style="display:flex;align-items:center;gap:0.5rem;padding:0.75rem;background:#f9fafb;border-radius:8px;cursor:pointer;">
+              <input type="checkbox" name="isAnonymous" style="width:1.25rem;height:1.25rem;cursor:pointer;">
+              <span style="font-size:0.95rem;color:#374151;">إرسال كشكوى مجهولة</span>
+            </label>
+          </div>
+          <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.5rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeEmployeeCreateComplaintModal()">إلغاء</button>
+            <button type="submit" class="btn btn-primary">إرسال الشكوى</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    </div>
+    <!-- End Complaints Tab -->
+
+    <!-- Suggestions Content -->
+    <div id="suggestionsTab" class="section-content">
+      <div id="suggestionsContent">
+        <div class="loading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+
+  <!-- Create Suggestion Modal -->
+  <div id="createSuggestionModal" style="position:fixed;inset:0;background:rgba(15,23,42,0.5);display:none;align-items:center;justify-content:center;z-index:1100;">
+    <div style="background:white;border-radius:16px;max-width:700px;width:95%;max-height:90vh;overflow-y:auto;padding:2rem;box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <h3 style="font-size:1.5rem;font-weight:700;color:#111827;">➕ إضافة اقتراح جديد</h3>
+        <button onclick="closeCreateSuggestionModal()" style="border:none;background:none;font-size:1.5rem;cursor:pointer;color:#6b7280;">✕</button>
+      </div>
+      <form id="newSuggestionForm" onsubmit="submitSuggestion(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">
+              عنوان الاقتراح
+              <span class="required">*</span>
+            </label>
+            <input 
+              type="text" 
+              name="title" 
+              id="suggestionTitle"
+              class="form-input" 
+              placeholder="أدخل عنواناً واضحاً للاقتراح"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">الفئة (اختياري)</label>
+            <input 
+              type="text" 
+              name="category" 
+              id="suggestionCategory"
+              class="form-input" 
+              placeholder="مثال: تحسينات، عمليات، تدريب..."
+            >
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">الوصف التفصيلي</label>
+            <textarea 
+              name="description" 
+              id="suggestionDescription"
+              class="form-textarea"
+              placeholder="اشرح تفاصيل الاقتراح بوضوح..."
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">القسم (اختياري)</label>
+            <select id="suggestionDepartmentId" name="departmentId" class="form-select">
+              <option value="">اختر القسم</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">ملف مرفق (اختياري)</label>
+            <input 
+              type="file" 
+              id="suggestionAttachment" 
+              class="form-input form-file"
+              accept="image/*,.pdf,.doc,.docx"
+              multiple
+            >
+            <div id="suggestionAttachmentsList" style="margin-top:0.5rem;display:flex;flex-direction:column;gap:0.5rem;"></div>
+            <span class="form-hint">الحد الأقصى: 5 ميجابايت</span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submitSuggestionBtn">
+          <span>📤</span>
+          إرسال الاقتراح
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Suggestion Messages Modal -->
+  <div id="suggestionMessagesModal" style="position:fixed;inset:0;background:rgba(15,23,42,0.5);display:none;align-items:center;justify-content:center;z-index:1200;">
+    <div style="background:white;border-radius:16px;max-width:650px;width:95%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 10px 30px rgba(0,0,0,0.25);">
+      <div style="padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="font-size:1.1rem;font-weight:700;color:#111827;display:flex;align-items:center;gap:0.4rem;">
+          <span>💬</span>
+          <span>ردود الإدارة على الاقتراح</span>
+        </h3>
+        <button onclick="closeSuggestionMessagesModal()" style="border:none;background:none;font-size:1.25rem;cursor:pointer;">✕</button>
+      </div>
+      <div id="suggestionMessagesList" style="padding:1rem 1.5rem;overflow-y:auto;flex:1;"></div>
+      <div style="padding:1rem 1.5rem;border-top:1px solid #e5e7eb;">
+        <label class="form-label" style="margin-bottom:0.4rem;">إضافة رد</label>
+        <textarea id="newSuggestionMessageBody" class="form-textarea" placeholder="اكتب ردك هنا..."></textarea>
+        <button class="btn btn-primary" style="margin-top:0.5rem;" onclick="sendSuggestionMessage()">إرسال الرد</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="vendor/html2canvas.min.js"></script>
+  <script src="vendor/jspdf.umd.min.js"></script>
+  <script>
+    // Configuration
+    const HR_TASKS_HOST = (() => {
+      try {
+        const parentBase = window.API_BASE || (window.parent && window.parent.API_BASE);
+        if (parentBase) return parentBase.replace(/\/$/, '');
+        if (window.location.origin && window.location.origin !== 'null') return window.location.origin;
+      } catch (_) {}
+      return 'http://localhost:3020';
+    })();
+
+    const CONFIG = {
+      API_BASE: `${HR_TASKS_HOST}/api/complaints`,
+      ALERT_DURATION: 4000
+    };
+
+    const VIEW_MODES = { CARD: 'card', TABLE: 'table' };
+    const SUGGESTION_VIEW_MODES = { CARD: 'card', TABLE: 'table' };
+    const SECTION_KEYS = { COMPLAINTS: 'complaints', SUGGESTIONS: 'suggestions' };
+    let employeeViewMode = localStorage.getItem('employeeComplaintsView') || VIEW_MODES.CARD;
+    let suggestionViewMode = localStorage.getItem('employeeSuggestionsView') || SUGGESTION_VIEW_MODES.CARD;
+    let activeSection = localStorage.getItem('employeeActiveSection') || SECTION_KEYS.COMPLAINTS;
+    let employeeComplaintsCache = [];
+    let pdfBusy = false;
+    const PRIORITY_LABELS = { high: 'مرتفعة', medium: 'متوسطة', low: 'منخفضة' };
+    const STATUS_LABELS = { completed: 'تمت المعالجة', pending: 'قيد المتابعة' };
+    const PDF_FONT_CONFIG = {
+      url: 'vendor/fonts/NotoSansArabic-Regular.ttf',
+      vfsName: 'NotoSansArabic-Regular.ttf',
+      fontName: 'NotoSansArabic'
+    };
+    let pdfFontData = null;
+    let pdfFontPromise = null;
+
+    function fixArabicText(text) {
+      if (!text) return '';
+      const str = String(text);
+      const segments = [];
+      let current = '';
+      let currentIsArabic = null;
+      const isArabicChar = (char) => {
+        if (!char) return false;
+        const code = char.charCodeAt(0);
+        const dirLib = window.stringDirection;
+        if (dirLib && typeof dirLib.getDirection === 'function') {
+          const dir = dirLib.getDirection(char);
+          if (dir === 'rtl') return true;
+        }
+        return (
+          (code >= 0x0600 && code <= 0x06FF) ||
+          (code >= 0x0750 && code <= 0x077F) ||
+          (code >= 0x08A0 && code <= 0x08FF) ||
+          (code >= 0xFB50 && code <= 0xFDFF) ||
+          (code >= 0xFE70 && code <= 0xFEFF)
+        );
+      };
+      for (let i = 0; i < str.length; i++) {
+        const char = str[i];
+        const charIsArabic = isArabicChar(char);
+        if (currentIsArabic === null) {
+          currentIsArabic = charIsArabic;
+          current = char;
+          continue;
+        }
+        if (charIsArabic === currentIsArabic) {
+          current += char;
+        } else {
+          segments.push({ text: current, isArabic: currentIsArabic });
+          current = char;
+          currentIsArabic = charIsArabic;
+        }
+      }
+      if (current) segments.push({ text: current, isArabic: currentIsArabic });
+      const reshape = (value) => {
+        if (
+          window.ArabicReshaper &&
+          typeof window.ArabicReshaper.convertArabicCharacters === 'function'
+        ) {
+          return window.ArabicReshaper.convertArabicCharacters(value);
+        }
+        return value;
+      };
+      const processed = segments.map(segment => {
+        if (!segment.text) return '';
+        if (segment.isArabic) {
+          const shaped = reshape(segment.text);
+          return shaped.split('').reverse().join('');
+        }
+        return segment.text;
+      });
+      return processed.reverse().join('');
+    }
+
+    function arrayBufferToBase64(buffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return window.btoa(binary);
+    }
+
+    async function ensureArabicFont(doc) {
+      if (!pdfFontData) {
+        if (!pdfFontPromise) {
+          pdfFontPromise = fetch(PDF_FONT_CONFIG.url)
+            .then(res => {
+              if (!res.ok) throw new Error('font fetch failed');
+              return res.arrayBuffer();
+            })
+            .then(arrayBufferToBase64)
+            .then(data => { pdfFontData = data; })
+            .catch(err => {
+              console.error('Arabic font load error', err);
+              pdfFontPromise = null;
+              throw err;
+            });
+        }
+        await pdfFontPromise;
+      }
+      if (pdfFontData) {
+        doc.addFileToVFS(PDF_FONT_CONFIG.vfsName, pdfFontData);
+        doc.addFont(PDF_FONT_CONFIG.vfsName, PDF_FONT_CONFIG.fontName, 'normal');
+        doc.setFont(PDF_FONT_CONFIG.fontName, 'normal');
+      }
+    }
+
+    function createPdfWriter(doc) {
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 60;
+      const maxWidth = pageWidth - margin * 2;
+      const baseLineHeight = 18;
+      const baseFontSize = 12;
+      const headingFontSize = 15;
+      const labelFontSize = 13;
+      let lineHeight = baseLineHeight;
+      let cursorY = margin;
+
+      const ensureSpace = (height = lineHeight) => {
+        if (cursorY + height > pageHeight - margin) {
+          doc.addPage();
+          doc.setFont(PDF_FONT_CONFIG.fontName, 'normal');
+          doc.setFontSize(baseFontSize);
+          cursorY = margin;
+        }
+      };
+
+      const writeParagraph = (text, { allowEmpty = false } = {}) => {
+        if (!allowEmpty && (text === undefined || text === null || text === '')) return;
+        const safeText = text === undefined || text === null || text === '' ? '—' : String(text);
+        const fixedText = fixArabicText(safeText);
+        const lines = doc.splitTextToSize(fixedText, maxWidth);
+        lines.forEach(line => {
+          ensureSpace();
+          doc.text(line, pageWidth - margin, cursorY, { align: 'right' });
+          cursorY += lineHeight;
+        });
+      };
+
+      const writeField = (label, value, fallback = '—') => {
+        const display = value === undefined || value === null || value === '' ? fallback : value;
+        ensureSpace(lineHeight * 2);
+        const prevSize = doc.getFontSize();
+        doc.setFontSize(labelFontSize);
+        doc.text(fixArabicText(label), pageWidth - margin, cursorY, { align: 'right' });
+        cursorY += lineHeight;
+        doc.setFontSize(baseFontSize);
+        doc.text(fixArabicText(String(display)), pageWidth - margin, cursorY, { align: 'right' });
+        cursorY += lineHeight;
+        doc.setFontSize(prevSize);
+      };
+
+      const writeSection = (title) => {
+        ensureSpace(lineHeight);
+        const prevSize = doc.getFontSize();
+        doc.setFontSize(headingFontSize);
+        doc.text(fixArabicText(title), pageWidth - margin, cursorY, { align: 'right' });
+        cursorY += lineHeight;
+        doc.setFontSize(prevSize);
+      };
+
+      const drawDivider = () => {
+        ensureSpace(12);
+        doc.setDrawColor(229, 231, 235);
+        doc.line(margin, cursorY, pageWidth - margin, cursorY);
+        cursorY += 12;
+      };
+
+      const addSpacer = (size = 8) => {
+        ensureSpace(size);
+        cursorY += size;
+      };
+
+      const writeList = (items, fallbackText = '—') => {
+        if (!Array.isArray(items) || !items.length) {
+          writeParagraph(fallbackText, { allowEmpty: true });
+          return;
+        }
+        items.forEach(item => writeParagraph(`• ${item}`, { allowEmpty: true }));
+      };
+
+      return { writeParagraph, writeField, writeSection, writeList, drawDivider, addSpacer, ensureSpace, getY: () => cursorY, setY: (val) => { cursorY = val; }, pageWidth, margin };
+    }
+
+    function getAttachments(complaint) {
+      return Array.isArray(complaint.attachments) ? complaint.attachments : [];
+    }
+
+    function getPrimaryAttachmentPath(complaint) {
+      if (complaint.attachment_path) return complaint.attachment_path;
+      const attachments = getAttachments(complaint);
+      return attachments.length ? attachments[0].file_path : null;
+    }
+
+    function getAttachmentLabel(attachment, index) {
+      if (!attachment) return '';
+      const name = attachment.file_name || '';
+      const path = attachment.file_path || '';
+      return `${index + 1}- ${name || path}`;
+    }
+
+    // Utility Functions
+    const $ = (id) => document.getElementById(id);
+    
+    const getUrlParam = (name) => {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name) || params.get('employeeId') || params.get('employee_id');
+    };
+
+    // Alert System
+    const AlertSystem = {
+      show(message, isError = false) {
+        const alert = $('alert');
+        const icon = alert.querySelector('.alert-icon');
+        const text = alert.querySelector('.alert-message');
+        
+        alert.className = `alert ${isError ? 'error' : 'success'} show`;
+        icon.textContent = isError ? '⚠️' : '✓';
+        text.textContent = message;
+        
+        setTimeout(() => {
+          alert.classList.remove('show');
+        }, CONFIG.ALERT_DURATION);
+      }
+    };
+
+    // API Service
+    const ApiService = {
+      async request(url, options = {}) {
+        try {
+          const response = await fetch(url, options);
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({ error: 'خطأ في الخادم' }));
+            throw new Error(data.error || 'حدث خطأ غير متوقع');
+          }
+          return await response.json();
+        } catch (error) {
+          throw error;
+        }
+      },
+
+      async getTypes() {
+        return this.request(`${CONFIG.API_BASE}/types`);
+      },
+
+      async getComplaints(employeeId) {
+        return this.request(`${CONFIG.API_BASE}/employee/${employeeId}`);
+      },
+
+      async createComplaint(employeeId, formData) {
+        return this.request(`${CONFIG.API_BASE}/employee/${employeeId}`, {
+          method: 'POST',
+          body: formData
+        });
+      },
+
+      async getMessages(complaintId, viewer = 'employee') {
+        return this.request(`${CONFIG.API_BASE}/${complaintId}/messages?viewer=${viewer}`);
+      },
+
+      async createMessage(complaintId, payload) {
+        return this.request(`${CONFIG.API_BASE}/${complaintId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+    };
+
+    function formatComplaintDate(dateStr) {
+      return new Date(dateStr).toLocaleDateString('ar-DZ', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function getPhotoButton(complaint) {
+      const photoPath = getPrimaryAttachmentPath(complaint);
+      if (!photoPath) {
+        return `<button class="btn btn-secondary" style="padding:0.5rem 1rem;font-size:0.85rem;" disabled>📷 لا توجد صورة</button>`;
+      }
+      return `<button class="btn btn-secondary" style="padding:0.5rem 1rem;font-size:0.85rem;" data-photo="${photoPath}" onclick="openPhotoModal(this.dataset.photo)">📷 عرض الصورة</button>`;
+    }
+
+    function getEmployeeActions(complaint) {
+      return `
+        <button class="btn btn-secondary" style="padding:0.5rem 1rem;font-size:0.85rem;" onclick="openMessagesModal('${complaint.id}')">💬 عرض الردود</button>
+        ${complaint.status === 'completed' && !complaint.satisfaction_rating ? `
+          <button class="btn btn-primary" style="padding:0.5rem 1rem;font-size:0.85rem;background:#10b981;" onclick="feedbackSystem.requestFeedback('${complaint.id}')">
+            ⭐ تقييم الخدمة
+          </button>
+        ` : ''}
+        ${getPhotoButton(complaint)}
+        <button class="btn btn-secondary" style="padding:0.5rem 1rem;font-size:0.85rem;" onclick="exportEmployeeComplaintPDF('${complaint.id}')">📝 PDF الشكوى</button>
+      `;
+    }
+
+    function renderComplaintCard(complaint) {
+      return `
+        <div class="complaint-card ${complaint.status}" data-complaint-id="${complaint.id}">
+          <div class="complaint-header">
+            <div class="complaint-badges">
+              <span class="badge badge-type">${complaint.type_name}</span>
+              ${complaint.is_anonymous ? '<span class="badge badge-anon">🔒 مجهول</span>' : ''}
+            </div>
+            <span class="badge badge-status ${complaint.status}">
+              ${STATUS_LABELS[complaint.status]}
+            </span>
+          </div>
+
+          <h3 class="complaint-title">${complaint.title}</h3>
+          ${complaint.description ? `<p class="complaint-description">${complaint.description}</p>` : ''}
+
+          <div class="complaint-meta">
+            <span class="badge badge-priority ${complaint.priority}">
+              ${PRIORITY_LABELS[complaint.priority]}
+            </span>
+            <span>🕒 ${formatComplaintDate(complaint.created_at)}</span>
+            ${getAttachments(complaint).length ? `<span style="color:var(--primary);font-weight:600;">📎 ${getAttachments(complaint).length} مرفق</span>` : ''}
+          </div>
+
+          ${complaint.status === 'completed' && complaint.satisfaction_rating ? `
+            <div style="margin-top:0.5rem;font-size:0.9rem;color:#f59e0b;">التقييم: ${'⭐'.repeat(complaint.satisfaction_rating)}</div>
+          ` : ''}
+
+          <div style="margin-top:0.75rem;display:flex;gap:0.5rem;justify-content:flex-end;flex-wrap:wrap;">
+            ${getEmployeeActions(complaint)}
+          </div>
+        </div>
+      `;
+    }
+
+    let employeeSortColumn = null;
+    let employeeSortDirection = 'asc';
+
+    function sortEmployeeComplaints(complaints, column, direction) {
+      const sorted = [...complaints];
+      sorted.sort((a, b) => {
+        let aVal, bVal;
+        switch(column) {
+          case 'title':
+            aVal = a.title || '';
+            bVal = b.title || '';
+            break;
+          case 'priority':
+            const priorityOrder = { high: 3, medium: 2, low: 1 };
+            aVal = priorityOrder[a.priority] || 0;
+            bVal = priorityOrder[b.priority] || 0;
+            break;
+          case 'status':
+            aVal = a.status || '';
+            bVal = b.status || '';
+            break;
+          default:
+            return 0;
+        }
+        if (typeof aVal === 'string') {
+          return direction === 'asc' ? aVal.localeCompare(bVal, 'ar') : bVal.localeCompare(aVal, 'ar');
+        }
+        return direction === 'asc' ? aVal - bVal : bVal - aVal;
+      });
+      return sorted;
+    }
+
+    function getEmployeeSortIcon(column) {
+      if (employeeSortColumn !== column) return '<span class="sort-icon"></span>';
+      return `<span class="sort-icon">${employeeSortDirection === 'asc' ? '▲' : '▼'}</span>`;
+    }
+
+    function renderComplaintsTable(complaints) {
+      const sortedComplaints = employeeSortColumn ? sortEmployeeComplaints(complaints, employeeSortColumn, employeeSortDirection) : complaints;
+      return `
+        <div class="table-filters">
+          <input type="text" id="employeeTableFilterTitle" placeholder="🔍 بحث في العنوان..." style="flex: 1; min-width: 200px;">
+          <select id="employeeTableFilterPriority" style="min-width: 120px;">
+            <option value="">جميع الأولويات</option>
+            <option value="high">مرتفعة</option>
+            <option value="medium">متوسطة</option>
+            <option value="low">منخفضة</option>
+          </select>
+          <select id="employeeTableFilterStatus" style="min-width: 120px;">
+            <option value="">جميع الحالات</option>
+            <option value="pending">قيد المعالجة</option>
+            <option value="completed">تمت المعالجة</option>
+          </select>
+          <button class="btn btn-primary" onclick="applyEmployeeTableFilters()" style="padding: 0.5rem 1rem;">تطبيق</button>
+          <button class="btn btn-secondary" onclick="resetEmployeeTableFilters()" style="padding: 0.5rem 1rem;">إعادة تعيين</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="complaints-table">
+            <thead>
+              <tr>
+                <th>النوع</th>
+                <th class="sortable" onclick="handleEmployeeSort('title')">العنوان ${getEmployeeSortIcon('title')}</th>
+                <th>الوصف</th>
+                <th class="sortable" onclick="handleEmployeeSort('priority')">الأولوية ${getEmployeeSortIcon('priority')}</th>
+                <th class="sortable" onclick="handleEmployeeSort('status')">الحالة ${getEmployeeSortIcon('status')}</th>
+                <th>التاريخ</th>
+                <th class="actions-header">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sortedComplaints.map(complaint => `
+                <tr data-complaint-id="${complaint.id}">
+                  <td>${complaint.type_name}</td>
+                  <td>${complaint.title}</td>
+                  <td>${complaint.description || '-'}</td>
+                  <td>${PRIORITY_LABELS[complaint.priority]}</td>
+                  <td><span class="status-${complaint.status}">${STATUS_LABELS[complaint.status]}</span></td>
+                  <td>${formatComplaintDate(complaint.created_at)}</td>
+                  <td class="actions-cell">
+                    <div class="table-actions">
+                      ${getEmployeeActions(complaint)}
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function handleEmployeeSort(column) {
+      if (employeeSortColumn === column) {
+        employeeSortDirection = employeeSortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        employeeSortColumn = column;
+        employeeSortDirection = 'asc';
+      }
+      const container = $('myComplaints');
+      if (container) renderComplaintsView(container, employeeComplaintsCache);
+    }
+
+    function applyEmployeeTableFilters() {
+      const titleFilter = document.getElementById('employeeTableFilterTitle')?.value.toLowerCase() || '';
+      const priorityFilter = document.getElementById('employeeTableFilterPriority')?.value || '';
+      const statusFilter = document.getElementById('employeeTableFilterStatus')?.value || '';
+      
+      let filtered = employeeComplaintsCache.filter(c => {
+        const matchesTitle = !titleFilter || c.title?.toLowerCase().includes(titleFilter);
+        const matchesPriority = !priorityFilter || c.priority === priorityFilter;
+        const matchesStatus = !statusFilter || c.status === statusFilter;
+        return matchesTitle && matchesPriority && matchesStatus;
+      });
+      
+      const container = $('myComplaints');
+      if (container) renderComplaintsView(container, filtered);
+    }
+
+    function resetEmployeeTableFilters() {
+      document.getElementById('employeeTableFilterTitle').value = '';
+      document.getElementById('employeeTableFilterPriority').value = '';
+      document.getElementById('employeeTableFilterStatus').value = '';
+      employeeSortColumn = null;
+      employeeSortDirection = 'asc';
+      const container = $('myComplaints');
+      if (container) renderComplaintsView(container, employeeComplaintsCache);
+    }
+
+    function renderComplaintsView(container, complaints) {
+      container.dataset.viewMode = employeeViewMode;
+      if (!complaints.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <div class="empty-state-text">لا توجد شكاوي حالياً</div>
+          </div>
+        `;
+        return;
+      }
+      container.innerHTML = employeeViewMode === VIEW_MODES.TABLE
+        ? renderComplaintsTable(complaints)
+        : complaints.map(renderComplaintCard).join('');
+      
+      // Re-attach filter event listeners
+      if (employeeViewMode === VIEW_MODES.TABLE) {
+        const titleFilter = document.getElementById('employeeTableFilterTitle');
+        if (titleFilter) {
+          titleFilter.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') applyEmployeeTableFilters();
+          });
+        }
+      }
+    }
+
+    function setEmployeeViewMode(mode) {
+      if (!Object.values(VIEW_MODES).includes(mode)) return;
+      employeeViewMode = mode;
+      localStorage.setItem('employeeComplaintsView', mode);
+      updateViewToggleUI();
+      const container = $('myComplaints');
+      if (container) renderComplaintsView(container, employeeComplaintsCache);
+    }
+
+    function updateViewToggleUI() {
+      document.querySelectorAll('.toggle-btn[data-view-mode]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.viewMode === employeeViewMode);
+      });
+    }
+
+    function initViewToggle() {
+      document.querySelectorAll('.toggle-btn[data-view-mode]').forEach(btn => {
+        btn.addEventListener('click', () => setEmployeeViewMode(btn.dataset.viewMode));
+      });
+      updateViewToggleUI();
+    }
+
+    function openPhotoModal(path) {
+      if (!path) return;
+      const modal = $('photoModal');
+      const img = $('photoPreview');
+      img.src = path;
+      modal.classList.add('show');
+    }
+
+    function closePhotoModal() {
+      const modal = $('photoModal');
+      const img = $('photoPreview');
+      img.src = '';
+      modal.classList.remove('show');
+    }
+
+    async function exportEmployeeComplaintPDF(complaintId) {
+      if (!window.jspdf) {
+        AlertSystem.show('ميزة PDF غير متاحة حالياً', true);
+        return;
+      }
+      const complaint = employeeComplaintsCache.find(c => c.id === complaintId);
+      if (!complaint) {
+        AlertSystem.show('تعذر العثور على الشكوى', true);
+        return;
+      }
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'pt', 'a4');
+        await ensureArabicFont(doc);
+        doc.setR2L(true);
+        doc.setFontSize(12);
+        const writer = createPdfWriter(doc);
+        doc.setFontSize(18);
+        writer.writeParagraph('تقرير الشكوى');
+        doc.setFontSize(12);
+        writer.addSpacer(6);
+        writer.writeField('رقم الشكوى', complaint.id);
+        writer.writeField('العنوان', complaint.title);
+        writer.writeField('النوع', complaint.type_name);
+        writer.writeField('الأولوية', PRIORITY_LABELS[complaint.priority]);
+        writer.writeField('الحالة', STATUS_LABELS[complaint.status]);
+        writer.writeField('تاريخ الإنشاء', formatComplaintDate(complaint.created_at));
+        if (complaint.completed_at) writer.writeField('تاريخ الإغلاق', formatComplaintDate(complaint.completed_at));
+        writer.drawDivider();
+        writer.writeSection('الوصف');
+        writer.writeParagraph(complaint.description || 'لا يوجد وصف');
+        writer.drawDivider();
+        if (complaint.manager_comment) {
+          writer.writeSection('رد الإدارة');
+          writer.writeParagraph(complaint.manager_comment);
+          writer.drawDivider();
+        }
+        if (complaint.status === 'completed' && complaint.satisfaction_rating) {
+          writer.writeSection('تقييمي للخدمة');
+          writer.writeField('التقييم', `${complaint.satisfaction_rating}/5`);
+          writer.writeParagraph(complaint.feedback || 'لا توجد ملاحظات إضافية');
+          writer.drawDivider();
+        }
+        const attachments = getAttachments(complaint);
+        writer.writeSection('المرفقات الخاصة بي');
+        writer.writeList(attachments.map((att, idx) => getAttachmentLabel(att, idx)), 'لا توجد مرفقات');
+        doc.save(`complaint_${complaint.id}.pdf`);
+      } catch (error) {
+        console.error('employee complaint pdf error', error);
+        AlertSystem.show('تعذر إنشاء ملف PDF للشكوى', true);
+      }
+    }
+
+    async function exportCurrentViewPDF() {
+      if (pdfBusy) return;
+      if (!window.html2canvas || !window.jspdf) {
+        AlertSystem.show('ميزة PDF غير متاحة حالياً', true);
+        return;
+      }
+      const container = $('myComplaints');
+      if (!container) return;
+      try {
+        pdfBusy = true;
+        const btn = $('exportPdfView');
+        if (btn) btn.disabled = true;
+        const canvas = await html2canvas(container, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'pt', 'a4');
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const ratio = Math.min(pageWidth / canvas.width, pageHeight / canvas.height);
+        const imgWidth = canvas.width * ratio;
+        const imgHeight = canvas.height * ratio;
+        pdf.addImage(imgData, 'PNG', (pageWidth - imgWidth) / 2, 20, imgWidth, imgHeight);
+        pdf.save('my_complaints.pdf');
+      } catch (error) {
+        console.error('export pdf error', error);
+        AlertSystem.show('تعذر إنشاء ملف PDF', true);
+      } finally {
+        pdfBusy = false;
+        const btn = $('exportPdfView');
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    class NotificationSystem {
+      constructor(userId) {
+        this.userId = userId;
+        this.unreadCount = 0;
+        this.checkInterval = null;
+        this.onNotificationClick = null;
+        this.onNewNotifications = null;
+        this._previousCount = null;
+      }
+
+      async init() {
+        if (!this.userId) return;
+        await this.loadUnreadCount();
+        this.startPolling();
+        this.createNotificationBadge();
+      }
+
+      async loadUnreadCount() {
+        try {
+          const res = await fetch(`${CONFIG.API_BASE}/notifications/${this.userId}/unread-count?ts=${Date.now()}`, {
+            cache: 'no-store'
+          });
+          if (!res.ok) throw new Error('failed');
+          const data = await res.json();
+          const prev = this.unreadCount;
+          this.unreadCount = data.count || 0;
+          if (prev !== null && this.unreadCount > prev && typeof this.onNewNotifications === 'function') {
+            this.onNewNotifications(this.unreadCount - prev);
+          }
+          this._previousCount = prev;
+          this.updateBadge();
+        } catch (e) {
+          console.error('فشل تحميل الإشعارات:', e);
+        }
+      }
+
+      startPolling() {
+        if (this.checkInterval) clearInterval(this.checkInterval);
+        this.checkInterval = setInterval(() => this.loadUnreadCount(), 3000);
+      }
+
+      createNotificationBadge() {
+        if (document.getElementById('notificationBadge')) return;
+        const badge = document.createElement('button');
+        badge.id = 'notificationBadge';
+        badge.type = 'button';
+        badge.className = 'notification-button';
+        badge.innerHTML = `
+          <span class="notification-icon">🔔</span>
+          <span class="notification-count">0</span>
+        `;
+        badge.style.display = 'inline-flex';
+        badge.onclick = () => this.showNotifications();
+        document.body.appendChild(badge);
+      }
+
+      updateBadge() {
+        const badge = document.getElementById('notificationBadge');
+        if (!badge) return;
+        const countEl = badge.querySelector('.notification-count');
+        if (countEl) {
+          countEl.textContent = this.unreadCount > 99 ? '99+' : this.unreadCount;
+        }
+        if (this.unreadCount > 0) {
+          badge.classList.add('has-notifications');
+          if (this._previousCount !== null && this.unreadCount > this._previousCount) {
+            badge.classList.remove('pulse');
+            void badge.offsetWidth;
+            badge.classList.add('pulse');
+          }
+        } else {
+          badge.classList.remove('has-notifications');
+          badge.classList.remove('pulse');
+        }
+      }
+
+      async showNotifications() {
+        try {
+          const res = await fetch(`${CONFIG.API_BASE}/notifications/${this.userId}?ts=${Date.now()}`, {
+            cache: 'no-store'
+          });
+          if (!res.ok) throw new Error('failed');
+          const notifications = await res.json();
+          const modal = this.createNotificationsModal(notifications);
+          document.body.appendChild(modal);
+          await Promise.all(notifications.filter(n => !n.is_read).map(n =>
+            fetch(`${CONFIG.API_BASE}/notifications/${n.id}/read`, { method: 'POST' })
+          ));
+          this.unreadCount = 0;
+          this.updateBadge();
+        } catch (e) {
+          console.error('فشل عرض الإشعارات', e);
+        }
+      }
+
+      createNotificationsModal(notifications) {
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000;';
+        modal.innerHTML = `
+          <div style="background:white;border-radius:16px;max-width:600px;width:90%;max-height:80vh;overflow:auto;padding:1.5rem;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:1rem;align-items:center;">
+              <h3>الإشعارات</h3>
+              <button style="border:none;background:none;font-size:1.25rem;cursor:pointer;">✕</button>
+            </div>
+            <div id="notificationsList">
+              ${notifications.length ? notifications.map(n => `
+                <button class="notification-item" data-notification-id="${n.id}" data-complaint-id="${n.complaint_id || ''}">
+                  <div>${n.message}</div>
+                  <div class="notification-date">${new Date(n.created_at).toLocaleString('ar-DZ')}</div>
+                </button>
+              `).join('') : '<div class="empty">لا توجد إشعارات</div>'}
+            </div>
+          </div>
+        `;
+        modal.querySelector('button').onclick = () => modal.remove();
+        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+
+        modal.querySelectorAll('.notification-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const complaintId = item.dataset.complaintId;
+            const notificationId = item.dataset.notificationId;
+            if (notificationId) {
+              fetch(`${CONFIG.API_BASE}/notifications/${notificationId}/read`, { method: 'POST' }).catch(() => {});
+            }
+            if (complaintId && typeof this.onNotificationClick === 'function') {
+              this.onNotificationClick({ complaintId });
+            }
+            modal.remove();
+          });
+        });
+        return modal;
+      }
+    }
+
+    class ComplaintEscalation {
+      constructor() {
+        this.escalationRules = { high: 24, medium: 72, low: 168 };
+      }
+
+      async checkOverdueComplaints() {
+        try {
+          const res = await fetch(`${CONFIG.API_BASE}/overdue`);
+          let complaints = [];
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) complaints = data;
+          } else {
+            console.error('فشل جلب الشكاوى المتأخرة', await res.text());
+          }
+          complaints.forEach(c => this.escalateComplaint(c));
+        } catch (e) {
+          console.error('فشل فحص الشكاوى المتأخرة:', e);
+        }
+      }
+
+      async escalateComplaint(complaint) {
+        try {
+          await fetch(`${CONFIG.API_BASE}/escalate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ complaintId: complaint.id })
+          });
+        } catch (e) {
+          console.error('فشل التصعيد', e);
+        }
+      }
+    }
+
+    class AttachmentManager {
+      constructor(maxFiles = 5, maxSize = 5 * 1024 * 1024) {
+        this.files = [];
+        this.maxFiles = maxFiles;
+        this.maxSize = maxSize;
+      }
+
+      addFile(file) {
+        if (this.files.length >= this.maxFiles) {
+          AlertSystem.show(`لا يمكن إرفاق أكثر من ${this.maxFiles} ملفات`, true);
+          return;
+        }
+        if (file.size > this.maxSize) {
+          AlertSystem.show('حجم الملف كبير جداً', true);
+          return;
+        }
+        this.files.push(file);
+        this.updateUI();
+      }
+
+      removeFile(index) {
+        this.files.splice(index, 1);
+        this.updateUI();
+      }
+
+      updateUI() {
+        const containers = ['attachmentsList', 'employeeModalAttachmentsList']
+          .map(id => $(id))
+          .filter(Boolean);
+        if (!containers.length) return;
+        const emptyState = '<span style="color:#94a3b8;font-size:0.85rem">لا توجد مرفقات مضافة</span>';
+        const content = !this.files.length
+          ? emptyState
+          : this.files.map((file, idx) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem;background:#f3f4f6;border-radius:8px;">
+            <span>${file.name} (${this.formatSize(file.size)})</span>
+            <button type="button" onclick="attachmentManager.removeFile(${idx})" style="background:#ef4444;color:white;border:none;padding:0.25rem 0.5rem;border-radius:4px;cursor:pointer;">حذف</button>
+          </div>
+        `).join('');
+        containers.forEach(container => {
+          container.innerHTML = content;
+        });
+      }
+
+      formatSize(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+      }
+
+      async uploadAll(complaintId, uploadedBy) {
+        if (!this.files.length) return;
+        const formData = new FormData();
+        this.files.forEach(file => formData.append('attachments', file));
+        if (uploadedBy) formData.append('uploadedBy', uploadedBy);
+        await fetch(`${CONFIG.API_BASE}/${complaintId}/attachments`, {
+          method: 'POST',
+          body: formData
+        });
+        this.files = [];
+        this.updateUI();
+      }
+    }
+
+    class ResponseTemplates {
+      constructor() {
+        this.templates = [
+          { id: 1, title: 'تم استلام الشكوى', body: 'تم استلام شكواك وجاري دراستها. سيتم الرد عليك في أقرب وقت ممكن.' },
+          { id: 2, title: 'قيد المعالجة', body: 'شكواك قيد المعالجة حالياً. نحن نعمل على حلها في أسرع وقت.' },
+          { id: 3, title: 'تم الحل', body: 'تم حل شكواك بنجاح. نأمل أن تكون راضياً عن الخدمة المقدمة.' },
+          { id: 4, title: 'معلومات إضافية', body: 'نحتاج إلى بعض المعلومات الإضافية لمعالجة شكواك. يرجى تزويدنا بالتفاصيل التالية:' }
+        ];
+      }
+
+      showTemplates() {
+        const select = document.createElement('select');
+        select.className = 'form-select';
+        select.innerHTML = '<option value="">اختر رداً جاهزاً</option>' +
+          this.templates.map(t => `<option value="${t.body}">${t.title}</option>`).join('');
+        select.onchange = (e) => {
+          if (e.target.value) $('newMessageBody').value = e.target.value;
+        };
+        return select;
+      }
+    }
+
+    class FeedbackSystem {
+      constructor() {
+        this.currentComplaintId = null;
+        this.currentRating = 0;
+      }
+
+      requestFeedback(complaintId) {
+        this.currentComplaintId = complaintId;
+        this.currentRating = 0;
+        const modal = document.createElement('div');
+        modal.id = 'feedbackModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000;';
+        modal.innerHTML = `
+          <div style="background:white;border-radius:16px;padding:2rem;max-width:500px;width:90%;">
+            <h3 style="margin-bottom:1rem;">تقييم الخدمة</h3>
+            <p style="margin-bottom:1rem;">كيف كانت تجربتك في حل هذه الشكوى؟</p>
+            <div id="ratingStars" style="display:flex;gap:0.5rem;justify-content:center;margin:1rem 0;">
+              ${[1,2,3,4,5].map(i => `<span data-value="${i}" style="font-size:2rem;cursor:pointer;">⭐</span>`).join('')}
+            </div>
+            <textarea id="feedbackText" placeholder="أخبرنا برأيك..." style="width:100%;padding:0.75rem;border:1px solid #d1d5db;border-radius:8px;min-height:100px;margin-bottom:1rem;"></textarea>
+            <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+              <button type="button" id="cancelFeedback" style="padding:0.5rem 1rem;background:#e5e7eb;border:none;border-radius:8px;cursor:pointer;">إلغاء</button>
+              <button type="button" id="submitFeedbackBtn" style="padding:0.5rem 1rem;background:#3b82f6;color:white;border:none;border-radius:8px;cursor:pointer;">إرسال</button>
+            </div>
+          </div>
+        `;
+        modal.addEventListener('click', (e) => {
+          if (e.target.id === 'cancelFeedback' || e.target === modal) modal.remove();
+        });
+        modal.querySelectorAll('#ratingStars span').forEach(star => {
+          star.addEventListener('click', () => {
+            this.currentRating = Number(star.dataset.value);
+            modal.querySelectorAll('#ratingStars span').forEach(s => s.textContent = s.dataset.value <= this.currentRating ? '⭐' : '☆');
+          });
+        });
+        modal.querySelector('#submitFeedbackBtn').onclick = () => this.submitFeedback();
+        document.body.appendChild(modal);
+      }
+
+      async submitFeedback() {
+        if (!this.currentComplaintId || !this.currentRating) {
+          AlertSystem.show('الرجاء اختيار التقييم', true);
+          return;
+        }
+        const comment = document.getElementById('feedbackText').value.trim();
+        await fetch(`${CONFIG.API_BASE}/${this.currentComplaintId}/feedback`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rating: this.currentRating, comment })
+        });
+        const modal = document.getElementById('feedbackModal');
+        if (modal) modal.remove();
+        AlertSystem.show('شكراً لتقييمك');
+        await app.loadComplaints();
+      }
+    }
+
+    class DataExporter {
+      async exportComplaints(filters = {}) {
+        const res = await fetch(`${CONFIG.API_BASE}/export`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filters, format: 'csv' })
+        });
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `complaints_export_${Date.now()}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    // UI Components
+    const UI = {
+      renderStats(data) {
+        const total = data.data.length;
+        const treated = data.data.filter(c => c.status === 'completed').length;
+        const pending = total - treated;
+
+        $('statTotal').textContent = total;
+        $('statTreated').textContent = treated;
+        $('statPending').textContent = pending;
+      },
+
+      renderComplaints(complaints, containerId) {
+        const container = $(containerId);
+        renderComplaintsView(container, complaints);
+      }
+    };
+
+    // App Controller
+    class ComplaintsApp {
+      constructor() {
+        this.employeeId = null;
+      }
+
+      async init() {
+        this.employeeId = getUrlParam('employeeId');
+        
+        if (!this.employeeId) {
+          AlertSystem.show('معرف الموظف مطلوب', true);
+          return;
+        }
+
+      notificationSystem = new NotificationSystem(this.employeeId);
+      notificationSystem.onNotificationClick = ({ complaintId }) => handleNotificationNavigation(complaintId);
+      notificationSystem.onNewNotifications = () => AlertSystem.show('🔔 إشعار جديد', false);
+      await notificationSystem.init();
+
+        await this.loadTypes();
+        await this.loadComplaints();
+        this.setupEventListeners();
+        this.setupModalTypes();
+      }
+
+      async loadTypes() {
+        try {
+          const types = await ApiService.getTypes();
+          const inlineSelect = $('typeId');
+          if (inlineSelect) {
+            inlineSelect.innerHTML = '<option value="">اختر النوع</option>' +
+              types.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+          }
+          const modalSelect = document.getElementById('employeeNewComplaintTypeId');
+          if (modalSelect) {
+            modalSelect.innerHTML = '<option value="">اختر النوع</option>' +
+              types.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+          }
+        } catch (error) {
+          AlertSystem.show(error.message, true);
+        }
+      }
+
+      async setupModalTypes() {
+        try {
+          const types = await ApiService.getTypes();
+          const modalSelect = document.getElementById('employeeNewComplaintTypeId');
+          if (modalSelect) {
+            modalSelect.innerHTML = '<option value="">اختر النوع</option>' +
+              types.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+          }
+        } catch (error) {
+          console.error('Error loading types for modal:', error);
+        }
+      }
+
+      async loadComplaints() {
+        try {
+          const data = await ApiService.getComplaints(this.employeeId);
+          employeeComplaintsCache = data.data || [];
+          UI.renderStats(data);
+          UI.renderComplaints(employeeComplaintsCache, 'myComplaints');
+        } catch (error) {
+          AlertSystem.show(error.message, true);
+        }
+      }
+
+      setupEventListeners() {
+      }
+    }
+
+    let currentComplaintId = null;
+    let notificationSystem;
+    let attachmentManager;
+    let responseTemplates;
+    let feedbackSystem;
+    let escalationSystem;
+
+    function focusComplaintCard(complaintId) {
+      return new Promise((resolve) => {
+        requestAnimationFrame(() => {
+          const card = document.querySelector(`[data-complaint-id="${complaintId}"]`);
+          if (!card) {
+            resolve(false);
+            return;
+          }
+          card.classList.remove('highlight');
+          void card.offsetWidth;
+          card.classList.add('highlight');
+          card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+          setTimeout(() => card.classList.remove('highlight'), 2500);
+          resolve(true);
+        });
+      });
+    }
+
+    async function openMessagesModal(complaintId) {
+      currentComplaintId = complaintId;
+      try {
+        const messages = await ApiService.getMessages(complaintId, 'employee');
+        const container = $('messagesList');
+        if (!messages.length) {
+          container.innerHTML = '<div class="empty">لا توجد ردود بعد</div>';
+        } else {
+          container.innerHTML = messages.map(m => {
+            const date = new Date(m.created_at).toLocaleString('ar-DZ');
+            const roleLabel = m.sender_role === 'director' ? 'المدير' : 'الموظف';
+            return `
+              <div style="margin-bottom:0.75rem;padding:0.75rem;border-radius:10px;background:#f9fafb;">
+                <div style="font-size:0.85rem;color:#4b5563;margin-bottom:0.25rem;">
+                  <strong>${roleLabel}:</strong> ${m.sender_name}
+                </div>
+                <div style="font-size:0.9rem;color:#111827;margin-bottom:0.25rem;">${m.body}</div>
+                <div style="font-size:0.75rem;color:#9ca3af;">🕒 ${date}</div>
+              </div>
+            `;
+          }).join('');
+        }
+        $('newMessageBody').value = '';
+        $('messagesModal').style.display = 'flex';
+        const templateHolder = document.getElementById('templatePicker');
+        if (templateHolder && responseTemplates) {
+          templateHolder.innerHTML = '';
+          templateHolder.appendChild(responseTemplates.showTemplates());
+        }
+      } catch (e) {
+        AlertSystem.show(e.message, true);
+      }
+    }
+
+    function closeMessagesModal() {
+      $('messagesModal').style.display = 'none';
+      currentComplaintId = null;
+    }
+
+    async function sendEmployeeMessage() {
+      if (!currentComplaintId) return;
+      const body = $('newMessageBody').value.trim();
+      if (!body) {
+        AlertSystem.show('الرجاء كتابة الرد', true);
+        return;
+      }
+      try {
+        await ApiService.createMessage(currentComplaintId, {
+          senderId: app.employeeId,
+          senderRole: 'employee',
+          body
+        });
+        $('newMessageBody').value = '';
+        const messages = await ApiService.getMessages(currentComplaintId, 'employee');
+        const container = $('messagesList');
+        container.innerHTML = messages.map(m => {
+          const date = new Date(m.created_at).toLocaleString('ar-DZ');
+          const roleLabel = m.sender_role === 'director' ? 'المدير' : 'الموظف';
+          return `
+            <div style="margin-bottom:0.75rem;padding:0.75rem;border-radius:10px;background:#f9fafb;">
+              <div style="font-size:0.85rem;color:#4b5563;margin-bottom:0.25rem;">
+                <strong>${roleLabel}:</strong> ${m.sender_name}
+              </div>
+              <div style="font-size:0.9rem;color:#111827;margin-bottom:0.25rem;">${m.body}</div>
+              <div style="font-size:0.75rem;color:#9ca3af;">🕒 ${date}</div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        AlertSystem.show(e.message, true);
+      }
+    }
+
+    // Initialize App
+    document.addEventListener('DOMContentLoaded', () => {
+      const appInstance = new ComplaintsApp();
+      app = appInstance;
+      app.init();
+      initViewToggle();
+      initSectionToggle();
+      setActiveSection(activeSection, { skipStorage: true });
+      const pdfBtn = $('exportPdfView');
+      if (pdfBtn) pdfBtn.addEventListener('click', exportCurrentViewPDF);
+      attachmentManager = new AttachmentManager();
+      attachmentManager.updateUI();
+      responseTemplates = new ResponseTemplates();
+      feedbackSystem = new FeedbackSystem();
+      escalationSystem = new ComplaintEscalation();
+      escalationSystem.checkOverdueComplaints();
+      setInterval(() => escalationSystem.checkOverdueComplaints(), 3600000);
+      const modalAttachmentInput = document.getElementById('employeeModalAttachment');
+      if (modalAttachmentInput) {
+        modalAttachmentInput.addEventListener('change', (e) => {
+          if (!attachmentManager) return;
+          Array.from(e.target.files || []).forEach(file => attachmentManager.addFile(file));
+          e.target.value = '';
+        });
+      }
+      window.attachmentManager = attachmentManager;
+      window.feedbackSystem = feedbackSystem;
+      window.responseTemplates = responseTemplates;
+      window.openPhotoModal = openPhotoModal;
+      window.closePhotoModal = closePhotoModal;
+      window.exportEmployeeComplaintPDF = exportEmployeeComplaintPDF;
+      window.exportCurrentViewPDF = exportCurrentViewPDF;
+      window.handleEmployeeSort = handleEmployeeSort;
+      window.applyEmployeeTableFilters = applyEmployeeTableFilters;
+      window.resetEmployeeTableFilters = resetEmployeeTableFilters;
+      window.openEmployeeCreateComplaintModal = openEmployeeCreateComplaintModal;
+      window.closeEmployeeCreateComplaintModal = closeEmployeeCreateComplaintModal;
+      window.submitEmployeeNewComplaint = submitEmployeeNewComplaint;
+      window.loadSuggestions = loadSuggestions;
+      window.openCreateSuggestionModal = openCreateSuggestionModal;
+      window.closeCreateSuggestionModal = closeCreateSuggestionModal;
+      window.submitSuggestion = submitSuggestion;
+      window.viewSuggestionDetail = viewSuggestionDetail;
+      window.openSuggestionMessagesModal = openSuggestionMessagesModal;
+      window.closeSuggestionMessagesModal = closeSuggestionMessagesModal;
+      window.sendSuggestionMessage = sendSuggestionMessage;
+    });
+
+    function openEmployeeCreateComplaintModal() {
+      document.getElementById('employeeCreateComplaintModal').style.display = 'flex';
+      if (app && typeof app.setupModalTypes === 'function') {
+        app.setupModalTypes();
+      }
+    }
+
+    function closeEmployeeCreateComplaintModal() {
+      document.getElementById('employeeCreateComplaintModal').style.display = 'none';
+      document.getElementById('employeeNewComplaintForm').reset();
+    }
+
+    async function submitEmployeeNewComplaint(event) {
+      event.preventDefault();
+      const form = document.getElementById('employeeNewComplaintForm');
+      const formData = new FormData(form);
+      
+      const title = formData.get('title');
+      const typeId = formData.get('typeId');
+      
+      if (!title || !typeId) {
+        AlertSystem.show('يرجى ملء الحقول المطلوبة', true);
+        return;
+      }
+
+      try {
+        formData.append('priority', formData.get('priority') || 'medium');
+        formData.append('isAnonymous', formData.get('isAnonymous') === 'on');
+        
+        const created = await ApiService.createComplaint(app.employeeId, formData);
+        if (attachmentManager && attachmentManager.files.length) {
+          await attachmentManager.uploadAll(created.id, app.employeeId);
+        }
+        
+        AlertSystem.show('تم إنشاء الشكوى بنجاح');
+        closeEmployeeCreateComplaintModal();
+        await app.loadComplaints();
+      } catch (error) {
+        AlertSystem.show(error.message, true);
+      }
+    }
+
+    async function handleNotificationNavigation(complaintId) {
+      try {
+        let found = await focusComplaintCard(complaintId);
+        if (!found) {
+          await app.loadComplaints();
+          found = await focusComplaintCard(complaintId);
+        }
+        if (!found) {
+          AlertSystem.show('تعذر العثور على الشكوى المطلوبة', true);
+          return;
+        }
+        setTimeout(() => openMessagesModal(complaintId), 350);
+      } catch (err) {
+        console.error('navigation error', err);
+        AlertSystem.show('حدث خطأ أثناء فتح الشكوى', true);
+      }
+    }
+
+    // =====================
+    // SUGGESTIONS FUNCTIONS
+    // =====================
+    const SUGGESTIONS_API = `${HR_TASKS_HOST}/api/suggestions`;
+    const SUGGESTION_STATUS_LABELS = { 
+      under_review: 'قيد الدراسة', 
+      accepted: 'تم الاستلام', 
+      rejected: 'تم الاستلام' 
+    };
+    let suggestionsCache = [];
+    activeSection = Object.values(SECTION_KEYS).includes(activeSection) ? activeSection : SECTION_KEYS.COMPLAINTS;
+    employeeViewMode = Object.values(VIEW_MODES).includes(employeeViewMode) ? employeeViewMode : VIEW_MODES.CARD;
+    suggestionViewMode = Object.values(SUGGESTION_VIEW_MODES).includes(suggestionViewMode) ? suggestionViewMode : SUGGESTION_VIEW_MODES.CARD;
+
+    function initSectionToggle() {
+      const toggle = document.getElementById('sectionToggle');
+      if (!toggle) return;
+      toggle.querySelectorAll('.section-btn').forEach(btn => {
+        btn.addEventListener('click', () => setActiveSection(btn.dataset.section));
+      });
+    }
+
+    function setActiveSection(section, { skipStorage } = {}) {
+      if (!Object.values(SECTION_KEYS).includes(section)) {
+        section = SECTION_KEYS.COMPLAINTS;
+      }
+      activeSection = section;
+      if (!skipStorage) {
+        localStorage.setItem('employeeActiveSection', section);
+      }
+      const toggle = document.getElementById('sectionToggle');
+      if (toggle) {
+        toggle.querySelectorAll('.section-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.section === section);
+        });
+      }
+      const complaintsTab = document.getElementById('complaintsTab');
+      const suggestionsTab = document.getElementById('suggestionsTab');
+      if (complaintsTab && suggestionsTab) {
+        complaintsTab.classList.toggle('active', section === SECTION_KEYS.COMPLAINTS);
+        suggestionsTab.classList.toggle('active', section === SECTION_KEYS.SUGGESTIONS);
+      }
+      if (section === SECTION_KEYS.SUGGESTIONS) {
+        loadSuggestions();
+      }
+    }
+
+    async function loadSuggestions() {
+      try {
+        const container = document.getElementById('suggestionsContent');
+        container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+        const data = await ApiService.request(`${SUGGESTIONS_API}/employee/${app.employeeId}`);
+        suggestionsCache = data.data || [];
+        renderSuggestionsView();
+      } catch (error) {
+        AlertSystem.show(error.message, true);
+        document.getElementById('suggestionsContent').innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">فشل تحميل الاقتراحات</div></div>';
+      }
+    }
+
+    function renderSuggestionsView() {
+      const container = document.getElementById('suggestionsContent');
+      if (!container) return;
+      const stats = {
+        total: suggestionsCache.length,
+        under_review: suggestionsCache.filter(s => s.status === 'under_review').length,
+        accepted: suggestionsCache.filter(s => s.status === 'accepted').length,
+        rejected: suggestionsCache.filter(s => s.status === 'rejected').length
+      };
+      const seenSuggestions = stats.accepted + stats.rejected;
+      const hasSuggestions = suggestionsCache.length > 0;
+      const listMarkup = hasSuggestions
+        ? (suggestionViewMode === SUGGESTION_VIEW_MODES.TABLE
+            ? renderSuggestionsTable(suggestionsCache)
+            : `<div id="suggestionsList" class="complaints-grid">
+                ${suggestionsCache.map(renderSuggestionCard).join('')}
+              </div>`)
+        : '<div class="empty-state"><div class="empty-state-icon">💡</div><div class="empty-state-text">لا توجد اقتراحات حالياً</div></div>';
+
+      container.innerHTML = `
+        <div class="stats-grid">
+          <div class="stat-card total">
+            <div class="stat-label">إجمالي الاقتراحات</div>
+            <div class="stat-value">${stats.total}</div>
+          </div>
+          <div class="stat-card pending">
+            <div class="stat-label">قيد الدراسة</div>
+            <div class="stat-value">${stats.under_review}</div>
+          </div>
+          <div class="stat-card completed">
+            <div class="stat-label">تم الاستلام</div>
+            <div class="stat-value">${seenSuggestions}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="view-controls">
+            <div class="card-title" style="display:flex;align-items:center;gap:0.5rem;font-size:1.25rem;font-weight:700;">
+              <span>💡</span>
+              اقتراحاتي
+            </div>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
+              <div class="view-toggle suggestions-view-toggle">
+                <button type="button" class="toggle-btn ${suggestionViewMode === SUGGESTION_VIEW_MODES.CARD ? 'active' : ''}" data-view-mode="card">🗂️ عرض البطاقات</button>
+                <button type="button" class="toggle-btn ${suggestionViewMode === SUGGESTION_VIEW_MODES.TABLE ? 'active' : ''}" data-view-mode="table">📋 عرض الجدول</button>
+              </div>
+              <button type="button" class="create-complaint-btn" onclick="openCreateSuggestionModal()">➕ إضافة اقتراح</button>
+            </div>
+          </div>
+          ${listMarkup}
+        </div>
+      `;
+      bindSuggestionsViewToggle();
+    }
+
+    function bindSuggestionsViewToggle() {
+      document.querySelectorAll('.suggestions-view-toggle .toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => setSuggestionViewMode(btn.dataset.viewMode));
+      });
+    }
+
+    function setSuggestionViewMode(mode) {
+      if (!Object.values(SUGGESTION_VIEW_MODES).includes(mode)) {
+        mode = SUGGESTION_VIEW_MODES.CARD;
+      }
+      suggestionViewMode = mode;
+      localStorage.setItem('employeeSuggestionsView', mode);
+      renderSuggestionsView();
+    }
+
+    function renderSuggestionCard(suggestion) {
+      const statusClass = suggestion.status === 'accepted' ? 'status-completed' : 
+                          suggestion.status === 'rejected' ? 'status-rejected' : 'status-pending';
+      const hasBeenSeen = suggestion.status !== 'under_review';
+      const hasDirectorResponse = !!suggestion.director_comment;
+      return `
+        <div class="complaint-card ${suggestion.status}" data-suggestion-id="${suggestion.id}">
+          <div class="complaint-header">
+            <div class="complaint-badges">
+              ${suggestion.type_name ? `<span class="badge badge-type">${suggestion.type_name}</span>` : ''}
+              ${suggestion.category ? `<span class="badge badge-anon">${suggestion.category}</span>` : ''}
+            </div>
+            <span class="badge badge-status ${statusClass}">
+              ${SUGGESTION_STATUS_LABELS[suggestion.status]}
+            </span>
+          </div>
+          <h3 class="complaint-title">${suggestion.title}</h3>
+          ${suggestion.description ? `<p class="complaint-description">${suggestion.description}</p>` : ''}
+          <div class="complaint-meta">
+            ${suggestion.department_name ? `<span>🏢 ${suggestion.department_name}</span>` : ''}
+            <span>🕒 ${formatComplaintDate(suggestion.created_at)}</span>
+          </div>
+          ${hasBeenSeen ? `
+            <div style="margin-top:0.5rem;display:inline-flex;align-items:center;gap:0.35rem;padding:0.3rem 0.6rem;border-radius:999px;background:#ecfccb;color:#166534;font-size:0.8rem;font-weight:600;">
+              <span>👀</span>
+              <span>تم استلام اقتراحك من الإدارة</span>
+            </div>
+          ` : ''}
+          <div style="margin-top:0.75rem;display:flex;gap:0.5rem;justify-content:flex-end;flex-wrap:wrap;">
+            <button class="btn btn-secondary" style="padding:0.5rem 1rem;font-size:0.85rem;" onclick="viewSuggestionDetail('${suggestion.id}')">👁️ عرض التفاصيل</button>
+            ${hasDirectorResponse ? `
+              <button class="btn btn-primary" style="padding:0.5rem 1rem;font-size:0.85rem;background:#3b82f6;" onclick="openSuggestionMessagesModal('${suggestion.id}')">💬 رد الإدارة</button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSuggestionsTable(list) {
+      return `
+        <div class="table-wrapper">
+          <table class="complaints-table">
+            <thead>
+              <tr>
+                <th>النوع</th>
+                <th>العنوان</th>
+                <th>الوصف</th>
+                <th>القسم</th>
+                <th>الحالة</th>
+                <th>التاريخ</th>
+                <th class="actions-header">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map(s => `
+                <tr data-suggestion-id="${s.id}">
+                  <td>${s.type_name || '—'}</td>
+                  <td>${s.title}</td>
+                  <td>${s.description || '-'}</td>
+                  <td>${s.department_name || '—'}</td>
+                  <td><span class="status-${s.status}">${SUGGESTION_STATUS_LABELS[s.status]}</span></td>
+                  <td>${formatComplaintDate(s.created_at)}</td>
+                  <td class="actions-cell">
+                    <div class="table-actions">
+                      <button class="btn btn-secondary" style="padding:0.4rem 0.9rem;font-size:0.85rem;" onclick="viewSuggestionDetail('${s.id}')">👁️ عرض التفاصيل</button>
+                      ${s.director_comment ? `
+                        <button class="btn btn-primary" style="padding:0.4rem 0.9rem;font-size:0.85rem;background:#3b82f6;" onclick="openSuggestionMessagesModal('${s.id}')">
+                          💬 رد الإدارة
+                        </button>
+                      ` : ''}
+                    </div>
+                    ${s.status !== 'under_review' ? `
+                      <div style="margin-top:0.35rem;font-size:0.8rem;color:#16a34a;font-weight:600;">👀 تم استلام اقتراحك</div>
+                    ` : ''}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function openCreateSuggestionModal() {
+      document.getElementById('createSuggestionModal').style.display = 'flex';
+      loadSuggestionTypes();
+      loadDepartments();
+    }
+
+    function closeCreateSuggestionModal() {
+      document.getElementById('createSuggestionModal').style.display = 'none';
+      document.getElementById('newSuggestionForm').reset();
+    }
+
+    async function loadSuggestionTypes() {
+      try {
+        const types = await ApiService.request(`${SUGGESTIONS_API}/types`);
+        const select = document.getElementById('suggestionTypeId');
+        if (select) {
+          select.innerHTML = '<option value="">اختر النوع (اختياري)</option>' +
+            types.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadDepartments() {
+      try {
+        const depts = await ApiService.request(`${HR_TASKS_HOST}/api/departments`);
+        const select = document.getElementById('suggestionDepartmentId');
+        if (select) {
+          select.innerHTML = '<option value="">اختر القسم (اختياري)</option>' +
+            depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    let currentSuggestionId = null;
+
+    async function submitSuggestion(event) {
+      event.preventDefault();
+      const form = document.getElementById('newSuggestionForm');
+      const formData = new FormData(form);
+      
+      const title = formData.get('title');
+      if (!title) {
+        AlertSystem.show('العنوان مطلوب', true);
+        return;
+      }
+
+      const submitBtn = document.getElementById('submitSuggestionBtn');
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        const payload = {
+          title,
+          description: formData.get('description') || null,
+          category: formData.get('category') || null,
+          departmentId: formData.get('departmentId') || null
+        };
+        
+        const created = await ApiService.request(`${SUGGESTIONS_API}/employee/${app.employeeId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        // Upload attachments if any
+        const attachmentInput = document.getElementById('suggestionAttachment');
+        if (attachmentInput && attachmentInput.files && attachmentInput.files.length > 0) {
+          const attachmentFormData = new FormData();
+          Array.from(attachmentInput.files).forEach(file => {
+            attachmentFormData.append('attachments', file);
+          });
+          attachmentFormData.append('uploadedBy', app.employeeId);
+          await fetch(`${SUGGESTIONS_API}/${created.id}/attachments`, {
+            method: 'POST',
+            body: attachmentFormData
+          });
+        }
+        
+        AlertSystem.show('تم إرسال الاقتراح بنجاح ✓');
+        closeCreateSuggestionModal();
+        await loadSuggestions();
+      } catch (error) {
+        AlertSystem.show(error.message, true);
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    }
+
+    function viewSuggestionDetail(suggestionId) {
+      const suggestion = suggestionsCache.find(s => s.id === suggestionId);
+      if (!suggestion) {
+        AlertSystem.show('الاقتراح غير موجود', true);
+        return;
+      }
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000;';
+      modal.innerHTML = `
+        <div style="background:white;border-radius:16px;max-width:700px;width:95%;max-height:90vh;overflow-y:auto;padding:2rem;box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+            <h3 style="font-size:1.5rem;font-weight:700;">تفاصيل الاقتراح</h3>
+            <button type="button" data-modal-close style="border:none;background:none;font-size:1.5rem;cursor:pointer;">✕</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div><strong>العنوان:</strong> ${suggestion.title}</div>
+            ${suggestion.description ? `<div><strong>الوصف:</strong> ${suggestion.description}</div>` : ''}
+            ${suggestion.type_name ? `<div><strong>النوع:</strong> ${suggestion.type_name}</div>` : ''}
+            ${suggestion.category ? `<div><strong>الفئة:</strong> ${suggestion.category}</div>` : ''}
+            ${suggestion.department_name ? `<div><strong>القسم:</strong> ${suggestion.department_name}</div>` : ''}
+            <div><strong>الحالة:</strong> <span class="status-${suggestion.status}">${SUGGESTION_STATUS_LABELS[suggestion.status]}</span></div>
+            <div><strong>التاريخ:</strong> ${formatComplaintDate(suggestion.created_at)}</div>
+            ${suggestion.status !== 'under_review' ? `
+              <div style="padding:0.85rem;border-radius:10px;background:#ecfccb;color:#166534;font-weight:600;display:flex;gap:0.5rem;align-items:center;">
+                <span>👀</span>
+                <span>تم استلام اقتراحك من الإدارة</span>
+              </div>
+            ` : ''}
+            ${suggestion.director_comment ? `<div><strong>رد الإدارة:</strong> ${suggestion.director_comment}</div>` : ''}
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal) modal.remove();
+      });
+      const closeBtn = modal.querySelector('[data-modal-close]');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => modal.remove());
+      }
+    }
+
+    async function openSuggestionMessagesModal(suggestionId) {
+      currentSuggestionId = suggestionId;
+      try {
+        const messages = await ApiService.request(`${SUGGESTIONS_API}/${suggestionId}/messages`);
+        const listEl = document.getElementById('suggestionMessagesList');
+        if (!messages.length) {
+          listEl.innerHTML = '<div class="empty-state"><div class="empty-state-text">لا توجد ردود بعد</div></div>';
+        } else {
+          listEl.innerHTML = messages.map(m => {
+            const date = new Date(m.created_at).toLocaleString('ar-DZ');
+            const roleLabel = m.sender_role === 'director' ? 'الإدارة' : 'الموظف';
+            // ملاحظة: نظام الاقتراحات الحالي لا يدعم الإرسال المجهول، لذلك نعرض الاسم دائماً
+            return `
+              <div style="margin-bottom:0.75rem;padding:0.75rem;border-radius:10px;background:#f9fafb;">
+                <div style="font-size:0.85rem;color:#4b5563;margin-bottom:0.25rem;">
+                  <strong>${roleLabel}:</strong> ${m.sender_name}
+                </div>
+                <div style="font-size:0.9rem;color:#111827;margin-bottom:0.25rem;">${m.body}</div>
+                <div style="font-size:0.75rem;color:#9ca3af;">🕒 ${date}</div>
+              </div>
+            `;
+          }).join('');
+        }
+        document.getElementById('newSuggestionMessageBody').value = '';
+        document.getElementById('suggestionMessagesModal').style.display = 'flex';
+      } catch (e) {
+        AlertSystem.show(e.message, true);
+      }
+    }
+
+    function closeSuggestionMessagesModal() {
+      const modal = document.getElementById('suggestionMessagesModal');
+      if (modal) modal.style.display = 'none';
+      currentSuggestionId = null;
+    }
+
+    async function sendSuggestionMessage() {
+      if (!currentSuggestionId) return;
+      const body = document.getElementById('newSuggestionMessageBody').value.trim();
+      if (!body) {
+        AlertSystem.show('الرجاء كتابة الرد', true);
+        return;
+      }
+      try {
+        await ApiService.request(`${SUGGESTIONS_API}/${currentSuggestionId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            senderId: app.employeeId,
+            senderRole: 'employee',
+            body
+          })
+        });
+        document.getElementById('newSuggestionMessageBody').value = '';
+        // إعادة تحميل الرسائل بعد الإرسال
+        const messages = await ApiService.request(`${SUGGESTIONS_API}/${currentSuggestionId}/messages`);
+        const listEl = document.getElementById('suggestionMessagesList');
+        listEl.innerHTML = messages.map(m => {
+          const date = new Date(m.created_at).toLocaleString('ar-DZ');
+          const roleLabel = m.sender_role === 'director' ? 'الإدارة' : 'الموظف';
+          return `
+            <div style="margin-bottom:0.75rem;padding:0.75rem;border-radius:10px;background:#f9fafb;">
+              <div style="font-size:0.85rem;color:#4b5563;margin-bottom:0.25rem;">
+                <strong>${roleLabel}:</strong> ${m.sender_name}
+              </div>
+              <div style="font-size:0.9rem;color:#111827;margin-bottom:0.25rem;">${m.body}</div>
+              <div style="font-size:0.75rem;color:#9ca3af;">🕒 ${date}</div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        AlertSystem.show(e.message, true);
+      }
+    }
+  </script>
+</body>
+</html>

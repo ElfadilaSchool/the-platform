@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title data-translate="director.systems_title">Director – Systems Space</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+	<link href="../assets/css/style.css" rel="stylesheet">
+	<style>
+		.systems-hero {
+			background: linear-gradient(135deg, #1d4ed8 0%, #7c3aed 100%);
+		}
+		.system-card {
+			transition: all 0.25s ease;
+		}
+		.system-card:hover {
+			transform: translateY(-4px);
+			box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
+		}
+	</style>
+</head>
+<body class="bg-gray-50">
+
+	<main class="min-h-screen">
+		<div class="max-w-7xl mx-auto px-4 py-8 lg:py-10">
+			<!-- Systems Space Hero -->
+			<section
+				class="systems-hero rounded-3xl px-6 py-8 lg:px-10 lg:py-10 text-white shadow-2xl mb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+				<div class="space-y-3">
+					<p class="text-sm font-semibold uppercase tracking-wide text-white/80">
+						<span data-translate="director.systems_badge">Director workspace</span>
+					</p>
+					<h1 class="text-3xl lg:text-4xl font-extrabold leading-tight">
+						<span data-translate="director.systems_heading">Systems Space</span>
+					</h1>
+					<p class="text-sm lg:text-base text-white/80 max-w-xl">
+						<span data-translate="director.systems_subtitle">
+							Central hub for all subsystems in your platform. Choose a system to open its full dashboard,
+							while keeping a quick path back to your own space.
+						</span>
+					</p>
+				</div>
+				<div class="flex flex-col items-start lg:items-end gap-3">
+						<div
+						class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-xs font-medium backdrop-blur">
+						<i class="fas fa-network-wired text-white"></i>
+						<span data-translate="director.systems_chip">Multi‑system overview</span>
+					</div>
+					<a href="director-dashboard.html"
+						class="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-900 rounded-full text-sm font-semibold shadow-md hover:bg-slate-100">
+						<i class="fas fa-arrow-left"></i>
+						<span data-translate="director.return_my_space">Return to My Space</span>
+					</a>
+				</div>
+			</section>
+
+			<!-- Systems grid -->
+			<section class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+				<!-- HR System -->
+				<a href="hr-dashboard.html"
+					class="system-card block bg-white rounded-2xl border border-slate-200/80 p-5 lg:p-6">
+					<div class="flex items-center justify-between mb-4">
+						<div
+							class="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-white shadow">
+							<i class="fas fa-users-cog"></i>
+						</div>
+						<span
+							class="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+							<i class="fas fa-circle text-[6px]"></i>
+							<span data-translate="director.system_available">Available</span>
+						</span>
+					</div>
+					<h2 class="text-lg font-semibold text-slate-900 mb-1" data-translate="director.hr_system_title">
+						HR System
+					</h2>
+					<p class="text-sm text-slate-500 mb-4" data-translate="director.hr_system_description">
+						Access HR dashboards, employee management, timetables, salary, exceptions and more.
+					</p>
+					<div class="flex items-center justify-between text-xs text-slate-500">
+						<div class="flex items-center gap-2">
+							<i class="fas fa-chart-pie text-blue-500"></i>
+							<span data-translate="director.hr_system_tagline">Core HR operations</span>
+						</div>
+						<span class="inline-flex items-center gap-1 font-medium text-blue-600">
+							<span data-translate="common.open">Open</span>
+							<i class="fas fa-arrow-right text-[11px]"></i>
+						</span>
+					</div>
+				</a>
+
+				<!-- Placeholder card for future systems -->
+				<div
+					class="system-card bg-slate-50 rounded-2xl border border-dashed border-slate-300 p-5 lg:p-6 flex flex-col justify-between">
+					<div class="space-y-3">
+						<div
+							class="h-10 w-10 rounded-xl bg-slate-200 flex items-center justify-center text-slate-500 shadow-inner">
+							<i class="fas fa-plus"></i>
+						</div>
+						<h2 class="text-lg font-semibold text-slate-800" data-translate="director.future_system_title">
+							Future System
+						</h2>
+						<p class="text-sm text-slate-500" data-translate="director.future_system_description">
+							Reserved slot for upcoming subsystems (Finance, Academics, Inventory, ...).
+						</p>
+					</div>
+					<p class="mt-4 text-[11px] uppercase tracking-wide font-semibold text-slate-400" data-translate="director.coming_soon">
+						Coming soon
+					</p>
+				</div>
+			</section>
+		</div>
+	</main>
+
+	<script src="../assets/js/auth.js"></script>
+	<script src="../assets/js/translations.js"></script>
+	<script src="../assets/js/main.js"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			if (!requireAuth()) return;
+			const userRole = authManager.getUserRole();
+			if (!userRole || userRole.toLowerCase() !== 'director') {
+				console.log('Access denied. User role:', userRole, 'Expected: Director');
+				authManager.redirectToDashboard();
+				return;
+			}
+			console.log('Access granted for Director role:', userRole);
+
+			initializeCollapsibleSidebar();
+
+			if (typeof updatePageTranslations === 'function') {
+				updatePageTranslations();
+			}
+		});
+	</script>
+</body>
+</html>
+
+

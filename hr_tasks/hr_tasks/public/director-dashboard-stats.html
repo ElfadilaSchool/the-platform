@@ -1,0 +1,3558 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="dashboard.title">Director Dashboard - HR Operations Platform</title>
+    <link rel="stylesheet" href="tailwind.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* Director-themed base styles */
+        :root {
+            --director-indigo: #4338ca;
+            --director-blue: #2563eb;
+            --director-purple: #7c3aed;
+            --director-slate: #0f172a;
+            --director-card-bg: #ffffff;
+            --director-surface: #f8fafc;
+        }
+
+        body {
+            font-family: 'Outfit', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--director-slate);
+            background: radial-gradient(circle at top, rgba(59, 130, 246, 0.06), transparent 45%), #f5f7fb;
+        }
+
+        /* KPI cards */
+        .kpi-card {
+            background: var(--director-card-bg);
+            border-radius: 24px;
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: 0 18px 35px rgba(15, 23, 42, 0.07);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 55%);
+            pointer-events: none;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 25px 45px rgba(15, 23, 42, 0.12);
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(99, 102, 241, 0.35));
+            color: var(--director-indigo);
+            margin-bottom: 16px;
+        }
+
+        .director-panel {
+            margin-top: 16px;
+            background: var(--director-card-bg);
+            border-radius: 22px;
+            padding: 24px 24px 20px;
+            box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08);
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .director-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg,
+                    rgba(37, 99, 235, 0.12),
+                    rgba(124, 58, 237, 0.08),
+                    rgba(56, 189, 248, 0.08));
+            opacity: 0.25;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .director-panel>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        .director-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .director-panel-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .director-panel-title-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at top left,
+                    rgba(37, 99, 235, 0.22),
+                    rgba(37, 99, 235, 0.05));
+            color: #1d4ed8;
+        }
+
+        .director-section-pill {
+            padding: 0.15rem 0.7rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            background: rgba(15, 23, 42, 0.04);
+            color: #64748b;
+        }
+
+        .stat-mini-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid rgba(15, 23, 42, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .stat-mini-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 16px;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(15, 23, 42, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #6366f1);
+            border-radius: 999px;
+            transition: width 0.6s ease;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .badge-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .badge-info {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .badge-purple {
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            color: white;
+        }
+
+        /* Director Summary Styles */
+        .dir-resp-summary {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.95));
+            border-radius: 20px;
+            padding: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .dir-resp-summary-main {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .dir-resp-summary-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .dir-resp-summary-info h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+
+        .dir-resp-summary-info .dir-resp-contact-line {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #475569;
+            font-size: 0.8rem;
+        }
+
+        .dir-resp-avatar-lg {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
+            flex-shrink: 0;
+        }
+
+        .dir-resp-summary-metrics {
+            display: flex;
+            gap: 8px;
+            justify-content: space-between;
+        }
+
+        .dir-resp-summary-metric {
+            flex: 1;
+            padding: 8px 10px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            background: rgba(248, 250, 252, 0.7);
+        }
+
+        .dir-resp-summary-metric strong {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.1;
+        }
+
+        .dir-resp-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .dir-resp-pane {
+            transition: all 0.3s ease;
+        }
+
+        .dir-resp-pane:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12);
+        }
+
+        /* Page Hero Styles */
+        .page-hero {
+            background: linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%);
+            color: white;
+            border-radius: 0;
+            padding: 32px;
+            position: sticky;
+            top: 0;
+            box-shadow: 0 25px 60px rgba(67, 56, 202, 0.25);
+            margin-bottom: 2rem;
+            z-index: 40;
+        }
+
+        .page-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 0;
+            background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.25), transparent 50%);
+            pointer-events: none;
+        }
+
+        .page-hero-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .hero-chip {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .hero-select {
+            background: rgba(15, 23, 42, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            border-radius: 12px;
+            padding: 10px 16px;
+            min-width: 180px;
+            backdrop-filter: blur(6px);
+        }
+
+        .hero-select option {
+            background: #1e293b;
+            color: white;
+        }
+
+        /* KPI Grid Styles */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.95));
+            border-radius: 24px;
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: 0 18px 35px rgba(15, 23, 42, 0.07);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 55%);
+            pointer-events: none;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 25px 45px rgba(15, 23, 42, 0.12);
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(99, 102, 241, 0.35));
+            color: #4338ca;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .kpi-card p {
+            position: relative;
+            z-index: 1;
+        }
+
+        .kpi-card h3 {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Report Stat Cards */
+        .report-stat-card-inline {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            transition: all 0.3s ease;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .report-stat-card-inline:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+        }
+
+        .report-stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .report-stat-content {
+            flex: 1;
+        }
+
+        .report-stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .report-stat-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .report-stat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Task Stat Cards */
+        .task-stat-card-vertical {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            transition: all 0.3s ease;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .task-stat-card-vertical:hover {
+            transform: translateX(4px);
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+        }
+
+        .task-stat-icon-badge {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .task-stat-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .task-stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .task-progress-wrapper {
+            margin-top: 16px;
+        }
+
+        .task-progress-bar {
+            height: 8px;
+            background: rgba(15, 23, 42, 0.06);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .task-progress-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.6s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .task-progress-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Quick Action Cards */
+        .quick-action-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            transition: all 0.3s ease;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex: 1;
+            min-width: 250px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .quick-action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .quick-action-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .quick-action-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .quick-action-desc {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Urgent Report Card */
+        .urgent-report-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            border-left: 4px solid;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+            transition: all 0.3s ease;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .urgent-report-card:hover {
+            transform: translateX(-4px);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+        }
+
+        .urgent-report-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .urgent-report-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .urgent-report-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .urgent-report-meta {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .urgent-report-score {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        /* Header User Section Styles */
+        .header-user-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 12px 18px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: all 0.3s ease;
+        }
+
+        .header-user-section:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .header-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #ffffff, #f1f5f9);
+            color: #4338ca;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .header-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 14px;
+            object-fit: cover;
+        }
+
+        .header-user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .header-user-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .header-user-role {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.85);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: 8px;
+            display: inline-block;
+            width: fit-content;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .notification-bell {
+            position: relative;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #ffffff;
+            font-size: 1.2rem;
+        }
+
+        .notification-bell:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .notification-bell:active {
+            transform: translateY(0);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .notification-badge:empty {
+            display: none;
+        }
+
+        .header-date {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 12px 18px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            font-size: 0.9rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .header-date i {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1024px) {
+            .header-user-section {
+                padding: 10px 14px;
+            }
+
+            .header-avatar {
+                width: 48px;
+                height: 48px;
+                font-size: 1.2rem;
+            }
+
+            .header-user-name {
+                font-size: 1rem;
+            }
+
+            .header-date {
+                padding: 10px 14px;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .header-user-section {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .header-date span {
+                display: none;
+            }
+
+            .header-date {
+                padding: 12px;
+                width: 48px;
+                height: 48px;
+                justify-content: center;
+            }
+        }
+
+        /* Notification Dropdown Styles */
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 12px;
+            width: 420px;
+            max-width: 95vw;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            z-index: 1000;
+            overflow: hidden;
+            animation: dropdownFadeIn 0.2s ease-out;
+        }
+
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .notification-dropdown.hidden {
+            display: none;
+        }
+
+        .notification-dropdown-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        }
+
+        .notification-dropdown-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .notification-dropdown-title i {
+            color: #3b82f6;
+            font-size: 1.1rem;
+        }
+
+        .mark-all-read-btn {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .mark-all-read-btn:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .notification-list {
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .notification-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .notification-list::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .notification-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .notification-list::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .notification-loading,
+        .notification-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            gap: 12px;
+            color: #64748b;
+        }
+
+        .notification-empty i {
+            font-size: 3rem;
+            color: #cbd5e1;
+        }
+
+        .notification-empty p {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f1f5f9;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .notification-item {
+            display: flex;
+            gap: 12px;
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .notification-item:hover {
+            background: #f8fafc;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item.unread {
+            background: rgba(59, 130, 246, 0.04);
+        }
+
+        .notification-item.unread::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #3b82f6;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1rem;
+            color: white;
+        }
+
+        .notification-icon.task {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .notification-icon.report {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .notification-icon.complaint {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .notification-icon.signal {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .notification-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .notification-message {
+            font-size: 0.8rem;
+            color: #64748b;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .notification-time {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .notification-time i {
+            font-size: 0.7rem;
+        }
+
+        .notification-dropdown-footer {
+            padding: 12px 20px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            background: #f8fafc;
+        }
+
+        .view-all-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #3b82f6;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .view-all-link:hover {
+            color: #2563eb;
+            gap: 12px;
+        }
+
+        .view-all-link i {
+            font-size: 0.75rem;
+            transition: transform 0.2s ease;
+        }
+
+        .view-all-link:hover i {
+            transform: translateX(4px);
+        }
+
+        /* Position notification bell relative for dropdown */
+        .notification-bell {
+            position: relative;
+        }
+
+        @media (max-width: 640px) {
+            .notification-dropdown {
+                position: fixed;
+                top: auto;
+                right: 0;
+                left: 0;
+                bottom: 0;
+                margin: 0;
+                width: 100%;
+                max-width: 100%;
+                border-radius: 16px 16px 0 0;
+                max-height: 80vh;
+            }
+
+            .notification-list {
+                max-height: calc(80vh - 140px);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Main Content -->
+    <main class="p-6" style="max-width: 100%;">
+        <!-- Page Hero -->
+        <section class="page-hero">
+            <div class="page-hero-content">
+                <div class="flex flex-wrap items-center justify-between gap-6">
+                    <!-- Left: User Profile -->
+                    <div class="header-user-section">
+                        <div class="header-avatar" id="userAvatar">
+                            <span id="userInitials">D</span>
+                        </div>
+                        <div class="header-user-info">
+                            <h2 class="header-user-name" id="userName">Director</h2>
+                            <span class="header-user-role" id="userRole">Director</span>
+                        </div>
+                    </div>
+
+                    <!-- Right: Actions -->
+                    <div class="header-actions">
+                        <!-- Notification Bell -->
+                        <div class="notification-bell" id="notificationBell" title="Notifications">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge" id="notificationCount">0</span>
+
+                            <!-- Notification Dropdown Panel -->
+                            <div id="notificationDropdown" class="notification-dropdown hidden">
+                                <div class="notification-dropdown-header">
+                                    <h3 class="notification-dropdown-title">
+                                        <i class="fas fa-bell"></i>
+                                        <span data-translate="notifications.title">Notifications</span>
+                                    </h3>
+                                    <button id="markAllReadBtn" class="mark-all-read-btn" title="Mark all as read">
+                                        <i class="fas fa-check-double"></i>
+                                    </button>
+                                </div>
+
+                                <div id="notificationList" class="notification-list">
+                                    <!-- Loading state -->
+                                    <div id="notificationLoading" class="notification-loading">
+                                        <div class="loading-spinner"></div>
+                                        <span data-translate="notifications.loading">Loading notifications...</span>
+                                    </div>
+
+                                    <!-- Empty state -->
+                                    <div id="notificationEmpty" class="notification-empty hidden">
+                                        <i class="fas fa-bell-slash"></i>
+                                        <p data-translate="notifications.empty">No notifications</p>
+                                    </div>
+
+                                    <!-- Notifications will be inserted here -->
+                                </div>
+
+                                <div class="notification-dropdown-footer">
+                                    <a href="priorities.html" class="view-all-link">
+                                        <span data-translate="notifications.view_all">View all notifications</span>
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Language Switcher -->
+                        <select id="languageSelector" class="hero-select">
+                            <option value="en">English</option>
+                            <option value="fr">Français</option>
+                            <option value="ar">العربية</option>
+                        </select>
+
+                        <!-- Date Display -->
+                        <div class="header-date">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span id="currentDate"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+
+
+
+
+
+
+        <!-- Page Title & Description -->
+        <!-- Page Title & Description -->
+        <div style="margin-bottom: 3.5rem; margin-top: 2rem; position: relative;">
+            <h1 class="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-900 mb-2"
+                data-translate="dashboard.director_title">
+                Director Dashboard
+            </h1>
+            <p class="text-lg text-gray-600 font-medium max-w-2xl leading-relaxed"
+                data-translate="dashboard.director_description">
+                Overview of operations and performance metrics
+            </p>
+            <div class="h-1.5 w-24 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mt-5 shadow-sm opacity-90">
+            </div>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="flex gap-6">
+            <!-- Left Sidebar: Department Performance & Statistics -->
+            <aside class="flex-shrink-0" style="width: 35%;">
+                <div>
+                    <!-- Department Performance -->
+                    <div class="director-panel" style="display: none !important;">
+                        <div class="director-panel-header">
+                            <div class="director-panel-title">
+                                <div class="director-panel-title-icon">
+                                    <i class="fas fa-chart-bar"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-900"
+                                        data-translate="dashboard.department_performance">Department Performance
+                                    </h2>
+                                    <p class="text-xs text-gray-500 mt-0.5"
+                                        data-translate="dashboard.top_performing_departments">Top performing
+                                        departments
+                                    </p>
+                                </div>
+                            </div>
+                            <span class="director-section-pill" data-translate="dashboard.analytics">Analytics</span>
+                        </div>
+
+                        <div id="departmentPerformance" class="space-y-4"
+                            style="max-height: 350px; overflow-y: auto; overflow-x: hidden;">
+                            <div class="flex justify-center items-center py-8">
+                                <div class="loading-spinner"></div>
+                                <span class="ml-3 text-gray-600 text-xs"
+                                    data-translate="dashboard.loading">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Signals & Complaints Combined Panel -->
+                    <div class="director-panel">
+                        <div class="director-panel-header">
+                            <div class="director-panel-title">
+                                <div class="director-panel-title-icon"
+                                    style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.15), rgba(217, 119, 6, 0.15)); color: #ea580c;">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-900"
+                                        data-translate="dashboard.feedback_overview">Feedback Overview</h2>
+                                    <p class="text-xs text-gray-500 mt-0.5"
+                                        data-translate="dashboard.signals_complaints_stats">Signals & Complaints
+                                        statistics
+                                    </p>
+                                </div>
+                            </div>
+                            <span class="director-section-pill" data-translate="dashboard.overview">Overview</span>
+                        </div>
+
+                        <div class="space-y-6">
+                            <!-- Signals Section -->
+                            <div>
+                                <h4
+                                    class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                                    <span data-translate="dashboard.signals">Signals</span>
+                                </h4>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-l-4 !border-orange-500">
+                                        <div class="report-stat-content">
+                                            <p class="report-stat-label !text-[0.65rem] !mb-1" data-translate="dashboard.pending">Pending</p>
+                                            <h3 id="signalsPendingCount" class="report-stat-value !text-xl !mb-0">0</h3>
+                                        </div>
+                                    </div>
+                                    <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-l-4 !border-emerald-500">
+                                        <div class="report-stat-content">
+                                            <p class="report-stat-label !text-[0.65rem] !mb-1" data-translate="dashboard.treated">Treated</p>
+                                            <h3 id="signalsTreatedCount" class="report-stat-value !text-xl !mb-0">0</h3>
+                                        </div>
+                                    </div>
+                                    <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-l-4 !border-red-500">
+                                        <div class="report-stat-content">
+                                            <p class="report-stat-label !text-[0.65rem] !mb-1" data-translate="dashboard.high_priority">High Priority</p>
+                                            <h3 id="signalsHighPriorityCount" class="report-stat-value !text-xl !mb-0">0</h3>
+                                        </div>
+                                    </div>
+                                    <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-l-4 !border-yellow-500">
+                                        <div class="report-stat-content">
+                                            <p class="report-stat-label !text-[0.65rem] !mb-1" data-translate="dashboard.medium_priority">Medium</p>
+                                            <h3 id="signalsMediumPriorityCount" class="report-stat-value !text-xl !mb-0">0</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Complaints Section -->
+                            <div>
+                                <h4
+                                    class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
+                                    <span data-translate="dashboard.complaints">Complaints</span>
+                                </h4>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-l-4 !border-orange-500">
+                                        <div class="report-stat-content">
+                                            <p class="report-stat-label !text-[0.65rem] !mb-1" data-translate="dashboard.pending">Pending</p>
+                                            <h3 id="complaintsPendingCount" class="report-stat-value !text-xl !mb-0">0</h3>
+                                        </div>
+                                    </div>
+                                    <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-l-4 !border-emerald-500">
+                                        <div class="report-stat-content">
+                                            <p class="report-stat-label !text-[0.65rem] !mb-1" data-translate="dashboard.completed">Completed</p>
+                                            <h3 id="complaintsCompletedCount" class="report-stat-value !text-xl !mb-0">0</h3>
+                                        </div>
+                                    </div>
+                                    <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-l-4 !border-red-600">
+                                        <div class="report-stat-content">
+                                            <p class="report-stat-label !text-[0.65rem] !mb-1" data-translate="dashboard.overdue">Overdue</p>
+                                            <h3 id="complaintsOverdueCount" class="report-stat-value !text-xl !mb-0">0</h3>
+                                        </div>
+                                    </div>
+                                    <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-l-4 !border-red-500">
+                                        <div class="report-stat-content">
+                                            <p class="report-stat-label !text-[0.65rem] !mb-1" data-translate="dashboard.high_priority">High Priority</p>
+                                            <h3 id="complaintsHighPriorityCount" class="report-stat-value !text-xl !mb-0">0</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Graph Toggle -->
+                        <div class="mt-6 pt-2">
+                            <button onclick="toggleStatsGraphs()" id="graphToggleBtn"
+                                class="w-full py-2.5 px-4 bg-gray-50 hover:bg-gray-100 text-gray-600 text-sm font-semibold rounded-xl border border-dashed border-gray-300 transition-all flex items-center justify-center gap-2 group">
+                                <span data-translate="dashboard.show_graphs">Show visualization</span>
+                                <i class="fas fa-chevron-down group-hover:translate-y-0.5 transition-transform duration-300"
+                                    id="graphToggleIcon"></i>
+                            </button>
+                        </div>
+
+                        <!-- Collapsible Graphs Section -->
+                        <div id="statsGraphsContainer"
+                            class="hidden mt-6 space-y-6 pt-4 border-t border-dashed border-gray-200">
+                            <!-- Signals Charts -->
+                            <div>
+                                <h5 class="text-xs font-semibold text-gray-400 uppercase mb-3 text-center"
+                                    data-translate="dashboard.signals_analysis">Signals
+                                    Analysis</h5>
+                                <div class="space-y-4">
+                                    <div class="chart-container" style="height: 250px;">
+                                        <canvas id="signalsStatusChart"></canvas>
+                                    </div>
+                                    <div class="chart-container" style="height: 250px;">
+                                        <canvas id="signalsTypeChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Complaints Charts -->
+                            <div>
+                                <h5 class="text-xs font-semibold text-gray-400 uppercase mb-3 text-center"
+                                    data-translate="dashboard.complaints_analysis">Complaints
+                                    Analysis</h5>
+                                <div class="space-y-4">
+                                    <div class="chart-container" style="height: 250px;">
+                                        <canvas id="complaintsStatusChart"></canvas>
+                                    </div>
+                                    <div class="chart-container" style="height: 250px;">
+                                        <canvas id="complaintsTypeChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Main Content -->
+            <div class="flex-1 space-y-6">
+                <!-- Main KPI Cards -->
+                <!-- Main KPI Cards (Replaced with Inline Style) -->
+                <div class="flex flex-wrap gap-4 justify-between">
+                    <div class="report-stat-card-inline">
+                        <div class="report-stat-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="report-stat-content">
+                            <p class="report-stat-label" data-translate="dashboard.total_departments">Total Departments</p>
+                            <h3 id="kpiDepartments" class="report-stat-value">0</h3>
+                        </div>
+                    </div>
+
+                    <div class="report-stat-card-inline">
+                        <div class="report-stat-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="report-stat-content">
+                            <p class="report-stat-label" data-translate="dashboard.total_employees">Total Employees</p>
+                            <h3 id="kpiEmployees" class="report-stat-value">0</h3>
+                        </div>
+                    </div>
+
+                    <a href="director.html" target="_top" class="report-stat-card-inline">
+                        <div class="report-stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                            <i class="fas fa-list-check"></i>
+                        </div>
+                        <div class="report-stat-content">
+                            <p class="report-stat-label" data-translate="dashboard.total_tasks">Total Tasks</p>
+                            <h3 id="kpiTasks" class="report-stat-value">0</h3>
+                             <p class="report-stat-label" data-translate="dashboard.click_details">Click here for details</p>
+                        </div>
+                    </a>
+
+                    <a href="complaints_director.html" target="_top" class="report-stat-card-inline">
+                        <div class="report-stat-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <div class="report-stat-content">
+                            <p class="report-stat-label" data-translate="dashboard.total_complaints">Total Complaints</p>
+                            <h3 id="kpiComplaints" class="report-stat-value">0</h3>
+                             <p class="report-stat-label" data-translate="dashboard.click_details">Click here for details</p>
+                        </div>
+                    </a>
+
+                    <a href="signals_responsible.html" target="_top" class="report-stat-card-inline">
+                        <div class="report-stat-icon" style="background: linear-gradient(135deg, #ec4899, #db2777);">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <div class="report-stat-content">
+                            <p class="report-stat-label" data-translate="dashboard.total_signals">Total Signals</p>
+                            <h3 id="kpiSignals" class="report-stat-value">0</h3>
+                             <p class="report-stat-label" data-translate="dashboard.click_details">Click here for details</p>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Reports Statistics -->
+                    <div class="director-panel">
+                        <div class="director-panel-header">
+                            <div class="director-panel-title">
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-900"
+                                        data-translate="dashboard.reports_overview">Reports Overview</h2>
+                                    <p class="text-xs text-gray-500 mt-0.5"
+                                        data-translate="dashboard.activity_reports_status">Activity reports status and
+                                        metrics</p>
+                                </div>
+                            </div>
+                            <span class="director-section-pill" data-translate="dashboard.reports">Reports</span>
+                        </div>
+
+                        <div class="flex flex-wrap gap-4 justify-between">
+                            <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-t-4 !border-blue-600 bg-blue-50">
+                                <div class="report-stat-content">
+                                    <p class="report-stat-label" data-translate="dashboard.total_reports">Total Reports
+                                    </p>
+                                    <h3 id="totalReports" class="report-stat-value">0</h3>
+                                    <span class="report-stat-badge"
+                                        style="background: rgba(59, 130, 246, 0.1); color: #2563eb;">
+                                        <span data-translate="dashboard.all_time">All time</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-t-4 !border-emerald-500 bg-emerald-50">
+                                <div class="report-stat-content">
+                                    <p class="report-stat-label" data-translate="dashboard.acknowledged">Acknowledged
+                                    </p>
+                                    <h3 id="acknowledgedReports" class="report-stat-value" style="color: #059669;">0
+                                    </h3>
+                                    <span class="report-stat-badge"
+                                        style="background: rgba(16, 185, 129, 0.1); color: #059669;">
+                                        <span data-translate="dashboard.completed_status">Completed</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-t-4 !border-yellow-500 bg-yellow-50">
+                                <div class="report-stat-content">
+                                    <p class="report-stat-label" data-translate="dashboard.pending">Pending</p>
+                                    <h3 id="pendingReports" class="report-stat-value" style="color: #d97706;">0</h3>
+                                    <span class="report-stat-badge"
+                                        style="background: rgba(245, 158, 11, 0.1); color: #d97706;">
+                                        <span data-translate="dashboard.awaiting">Awaiting</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-t-4 !border-purple-600 bg-purple-50">
+                                <div class="report-stat-content">
+                                    <p class="report-stat-label" data-translate="dashboard.today">Today</p>
+                                    <h3 id="todayReports" class="report-stat-value" style="color: #7c3aed;">0</h3>
+                                    <span class="report-stat-badge"
+                                        style="background: rgba(168, 85, 247, 0.1); color: #7c3aed;">
+                                        <span data-translate="dashboard.recent">Recent</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+
+                <!-- Urgent Reports Quick Access -->
+                <div class="director-panel">
+                    <div class="director-panel-header">
+                        <div class="director-panel-title">
+                            <div class="director-panel-title-icon">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-900"
+                                    data-translate="dashboard.urgent_reports">Urgent Reports</h2>
+                                <p class="text-xs text-gray-500 mt-0.5"
+                                    data-translate="dashboard.quick_access_critical">Quick access to critical
+                                    pending
+                                    reports</p>
+                            </div>
+                        </div>
+                        <span class="director-section-pill" data-translate="dashboard.urgent">Urgent</span>
+                    </div>
+
+                    <div id="urgentReportsList" class="space-y-3">
+                        <div class="flex justify-center items-center py-8">
+                            <div class="loading-spinner"></div>
+                            <span class="ml-3 text-gray-600" data-translate="dashboard.loading_urgent_reports">Loading
+                                urgent reports...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Priority Statistics -->
+                <div class="director-panel">
+                    <div class="director-panel-header">
+                        <div class="director-panel-title">
+                            <div class="director-panel-title-icon">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-900"
+                                    data-translate="dashboard.priority_analysis">Priority Analysis</h2>
+                                <p class="text-xs text-gray-500 mt-0.5"
+                                    data-translate="dashboard.report_urgency_distribution">Report urgency
+                                    distribution
+                                </p>
+                            </div>
+                        </div>
+                        <span class="director-section-pill" data-translate="dashboard.priorities">Priorities</span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-4 justify-between">
+                        <div class="report-stat-card-inline">
+                            <div class="report-stat-icon"
+                                style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+                                <i class="fas fa-fire"></i>
+                            </div>
+                            <div class="report-stat-content">
+                                <p class="report-stat-label"><span data-translate="dashboard.critical">Critical</span>
+                                    (10)</p>
+                                <h3 id="criticalPriority" class="report-stat-value" style="color: #dc2626;">0</h3>
+                                <span class="report-stat-badge"
+                                    style="background: rgba(220, 38, 38, 0.1); color: #dc2626;">
+                                    <i class="fas fa-exclamation-triangle"></i> <span
+                                        data-translate="dashboard.urgent">Urgent</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="report-stat-card-inline">
+                            <div class="report-stat-icon"
+                                style="background: linear-gradient(135deg, #ea580c, #c2410c);">
+                                <i class="fas fa-exclamation"></i>
+                            </div>
+                            <div class="report-stat-content">
+                                <p class="report-stat-label"><span data-translate="dashboard.high">High</span> (6-9)
+                                </p>
+                                <h3 id="highPriority" class="report-stat-value" style="color: #ea580c;">0</h3>
+                                <span class="report-stat-badge"
+                                    style="background: rgba(234, 88, 12, 0.1); color: #ea580c;">
+                                    <i class="fas fa-arrow-up"></i> <span
+                                        data-translate="dashboard.important">Important</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="report-stat-card-inline">
+                            <div class="report-stat-icon"
+                                style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                <i class="fas fa-minus-circle"></i>
+                            </div>
+                            <div class="report-stat-content">
+                                <p class="report-stat-label"><span data-translate="dashboard.medium">Medium</span>
+                                    (4-5)
+                                </p>
+                                <h3 id="mediumPriority" class="report-stat-value" style="color: #d97706;">0</h3>
+                                <span class="report-stat-badge"
+                                    style="background: rgba(245, 158, 11, 0.1); color: #d97706;">
+                                    <i class="fas fa-equals"></i> <span
+                                        data-translate="dashboard.moderate">Moderate</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="report-stat-card-inline">
+                            <div class="report-stat-icon"
+                                style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                                <i class="fas fa-arrow-down"></i>
+                            </div>
+                            <div class="report-stat-content">
+                                <p class="report-stat-label"><span data-translate="dashboard.low">Low</span> (1-3)
+                                </p>
+                                <h3 id="lowPriority" class="report-stat-value" style="color: #2563eb;">0</h3>
+                                <span class="report-stat-badge"
+                                    style="background: rgba(59, 130, 246, 0.1); color: #2563eb;">
+                                    <i class="fas fa-info-circle"></i> <span
+                                        data-translate="dashboard.normal">Normal</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+
+                <!-- Task Statistics and Chart Grid -->
+                <div class="flex gap-6">
+                    <!-- Task Statistics -->
+                    <div class="director-panel" style="flex: 0 0 60%;">
+                        <div class="director-panel-header">
+                            <div class="director-panel-title">
+                                <div class="director-panel-title-icon">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-900"
+                                        data-translate="dashboard.task_distribution">Task Distribution</h2>
+                                    <p class="text-xs text-gray-500 mt-0.5"
+                                        data-translate="dashboard.current_task_status">Current task status across
+                                        departments</p>
+                                </div>
+                            </div>
+                            <span class="director-section-pill" data-translate="dashboard.tasks">Tasks</span>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="task-stat-card-vertical">
+                                <div class="task-stat-icon-badge"
+                                    style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                                    <i class="fas fa-spinner"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="task-stat-label" data-translate="dashboard.in_progress">In Progress
+                                    </p>
+                                    <h3 id="inProgressCount" class="task-stat-value" style="color: #2563eb;">0</h3>
+                                    <div class="task-progress-wrapper">
+                                        <div class="task-progress-bar">
+                                            <div id="inProgressBar" class="task-progress-fill"
+                                                style="width: 0%; background: linear-gradient(90deg, #3b82f6, #2563eb);">
+                                            </div>
+                                        </div>
+                                        <p class="task-progress-label" data-translate="dashboard.active_tasks">
+                                            Active
+                                            tasks</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="task-stat-card-vertical">
+                                <div class="task-stat-icon-badge"
+                                    style="background: linear-gradient(135deg, #10b981, #059669);">
+                                    <i class="fas fa-check-double"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="task-stat-label" data-translate="dashboard.completed">Completed</p>
+                                    <h3 id="completedCount" class="task-stat-value" style="color: #059669;">0</h3>
+                                    <div class="task-progress-wrapper">
+                                        <div class="task-progress-bar">
+                                            <div id="completedBar" class="task-progress-fill"
+                                                style="width: 0%; background: linear-gradient(90deg, #10b981, #059669);">
+                                            </div>
+                                        </div>
+                                        <p class="task-progress-label" data-translate="dashboard.finished_tasks">
+                                            Finished tasks</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="task-stat-card-vertical">
+                                <div class="task-stat-icon-badge"
+                                    style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                    <i class="fas fa-pause-circle"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="task-stat-label" data-translate="dashboard.pending">Pending</p>
+                                    <h3 id="pendingTasksCount" class="task-stat-value" style="color: #d97706;">0
+                                    </h3>
+                                    <div class="task-progress-wrapper">
+                                        <div class="task-progress-bar">
+                                            <div id="pendingBar" class="task-progress-fill"
+                                                style="width: 0%; background: linear-gradient(90deg, #f59e0b, #d97706);">
+                                            </div>
+                                        </div>
+                                        <p class="task-progress-label" data-translate="dashboard.awaiting_action">
+                                            Awaiting action</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task Chart -->
+                    <div class="director-panel" style="flex: 0 0 40%; display: flex; flex-direction: column;">
+                        <div class="director-panel-header">
+                            <div class="director-panel-title">
+                                <div class="director-panel-title-icon">
+                                    <i class="fas fa-chart-pie"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-900"
+                                        data-translate="dashboard.task_visualization">Task Visualization</h2>
+                                    <p class="text-xs text-gray-500 mt-0.5"
+                                        data-translate="dashboard.task_status_distribution">Task status distribution
+                                    </p>
+                                </div>
+                            </div>
+                            <span class="director-section-pill" data-translate="dashboard.chart">Chart</span>
+                        </div>
+
+                        <div class="chart-container" style="height: 250px;">
+                            <canvas id="taskStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- Quick Actions -->
+                <div class="director-panel hidden">
+                    <div class="director-panel-header">
+                        <div class="director-panel-title">
+                            <div class="director-panel-title-icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-900"
+                                    data-translate="dashboard.quick_actions">Quick Actions</h2>
+                                <p class="text-xs text-gray-500 mt-0.5"
+                                    data-translate="dashboard.navigate_key_sections">Navigate to key sections</p>
+                            </div>
+                        </div>
+                        <span class="director-section-pill" data-translate="dashboard.actions">Actions</span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-6 justify-between">
+                        <a href="director.html" class="quick-action-card group">
+                            <div class="quick-action-icon"
+                                style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="quick-action-title" data-translate="dashboard.tasks_management">Tasks
+                                    Management</h3>
+                                <p class="quick-action-desc" data-translate="dashboard.manage_all_tasks">Manage all
+                                    tasks</p>
+                            </div>
+                            <i
+                                class="fas fa-arrow-right text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all"></i>
+                        </a>
+
+                        <a href="reportdir.html" class="quick-action-card group">
+                            <div class="quick-action-icon"
+                                style="background: linear-gradient(135deg, #a855f7, #7c3aed);">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="quick-action-title" data-translate="dashboard.reports">Reports</h3>
+                                <p class="quick-action-desc" data-translate="dashboard.view_activity_reports">View
+                                    activity reports</p>
+                            </div>
+                            <i
+                                class="fas fa-arrow-right text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all"></i>
+                        </a>
+
+                        <a href="priorities.html" class="quick-action-card group">
+                            <div class="quick-action-icon"
+                                style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="quick-action-title" data-translate="dashboard.priorities">Priorities</h3>
+                                <p class="quick-action-desc" data-translate="dashboard.critical_items">Critical
+                                    items
+                                </p>
+                            </div>
+                            <i
+                                class="fas fa-arrow-right text-gray-400 group-hover:text-red-600 group-hover:translate-x-1 transition-all"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="auth.js"></script>
+    <script src="translations.js"></script>
+
+    <script>
+        // API Configuration
+        const API = (function () {
+            try {
+                if (window.parent && window.parent !== window && window.parent.API_BASE) {
+                    return window.parent.API_BASE;
+                }
+                if (window.API_BASE) {
+                    return window.API_BASE;
+                }
+                const origin = (window.location && window.location.origin) || '';
+                const hostname = (window.location && window.location.hostname) || '';
+                const port = window.location.port || '';
+                const portNumber = parseInt(port, 10);
+                const isLiveServerPort = !Number.isNaN(portNumber) && portNumber >= 5500 && portNumber <= 5599;
+                const isLocalHost = /^(127\.0\.0\.1|localhost)$/i.test(hostname || '');
+                if ((isLocalHost && isLiveServerPort) || !origin || !/^https?:\/\//i.test(origin)) {
+                    // Use same hostname as current page to avoid CORS issues
+                    const apiHost = hostname === '127.0.0.1' ? '127.0.0.1' : 'localhost';
+                    return `http://${apiHost}:3020`;
+                }
+                return origin;
+            } catch (_) {
+                return 'http://localhost:3020';
+            }
+        })();
+
+        // Helper for translations
+        function getTranslation(key) {
+            if (typeof translations === 'undefined') return key;
+            const lang = localStorage.getItem('preferredLanguage') || 'en';
+            return (translations[lang] && translations[lang][key]) ? translations[lang][key] : key;
+        }
+
+        // Auth headers helper
+        function getAuthHeaders() {
+            try {
+                const authToken = (function () {
+                    try {
+                        if (window.parent && window.parent !== window && window.parent.authManager) {
+                            const token = window.parent.authManager.getToken();
+                            if (token) {
+                                localStorage.setItem('token', token);
+                                return token;
+                            }
+                        }
+                    } catch (_) { }
+                    try {
+                        if (window.authManager && typeof window.authManager.getToken === 'function') {
+                            const token = window.authManager.getToken();
+                            if (token) return token;
+                        }
+                    } catch (_) { }
+                    return localStorage.getItem('token') || '';
+                })();
+                return authToken ? { 'Authorization': `Bearer ${authToken}` } : {};
+            } catch (_) {
+                return {};
+            }
+        }
+
+        // Load all dashboard data
+        async function loadDashboardData() {
+            try {
+                await Promise.all([
+                    loadTasksData(),
+                    loadReportsData(),
+                    loadDepartmentsData(),
+                    loadPriorityData(),
+                    loadUrgentReports(),
+                    loadSignalsStatistics(),
+                    loadComplaintsStatistics()
+                ]);
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        // Load priority statistics
+        async function loadPriorityData() {
+            try {
+                const response = await fetch(`${API}/api/rapportemp/director/all-reports`, {
+                    headers: getAuthHeaders()
+                });
+                const data = await response.json();
+
+                if (data.success && data.reports) {
+                    const pendingReports = data.reports.filter(r => r.status === 'pending');
+
+                    let critical = 0, high = 0, medium = 0, low = 0;
+
+                    pendingReports.forEach(report => {
+                        let analysis = report.analysis;
+                        if (typeof analysis === 'string') {
+                            try {
+                                analysis = JSON.parse(analysis);
+                            } catch (e) {
+                                analysis = null;
+                            }
+                        }
+
+                        const urgencyScore = analysis?.urgency?.score || 0;
+
+                        if (urgencyScore >= 10) critical++;
+                        else if (urgencyScore >= 6) high++;
+                        else if (urgencyScore >= 4) medium++;
+                        else if (urgencyScore >= 1) low++;
+                    });
+
+                    document.getElementById('criticalPriority').textContent = critical;
+                    document.getElementById('highPriority').textContent = high;
+                    document.getElementById('mediumPriority').textContent = medium;
+                    document.getElementById('lowPriority').textContent = low;
+                }
+            } catch (error) {
+                console.error('Error loading priority data:', error);
+            }
+        }
+
+        // Load urgent reports for quick access
+        async function loadUrgentReports() {
+            try {
+                const response = await fetch(`${API}/api/rapportemp/director/all-reports`, {
+                    headers: getAuthHeaders()
+                });
+                const data = await response.json();
+
+                const urgentContainer = document.getElementById('urgentReportsList');
+
+                if (data.success && data.reports) {
+                    const pendingReports = data.reports.filter(r => r.status === 'pending');
+
+                    // Parse and sort by urgency
+                    const reportsWithUrgency = pendingReports.map(report => {
+                        let analysis = report.analysis;
+                        if (typeof analysis === 'string') {
+                            try {
+                                analysis = JSON.parse(analysis);
+                            } catch (e) {
+                                analysis = { urgency: { score: 0 } };
+                            }
+                        }
+                        return {
+                            ...report,
+                            analysis,
+                            urgencyScore: analysis?.urgency?.score || 0
+                        };
+                    });
+
+                    // Get top 5 most urgent
+                    const urgentReports = reportsWithUrgency
+                        .sort((a, b) => b.urgencyScore - a.urgencyScore)
+                        .slice(0, 5);
+
+                    if (urgentReports.length === 0) {
+                        urgentContainer.innerHTML = '<p class="text-center text-gray-500 py-8" data-translate="dashboard.no_urgent_reports">No urgent reports at this time</p>';
+                        if (typeof updatePageTranslations === 'function') {
+                            updatePageTranslations();
+                        }
+                        return;
+                    }
+
+                    const buildCard = (report) => {
+                        const score = report.urgencyScore;
+                        let borderColor, badgeColor, icon, badgeText;
+
+                        if (score >= 10) {
+                            borderColor = '#dc2626';
+                            badgeColor = 'background: linear-gradient(135deg, #dc2626, #b91c1c); color: white;';
+                            icon = '🚨';
+                            badgeText = '<span data-translate="dashboard.critical">Critical</span>';
+                        } else if (score >= 8) {
+                            borderColor = '#ea580c';
+                            badgeColor = 'background: linear-gradient(135deg, #ea580c, #c2410c); color: white;';
+                            icon = '🔴';
+                            badgeText = '<span data-translate="dashboard.very_high">Very High</span>';
+                        } else if (score >= 6) {
+                            borderColor = '#f59e0b';
+                            badgeColor = 'background: linear-gradient(135deg, #f59e0b, #d97706); color: white;';
+                            icon = '🟠';
+                            badgeText = '<span data-translate="dashboard.high">High</span>';
+                        } else if (score >= 4) {
+                            borderColor = '#eab308';
+                            badgeColor = 'background: linear-gradient(135deg, #eab308, #ca8a04); color: white;';
+                            icon = '🟡';
+                            badgeText = '<span data-translate="dashboard.medium">Medium</span>';
+                        } else {
+                            borderColor = '#3b82f6';
+                            badgeColor = 'background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;';
+                            icon = '🟢';
+                            badgeText = '<span data-translate="dashboard.low">Low</span>';
+                        }
+
+                        const summary = report.analysis?.summary || 'No summary available';
+                        const truncatedSummary = summary.length > 80 ? summary.substring(0, 80) + '...' : summary;
+
+                        return `
+                            <div class="urgent-report-card" style="border-left-color: ${borderColor};">
+                                <div class="urgent-report-badge" style="${badgeColor}">
+                                    ${icon}
+                                </div>
+                                <div class="urgent-report-content">
+                                    <h4 class="urgent-report-title">${report.title}</h4>
+                                    <p class="urgent-report-meta">${truncatedSummary}</p>
+                                    <div class="flex items-center gap-2">
+                                        <span class="urgent-report-score" style="${badgeColor}">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            ${score}/10 - ${badgeText}
+                                        </span>
+                                        ${report.employee_name ? `<span class="text-xs text-gray-500">• ${report.employee_name}</span>` : ''}
+                                    </div>
+                                </div>
+                                <a href="priorities.html" class="flex-shrink-0 px-3 py-2 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1">
+                                    <i class="fas fa-eye"></i>
+                                    <span data-translate="dashboard.view">View</span>
+                                </a>
+                            </div>
+                        `;
+                    };
+
+                    const visibleReports = urgentReports.slice(0, 3);
+                    const hiddenReports = urgentReports.slice(3);
+
+                    let htmlVisible = visibleReports.map(buildCard).join('');
+                    let htmlHidden = hiddenReports.map(buildCard).join('');
+
+                    let toggleHtml = '';
+                    if (hiddenReports.length > 0) {
+                        const showMoreText = getTranslation('dashboard.show_more') || 'Show more';
+                        const showLessText = getTranslation('dashboard.show_less') || 'Show less';
+                        toggleHtml = `
+                            <div id="urgentReportsMore" class="space-y-3 hidden">${htmlHidden}</div>
+                            <div class="flex justify-center mt-2">
+                                <button id="urgentReportsToggleBtn"
+                                    class="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700"
+                                    onclick="toggleUrgentList()"
+                                    data-show-more="${showMoreText}"
+                                    data-show-less="${showLessText}">
+                                    ${showMoreText}
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    urgentContainer.innerHTML = htmlVisible + toggleHtml;
+
+                    // Update translations for dynamically added content
+                    if (typeof updatePageTranslations === 'function') {
+                        updatePageTranslations();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading urgent reports:', error);
+                document.getElementById('urgentReportsList').innerHTML = '<p class="text-center text-red-500 py-8" data-translate="dashboard.error_loading_urgent_reports">Error loading urgent reports</p>';
+                if (typeof updatePageTranslations === 'function') {
+                    updatePageTranslations();
+                }
+            }
+        }
+
+        function toggleUrgentList() {
+            const moreEl = document.getElementById('urgentReportsMore');
+            const btn = document.getElementById('urgentReportsToggleBtn');
+            if (!moreEl || !btn) return;
+            const isHidden = moreEl.classList.contains('hidden');
+            if (isHidden) {
+                moreEl.classList.remove('hidden');
+                btn.textContent = btn.getAttribute('data-show-less') || 'Show less';
+            } else {
+                moreEl.classList.add('hidden');
+                btn.textContent = btn.getAttribute('data-show-more') || 'Show more';
+            }
+        }
+
+        // Load tasks data
+        async function loadTasksData() {
+            try {
+                const response = await fetch(`${API}/tasks`, {
+                    headers: getAuthHeaders()
+                });
+                const tasks = await response.json();
+
+                const totalTasks = tasks.length;
+                const inProgress = tasks.filter(t => t.status === 'In Progress').length;
+                const completed = tasks.filter(t => t.status === 'Completed').length;
+                const pending = tasks.filter(t => t.status === 'Pending').length;
+                const other = totalTasks - (inProgress + completed + pending); // Any other status
+
+                document.getElementById('kpiTasks').textContent = totalTasks;
+                document.getElementById('inProgressCount').textContent = inProgress;
+                document.getElementById('completedCount').textContent = completed;
+                document.getElementById('pendingTasksCount').textContent = pending;
+
+                // Update progress bars
+                if (totalTasks > 0) {
+                    document.getElementById('inProgressBar').style.width = `${(inProgress / totalTasks) * 100}%`;
+                    document.getElementById('completedBar').style.width = `${(completed / totalTasks) * 100}%`;
+                    document.getElementById('pendingBar').style.width = `${(pending / totalTasks) * 100}%`;
+                }
+
+                // Render the task status chart
+                renderTaskStatusChart({
+                    inProgress,
+                    completed,
+                    pending,
+                    other
+                });
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+            }
+        }
+
+        // Function to render the task status chart
+        function renderTaskStatusChart(data) {
+            const ctx = document.getElementById('taskStatusChart');
+
+            if (!ctx) {
+                console.error('Canvas element not found');
+                return;
+            }
+
+            // Destroy existing chart if it exists
+            if (window.taskStatusChart && typeof window.taskStatusChart.destroy === 'function') {
+                window.taskStatusChart.destroy();
+            }
+
+            // Get translation function
+            const getTranslation = (key) => {
+                const lang = localStorage.getItem('preferredLanguage') || 'en';
+                if (typeof translations !== 'undefined' && translations[lang] && translations[lang][key]) {
+                    return translations[lang][key];
+                }
+                return key;
+            };
+
+            // Filter out zero values for cleaner display
+            const chartData = [];
+            const chartLabels = [];
+            const chartColors = [];
+
+            if (data.inProgress > 0) {
+                chartData.push(data.inProgress);
+                chartLabels.push(getTranslation('dashboard.in_progress'));
+                chartColors.push('#2563eb');
+            }
+            if (data.completed > 0) {
+                chartData.push(data.completed);
+                chartLabels.push(getTranslation('dashboard.completed'));
+                chartColors.push('#10b981');
+            }
+            if (data.pending > 0) {
+                chartData.push(data.pending);
+                chartLabels.push(getTranslation('dashboard.pending'));
+                chartColors.push('#f59e0b');
+            }
+            if (data.other > 0) {
+                chartData.push(data.other);
+                chartLabels.push(getTranslation('dashboard.other'));
+                chartColors.push('#94a3b8');
+            }
+
+            // If no data, show a placeholder
+            if (chartData.length === 0) {
+                chartData.push(1);
+                chartLabels.push(getTranslation('dashboard.no_tasks'));
+                chartColors.push('#e5e7eb');
+            }
+
+            // Create new chart
+            window.taskStatusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        data: chartData,
+                        backgroundColor: chartColors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 4,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 6,
+                                font: {
+                                    family: 'Inter, sans-serif',
+                                    size: 10
+                                },
+                                padding: 10
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1f2937',
+                            bodyColor: '#4b5563',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 1,
+                            padding: 10,
+                            boxPadding: 4,
+                            cornerRadius: 8,
+                            displayColors: true,
+                            usePointStyle: true,
+                            callbacks: {
+                                label: function (context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
+                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true,
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            });
+
+            // Hide loading indicator
+            const loadingEl = document.getElementById('chartLoading');
+            if (loadingEl) {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        // Load reports data
+        async function loadReportsData() {
+            try {
+                const response = await fetch(`${API}/api/rapportemp/director/stats`, {
+                    headers: getAuthHeaders()
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('totalReports').textContent = data.stats.total_reports || 0;
+                    document.getElementById('acknowledgedReports').textContent = data.stats.acknowledged || 0;
+                    document.getElementById('pendingReports').textContent = data.stats.pending || 0;
+                    document.getElementById('todayReports').textContent = data.stats.today || 0;
+                }
+            } catch (error) {
+                console.error('Error loading reports:', error);
+            }
+        }
+
+        // Load departments data
+        async function loadDepartmentsData() {
+            try {
+                const [deptResponse, empResponse, tasksResponse] = await Promise.all([
+                    fetch(`${API}/departments`, { headers: getAuthHeaders() }),
+                    fetch(`${API}/employees`, { headers: getAuthHeaders() }),
+                    fetch(`${API}/tasks`, { headers: getAuthHeaders() })
+                ]);
+
+                const departments = await deptResponse.json();
+                const employees = await empResponse.json();
+                const tasks = await tasksResponse.json();
+
+                // Calculate responsibles from departments (unique responsible_id values)
+                const responsibleIds = new Set();
+                departments.forEach(dept => {
+                    if (dept.responsible_id) {
+                        responsibleIds.add(dept.responsible_id);
+                    }
+                });
+
+                document.getElementById('kpiDepartments').textContent = departments.length;
+                document.getElementById('kpiEmployees').textContent = employees.length;
+                document.getElementById('kpiResponsibles').textContent = responsibleIds.size;
+
+                // Display department performance
+                displayDepartmentPerformance(departments, tasks, employees);
+            } catch (error) {
+                console.error('Error loading departments:', error);
+            }
+        }
+
+        let signalsChart = null;
+        let signalsTypeChart = null;
+        let complaintsChart = null;
+        let complaintsTypeChart = null;
+
+        // Load signals statistics
+        async function loadSignalsStatistics() {
+            try {
+                const response = await fetch(`${API}/api/director/signals-stats`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const overview = data.overview || {};
+
+                    // Update KPI
+                    document.getElementById('kpiSignals').textContent = overview.total || 0;
+
+                    // Update detailed stats
+                    document.getElementById('signalsPendingCount').textContent = overview.pending || 0;
+                    document.getElementById('signalsTreatedCount').textContent = overview.treated || 0;
+                    document.getElementById('signalsHighPriorityCount').textContent = overview.high_priority || 0;
+                    document.getElementById('signalsMediumPriorityCount').textContent = overview.medium_priority || 0;
+
+                    // Render charts
+                    renderSignalsStatusChart(overview);
+                    renderSignalsTypeChart(data.byType || []);
+                } else {
+                    console.warn('Signals statistics API response not OK:', response.status);
+                    document.getElementById('kpiSignals').textContent = '0';
+                }
+            } catch (error) {
+                console.error('Error loading signals statistics:', error);
+                document.getElementById('kpiSignals').textContent = '0';
+            }
+        }
+
+        // Load complaints statistics
+        async function loadComplaintsStatistics() {
+            try {
+                const response = await fetch(`${API}/api/director/complaints-statistics`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const overview = data.overview || {};
+
+                    // Update KPI
+                    document.getElementById('kpiComplaints').textContent = overview.total || 0;
+
+                    // Update detailed stats
+                    document.getElementById('complaintsPendingCount').textContent = overview.pending || 0;
+                    document.getElementById('complaintsCompletedCount').textContent = overview.completed || 0;
+                    document.getElementById('complaintsOverdueCount').textContent = overview.overdue || 0;
+                    document.getElementById('complaintsHighPriorityCount').textContent = overview.high_priority || 0;
+
+                    // Render charts
+                    renderComplaintsStatusChart(overview);
+                    renderComplaintsTypeChart(data.byType || []);
+                } else {
+                    console.warn('Complaints statistics API response not OK:', response.status);
+                    document.getElementById('kpiComplaints').textContent = '0';
+                }
+            } catch (error) {
+                console.error('Error loading complaints statistics:', error);
+                document.getElementById('kpiComplaints').textContent = '0';
+            }
+        }
+
+        // Render signals status chart
+        function renderSignalsStatusChart(overview) {
+            const ctx = document.getElementById('signalsStatusChart');
+            if (!ctx) return;
+
+            if (signalsChart) {
+                signalsChart.destroy();
+            }
+
+            const pending = overview.pending || 0;
+            const treated = overview.treated || 0;
+            const total = pending + treated;
+
+            // If no data, show placeholder
+            if (total === 0) {
+                signalsChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['No Data'],
+                        datasets: [{
+                            data: [1],
+                            backgroundColor: ['#e5e7eb'],
+                            borderWidth: 0,
+                            hoverBackgroundColor: '#e5e7eb'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: false
+                            }
+                        }
+                    }
+                });
+                return;
+            }
+
+            signalsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [getTranslation('dashboard.pending'), getTranslation('dashboard.treated')],
+                    datasets: [{
+                        data: [pending, treated],
+                        backgroundColor: ['#f97316', '#10b981'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 4,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 6,
+                                font: {
+                                    family: 'Inter, sans-serif',
+                                    size: 10
+                                },
+                                padding: 10
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1f2937',
+                            bodyColor: '#4b5563',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 1,
+                            padding: 10,
+                            boxPadding: 4,
+                            cornerRadius: 8,
+                            displayColors: true,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render signals by type chart
+        function renderSignalsTypeChart(byType) {
+            const ctx = document.getElementById('signalsTypeChart');
+            if (!ctx) return;
+
+            if (signalsTypeChart) {
+                signalsTypeChart.destroy();
+            }
+
+            const topTypes = (byType || []).slice(0, 5);
+
+            if (topTypes.length === 0) {
+                signalsTypeChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['No Data'],
+                        datasets: [{
+                            label: 'Signals',
+                            data: [0],
+                            backgroundColor: 'rgba(229, 231, 235, 0.5)',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    display: false
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+                return;
+            }
+
+            const labels = topTypes.map(t => t.type_name || 'Unknown');
+            const data = topTypes.map(t => t.total || 0);
+
+            signalsTypeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: getTranslation('dashboard.signals'),
+                        data: data,
+                        backgroundColor: '#f97316',
+                        hoverBackgroundColor: '#ea580c',
+                        borderWidth: 0,
+                        borderRadius: 4,
+                        barThickness: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1f2937',
+                            bodyColor: '#4b5563',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 1,
+                            padding: 10,
+                            boxPadding: 4,
+                            cornerRadius: 8,
+                            displayColors: false,
+                            usePointStyle: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                borderDash: [2, 4],
+                                color: '#f3f4f6',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10,
+                                    family: 'Inter, sans-serif'
+                                },
+                                color: '#9ca3af',
+                                precision: 0
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10,
+                                    family: 'Inter, sans-serif'
+                                },
+                                color: '#6b7280'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render complaints status chart
+        function renderComplaintsStatusChart(overview) {
+            const ctx = document.getElementById('complaintsStatusChart');
+            if (!ctx) return;
+
+            if (complaintsChart) {
+                complaintsChart.destroy();
+            }
+
+            const pending = overview.pending || 0;
+            const completed = overview.completed || 0;
+            const total = pending + completed;
+
+            // If no data, show placeholder
+            if (total === 0) {
+                complaintsChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['No Data'],
+                        datasets: [{
+                            data: [1],
+                            backgroundColor: ['#e5e7eb'],
+                            borderWidth: 0,
+                            hoverBackgroundColor: '#e5e7eb'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: false
+                            }
+                        }
+                    }
+                });
+                return;
+            }
+
+            complaintsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [getTranslation('dashboard.pending'), getTranslation('dashboard.completed')],
+                    datasets: [{
+                        data: [pending, completed],
+                        backgroundColor: ['#f59e0b', '#10b981'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 4,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 6,
+                                font: {
+                                    family: 'Inter, sans-serif',
+                                    size: 10
+                                },
+                                padding: 10
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1f2937',
+                            bodyColor: '#4b5563',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 1,
+                            padding: 10,
+                            boxPadding: 4,
+                            cornerRadius: 8,
+                            displayColors: true,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render complaints by type chart
+        function renderComplaintsTypeChart(byType) {
+            const ctx = document.getElementById('complaintsTypeChart');
+            if (!ctx) return;
+
+            if (complaintsTypeChart) {
+                complaintsTypeChart.destroy();
+            }
+
+            const topTypes = (byType || []).slice(0, 5);
+
+            if (topTypes.length === 0) {
+                complaintsTypeChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['No Data'],
+                        datasets: [{
+                            label: 'Complaints',
+                            data: [0],
+                            backgroundColor: 'rgba(229, 231, 235, 0.8)',
+                            borderColor: '#9ca3af',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    display: false
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+                return;
+            }
+
+            const labels = topTypes.map(t => t.type_name || 'Unknown');
+            const data = topTypes.map(t => t.total || 0);
+
+            complaintsTypeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: getTranslation('dashboard.complaints'),
+                        data: data,
+                        backgroundColor: '#f59e0b',
+                        hoverBackgroundColor: '#d97706',
+                        borderWidth: 0,
+                        borderRadius: 4,
+                        barThickness: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1f2937',
+                            bodyColor: '#4b5563',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 1,
+                            padding: 10,
+                            boxPadding: 4,
+                            cornerRadius: 8,
+                            displayColors: false,
+                            usePointStyle: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                borderDash: [2, 4],
+                                color: '#f3f4f6',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10,
+                                    family: 'Inter, sans-serif'
+                                },
+                                color: '#9ca3af',
+                                precision: 0
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10,
+                                    family: 'Inter, sans-serif'
+                                },
+                                color: '#6b7280'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Display department performance
+        function displayDepartmentPerformance(departments, tasks, employees) {
+            const performanceContainer = document.getElementById('departmentPerformance');
+
+            // Get translation function
+            const getTranslation = (key) => {
+                const lang = localStorage.getItem('preferredLanguage') || 'en';
+                if (typeof translations !== 'undefined' && translations[lang] && translations[lang][key]) {
+                    return translations[lang][key];
+                }
+                return key;
+            };
+
+            if (!departments || departments.length === 0) {
+                performanceContainer.innerHTML = `<p class="text-center text-gray-500 py-8" data-translate="dashboard.no_department_data">${getTranslation('dashboard.no_department_data')}</p>`;
+                return;
+            }
+
+            const deptStats = departments.map(dept => {
+                const deptEmployees = employees.filter(e => e.department_id === dept.id);
+                const deptEmpIds = new Set(deptEmployees.map(e => e.id));
+
+                // Filter tasks where any assignee belongs to this department
+                const deptTasks = tasks.filter(t =>
+                    (t.assignees || []).some(a => deptEmpIds.has(a.id))
+                );
+
+                const completedTasks = deptTasks.filter(t => t.status === 'Completed').length;
+                const totalTasks = deptTasks.length;
+                const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+                return {
+                    name: dept.name,
+                    totalTasks,
+                    completedTasks,
+                    completionRate,
+                    employeeCount: deptEmployees.length
+                };
+            }).sort((a, b) => b.completionRate - a.completionRate).slice(0, 5);
+
+            let html = '';
+            deptStats.forEach((dept, index) => {
+                const colors = [
+                    { gradient1: '#2563eb', gradient2: '#7c3aed', icon: 'fa-trophy' },
+                    { gradient1: '#10b981', gradient2: '#059669', icon: 'fa-medal' },
+                    { gradient1: '#a855f7', gradient2: '#9333ea', icon: 'fa-award' },
+                    { gradient1: '#f59e0b', gradient2: '#d97706', icon: 'fa-star' },
+                    { gradient1: '#6b7280', gradient2: '#4b5563', icon: 'fa-building' }
+                ];
+                const color = colors[index] || colors[4];
+
+                html += `
+                    <div class="dir-resp-summary dir-resp-pane">
+                        <div class="dir-resp-summary-main">
+                            <div class="dir-resp-summary-info">
+                                <div class="dir-resp-avatar-lg" style="background: linear-gradient(135deg, ${color.gradient1}, ${color.gradient2});">
+                                    <i class="fas ${color.icon}"></i>
+                                </div>
+                                <div>
+                                    <p class="dir-resp-label" style="color: ${color.gradient1};"><span data-translate="dashboard.rank">${getTranslation('dashboard.rank')}</span> #${index + 1}</p>
+                                    <h3>${dept.name}</h3>
+                                    <div class="dir-resp-contact-line">
+                                        <i class="fas fa-chart-line"></i>
+                                        <span>${Math.round(dept.completionRate)}% <span data-translate="dashboard.completion_rate">${getTranslation('dashboard.completion_rate')}</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dir-resp-summary-metrics">
+                                <div class="dir-resp-summary-metric">
+                                    <p class="dir-resp-label" data-translate="dashboard.tasks">${getTranslation('dashboard.tasks')}</p>
+                                    <strong>${dept.totalTasks}</strong>
+                                </div>
+                                <div class="dir-resp-summary-metric" style="background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.4);">
+                                    <p class="dir-resp-label" data-translate="dashboard.completed">${getTranslation('dashboard.completed')}</p>
+                                    <strong style="color: #059669;">${dept.completedTasks}</strong>
+                                </div>
+                                <div class="dir-resp-summary-metric">
+                                    <p class="dir-resp-label" data-translate="dashboard.team">${getTranslation('dashboard.team')}</p>
+                                    <strong>${dept.employeeCount}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            performanceContainer.innerHTML = html;
+        }
+
+        // Language handling
+        document.getElementById('languageSelector')?.addEventListener('change', function () {
+            const selectedLang = this.value;
+            localStorage.setItem('preferredLanguage', selectedLang);
+
+            // Update HTML lang and dir attributes
+            document.documentElement.lang = selectedLang === 'ar' ? 'ar' : selectedLang === 'fr' ? 'fr' : 'en';
+            document.documentElement.dir = selectedLang === 'ar' ? 'rtl' : 'ltr';
+
+            // Update current language in window object for translations.js
+            if (typeof window !== 'undefined') {
+                window.currentLanguage = selectedLang;
+            }
+
+            // Update date display
+            updateDateDisplay(selectedLang);
+
+            // Update translations
+            setTimeout(() => {
+                if (typeof updatePageTranslations === 'function') {
+                    updatePageTranslations();
+                }
+
+                // Reload dashboard data to update dynamic content
+                loadDashboardData();
+            }, 50);
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function () {
+            // Hide internal header when embedded inside main frontend layout
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const isEmbed = params.get('embed') === '1';
+                if (isEmbed) {
+                    const hero = document.querySelector('.page-hero');
+                    if (hero) {
+                        hero.style.display = 'none';
+                    }
+                }
+            } catch (e) {
+                console.warn('Embed detection failed:', e);
+            }
+
+            // Load user data from AuthManager
+            loadUserData();
+
+            // Set language first
+            const savedLang = localStorage.getItem('preferredLanguage') || 'en';
+            const langSelector = document.getElementById('languageSelector');
+            if (langSelector) langSelector.value = savedLang;
+
+            // Update HTML lang and dir attributes
+            document.documentElement.lang = savedLang === 'ar' ? 'ar' : savedLang === 'fr' ? 'fr' : 'en';
+            document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+
+            // Set current language in window object for translations.js
+            if (typeof window !== 'undefined') {
+                window.currentLanguage = savedLang;
+            }
+
+            // Set current date with proper locale and Western numerals
+            updateDateDisplay(savedLang);
+
+            // Load data
+            loadDashboardData();
+
+            // Update translations - use setTimeout to ensure translations.js is fully loaded
+            setTimeout(() => {
+                if (typeof updatePageTranslations === 'function') {
+                    updatePageTranslations();
+                } else {
+                    console.error('updatePageTranslations function not found');
+                }
+            }, 100);
+
+            // Refresh data every 30 seconds
+            setInterval(loadDashboardData, 30000);
+        });
+
+        // Load user data from AuthManager
+        function loadUserData() {
+            try {
+                const user = authManager.getUser();
+
+                if (user) {
+                    // Set user name
+                    const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username || 'Director';
+                    const userNameElement = document.getElementById('userName');
+                    if (userNameElement) {
+                        userNameElement.textContent = fullName;
+                    }
+
+                    // Set user role
+                    const roleMap = {
+                        'Director': 'Director',
+                        'HR_Manager': 'HR Manager',
+                        'Department_Responsible': 'Department Head',
+                        'Employee': 'Employee'
+                    };
+                    const displayRole = roleMap[user.role] || user.role || 'Director';
+                    const userRoleElement = document.getElementById('userRole');
+                    if (userRoleElement) {
+                        userRoleElement.textContent = displayRole;
+                    }
+
+                    // Set user initials
+                    const initials = getInitials(fullName);
+                    const userInitialsElement = document.getElementById('userInitials');
+                    if (userInitialsElement) {
+                        userInitialsElement.textContent = initials;
+                    }
+
+                    // If user has profile image, set it
+                    if (user.profile_image) {
+                        const avatarElement = document.getElementById('userAvatar');
+                        if (avatarElement) {
+                            avatarElement.innerHTML = `<img src="${user.profile_image}" alt="${fullName}">`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        // Get initials from full name
+        function getInitials(name) {
+            if (!name) return 'D';
+
+            const parts = name.trim().split(' ').filter(p => p.length > 0);
+            if (parts.length === 0) return 'D';
+            if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+
+            // Get first letter of first name and last name
+            return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        }
+
+        // Update date display with Western numerals
+        function updateDateDisplay(lang) {
+            const dateElement = document.getElementById('currentDate');
+            if (dateElement) {
+                const today = new Date();
+                const options = {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    numberingSystem: 'latn' // Force Western numerals (0-9) for all languages
+                };
+
+                let locale = 'en-US';
+                if (lang === 'ar') {
+                    locale = 'ar-SA';
+                } else if (lang === 'fr') {
+                    locale = 'fr-FR';
+                }
+
+                dateElement.textContent = today.toLocaleDateString(locale, options);
+            }
+        }
+
+        // Toggle Graphs Function
+        function toggleStatsGraphs() {
+            const container = document.getElementById('statsGraphsContainer');
+            const icon = document.getElementById('graphToggleIcon');
+            const btn = document.getElementById('graphToggleBtn');
+            const isHidden = container.classList.contains('hidden');
+            const txt = btn ? btn.querySelector('span') : null;
+
+            if (isHidden) {
+                container.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+                if (txt) {
+                    txt.textContent = getTranslation('dashboard.hide_graphs');
+                    txt.setAttribute('data-translate', 'dashboard.hide_graphs');
+                }
+                // Trigger resize for Chart.js
+                window.dispatchEvent(new Event('resize'));
+            } else {
+                container.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+                if (txt) {
+                    txt.textContent = getTranslation('dashboard.show_graphs');
+                    txt.setAttribute('data-translate', 'dashboard.show_graphs');
+                }
+            }
+        }
+
+        // =====================
+        // Notification System
+        // =====================
+        let allNotifications = [];
+        let notificationRefreshInterval = null;
+
+        // Toggle notification dropdown
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notificationDropdown');
+            const isHidden = dropdown.classList.contains('hidden');
+
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+                loadNotifications();
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (event) {
+            const dropdown = document.getElementById('notificationDropdown');
+            const bell = document.getElementById('notificationBell');
+
+            if (!dropdown.contains(event.target) && !bell.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Notification bell click handler
+        document.getElementById('notificationBell')?.addEventListener('click', function (e) {
+            e.stopPropagation();
+            toggleNotificationDropdown();
+        });
+
+        // Mark all as read
+        document.getElementById('markAllReadBtn')?.addEventListener('click', function (e) {
+            e.stopPropagation();
+            markAllAsRead();
+        });
+
+        // Load all notifications
+        async function loadNotifications() {
+            showNotificationLoading();
+
+            try {
+                const [tasks, reports, complaints, signals] = await Promise.all([
+                    loadTaskNotifications(),
+                    loadReportNotifications(),
+                    loadComplaintNotifications(),
+                    loadSignalNotifications()
+                ]);
+
+                // Combine all notifications
+                allNotifications = [...tasks, ...reports, ...complaints, ...signals];
+
+                // Sort by timestamp (newest first)
+                allNotifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                // Update badge
+                const unreadCount = allNotifications.filter(n => !n.isRead).length;
+                updateNotificationBadge(unreadCount);
+
+                // Render notifications
+                renderNotifications(allNotifications);
+
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                showNotificationEmpty();
+            }
+        }
+
+        // Load task notifications
+        async function loadTaskNotifications() {
+            try {
+                const response = await fetch(`${API}/tasks`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) return [];
+
+                const tasks = await response.json();
+                const notifications = [];
+
+                // Get current user
+                const user = authManager.getUser();
+                if (!user) return [];
+
+                // Filter tasks assigned to director or overdue
+                const now = new Date();
+                tasks.forEach(task => {
+                    const dueDate = task.due_date ? new Date(task.due_date) : null;
+                    const isOverdue = dueDate && dueDate < now && task.status !== 'Completed';
+                    const isPending = task.status === 'Pending' || task.status === 'In Progress';
+
+                    if (isOverdue) {
+                        notifications.push({
+                            id: `task-${task.id}`,
+                            type: 'task',
+                            title: task.title || 'Task',
+                            message: `Overdue task - Due ${formatDate(dueDate)}`,
+                            link: `tasks.html?task=${task.id}`,
+                            icon: 'fa-tasks',
+                            color: '#ef4444',
+                            timestamp: task.created_at,
+                            isRead: false
+                        });
+                    } else if (isPending && task.priority === 'high') {
+                        notifications.push({
+                            id: `task-${task.id}`,
+                            type: 'task',
+                            title: task.title || 'Task',
+                            message: 'High priority task pending',
+                            link: `tasks.html?task=${task.id}`,
+                            icon: 'fa-tasks',
+                            color: '#3b82f6',
+                            timestamp: task.created_at,
+                            isRead: false
+                        });
+                    }
+                });
+
+                return notifications.slice(0, 10); // Limit to 10 most recent
+            } catch (error) {
+                console.error('Error loading task notifications:', error);
+                return [];
+            }
+        }
+
+        // Load report notifications
+        async function loadReportNotifications() {
+            try {
+                const response = await fetch(`${API}/api/rapportemp/director/all-reports`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) return [];
+
+                const data = await response.json();
+                const reports = data.reports || [];
+                const notifications = [];
+
+                reports.forEach(report => {
+                    let analysis = report.analysis;
+                    if (typeof analysis === 'string') {
+                        try {
+                            analysis = JSON.parse(analysis);
+                        } catch (e) {
+                            analysis = null;
+                        }
+                    }
+
+                    const urgencyScore = analysis?.urgency?.score || 0;
+
+                    // Only show urgent reports (score >= 8) or pending reports
+                    if (report.status === 'pending' && urgencyScore >= 8) {
+                        notifications.push({
+                            id: `report-${report.id}`,
+                            type: 'report',
+                            title: report.title || 'Report',
+                            message: `Urgent report - Priority score: ${urgencyScore}/10`,
+                            link: `priorities.html?report=${report.id}`,
+                            icon: 'fa-file-alt',
+                            color: '#f59e0b',
+                            timestamp: report.created_at,
+                            isRead: false
+                        });
+                    }
+                });
+
+                return notifications.slice(0, 10);
+            } catch (error) {
+                console.error('Error loading report notifications:', error);
+                return [];
+            }
+        }
+
+        // Load complaint notifications
+        async function loadComplaintNotifications() {
+            try {
+                const response = await fetch(`${API}/api/director/complaints-statistics`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) return [];
+
+                const data = await response.json();
+                const overview = data.overview || {};
+                const notifications = [];
+
+                // Show notification for pending complaints
+                if (overview.pending > 0) {
+                    notifications.push({
+                        id: 'complaints-pending',
+                        type: 'complaint',
+                        title: 'Pending Complaints',
+                        message: `${overview.pending} complaint${overview.pending > 1 ? 's' : ''} awaiting review`,
+                        link: 'complaints_director.html',
+                        icon: 'fa-comment',
+                        color: '#ef4444',
+                        timestamp: new Date().toISOString(),
+                        isRead: false
+                    });
+                }
+
+                // Show notification for overdue complaints
+                if (overview.overdue > 0) {
+                    notifications.push({
+                        id: 'complaints-overdue',
+                        type: 'complaint',
+                        title: 'Overdue Complaints',
+                        message: `${overview.overdue} complaint${overview.overdue > 1 ? 's' : ''} past due date`,
+                        link: 'complaints_director.html',
+                        icon: 'fa-comment',
+                        color: '#dc2626',
+                        timestamp: new Date().toISOString(),
+                        isRead: false
+                    });
+                }
+
+                return notifications;
+            } catch (error) {
+                console.error('Error loading complaint notifications:', error);
+                return [];
+            }
+        }
+
+        // Load signal notifications
+        async function loadSignalNotifications() {
+            try {
+                const response = await fetch(`${API}/api/director/signals-stats`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) return [];
+
+                const data = await response.json();
+                const overview = data.overview || {};
+                const notifications = [];
+
+                // Show notification for pending signals
+                if (overview.pending > 0) {
+                    notifications.push({
+                        id: 'signals-pending',
+                        type: 'signal',
+                        title: 'Pending Signals',
+                        message: `${overview.pending} signal${overview.pending > 1 ? 's' : ''} awaiting treatment`,
+                        link: 'signals_responsible.html',
+                        icon: 'fa-exclamation-triangle',
+                        color: '#10b981',
+                        timestamp: new Date().toISOString(),
+                        isRead: false
+                    });
+                }
+
+                // Show notification for high priority signals
+                if (overview.high_priority > 0) {
+                    notifications.push({
+                        id: 'signals-high-priority',
+                        type: 'signal',
+                        title: 'High Priority Signals',
+                        message: `${overview.high_priority} high priority signal${overview.high_priority > 1 ? 's' : ''}`,
+                        link: 'signals_responsible.html',
+                        icon: 'fa-exclamation-triangle',
+                        color: '#059669',
+                        timestamp: new Date().toISOString(),
+                        isRead: false
+                    });
+                }
+
+                return notifications;
+            } catch (error) {
+                console.error('Error loading signal notifications:', error);
+                return [];
+            }
+        }
+
+        // Update notification badge
+        function updateNotificationBadge(count) {
+            const badge = document.getElementById('notificationCount');
+            if (badge) {
+                badge.textContent = count;
+                if (count > 0) {
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        // Render notifications
+        function renderNotifications(notifications) {
+            const listContainer = document.getElementById('notificationList');
+            const loading = document.getElementById('notificationLoading');
+            const empty = document.getElementById('notificationEmpty');
+
+            // Hide loading
+            if (loading) loading.style.display = 'none';
+
+            // Remove existing notification items
+            const existingItems = listContainer.querySelectorAll('.notification-item');
+            existingItems.forEach(item => item.remove());
+
+            if (notifications.length === 0) {
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+
+            // Render each notification
+            notifications.forEach(notification => {
+                const item = createNotificationItem(notification);
+                listContainer.appendChild(item);
+            });
+        }
+
+        // Create notification item HTML
+        function createNotificationItem(notification) {
+            const div = document.createElement('div');
+            div.className = `notification-item ${notification.isRead ? '' : 'unread'}`;
+            div.style.position = 'relative';
+
+            div.innerHTML = `
+                <div class="notification-icon ${notification.type}">
+                    <i class="fas ${notification.icon}"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">${notification.title}</div>
+                    <div class="notification-message">${notification.message}</div>
+                    <div class="notification-time">
+                        <i class="fas fa-clock"></i>
+                        ${formatRelativeTime(notification.timestamp)}
+                    </div>
+                </div>
+            `;
+
+            div.addEventListener('click', () => {
+                window.location.href = notification.link;
+            });
+
+            return div;
+        }
+
+        // Format relative time
+        function formatRelativeTime(timestamp) {
+            const now = new Date();
+            const date = new Date(timestamp);
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+            if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+            if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+
+            return formatDate(date);
+        }
+
+        // Format date
+        function formatDate(date) {
+            if (!date) return '';
+            const d = new Date(date);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        // Show loading state
+        function showNotificationLoading() {
+            const loading = document.getElementById('notificationLoading');
+            const empty = document.getElementById('notificationEmpty');
+
+            if (loading) loading.style.display = 'flex';
+            if (empty) empty.classList.add('hidden');
+        }
+
+        // Show empty state
+        function showNotificationEmpty() {
+            const loading = document.getElementById('notificationLoading');
+            const empty = document.getElementById('notificationEmpty');
+
+            if (loading) loading.style.display = 'none';
+            if (empty) empty.classList.remove('hidden');
+        }
+
+        // Mark all as read
+        function markAllAsRead() {
+            allNotifications.forEach(n => n.isRead = true);
+            updateNotificationBadge(0);
+            renderNotifications(allNotifications);
+        }
+
+        // Auto-refresh notifications every 30 seconds
+        function startNotificationRefresh() {
+            // Clear existing interval
+            if (notificationRefreshInterval) {
+                clearInterval(notificationRefreshInterval);
+            }
+
+            // Refresh every 30 seconds
+            notificationRefreshInterval = setInterval(() => {
+                loadNotifications();
+            }, 30000);
+        }
+
+        // Initialize notifications on page load
+        setTimeout(() => {
+            loadNotifications();
+            startNotificationRefresh();
+        }, 1000);
+    </script>
+</body>
+
+</html>

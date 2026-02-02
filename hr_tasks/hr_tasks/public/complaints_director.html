@@ -1,0 +1,2582 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة الشكاوي</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --director-blue: #2563eb;
+      --director-purple: #7c3aed;
+      --director-slate: #0f172a;
+      --director-card-bg: #ffffff;
+      --director-surface: #f8fafc;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #f8f9fa;
+      line-height: 1.6;
+    }
+
+    .notification-button {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: white;
+      border: none;
+      border-radius: 999px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      padding: 0.5rem 0.75rem;
+      display: none;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+      font-weight: 600;
+      z-index: 1200;
+      transition: all 0.2s;
+    }
+
+    .notification-button:hover {
+      transform: translateY(-2px);
+    }
+
+    .notification-button .notification-count {
+      min-width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #ef4444;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+    }
+
+    .notification-button:not(.has-notifications) .notification-count {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .notification-button.pulse {
+      animation: badgePulse 0.6s ease-in-out 2;
+    }
+
+    @keyframes badgePulse {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(37, 99, 235, 0);
+      }
+
+      50% {
+        transform: scale(1.08);
+        box-shadow: 0 0 18px rgba(37, 99, 235, 0.35);
+      }
+
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(37, 99, 235, 0);
+      }
+    }
+
+    .notification-item {
+      width: 100%;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 0.75rem;
+      display: block;
+      text-align: right;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 0.5rem;
+    }
+
+    .notification-item:hover {
+      background: #f9fafb;
+      border-color: #3b82f6;
+    }
+
+    .notification-item .notification-date {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 0.25rem;
+      display: block;
+    }
+
+    .complaint-item.highlight,
+    tr.highlight {
+      animation: directorHighlight 1.2s ease-in-out 2;
+      border-color: #3b82f6;
+    }
+
+    tr.highlight {
+      background: #dbeafe !important;
+    }
+
+    @keyframes directorHighlight {
+      0% {
+        box-shadow: 0 0 0 rgba(37, 99, 235, 0);
+        transform: scale(1);
+      }
+
+      50% {
+        box-shadow: 0 0 18px rgba(37, 99, 235, 0.4);
+        transform: scale(1.02);
+      }
+
+      100% {
+        box-shadow: 0 0 0 rgba(37, 99, 235, 0);
+        transform: scale(1);
+      }
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    /* Header - Simplified to only show buttons */
+    .header {
+      background: transparent;
+      padding: 0;
+      border-radius: 0;
+      box-shadow: none;
+      margin-bottom: 1rem;
+      border: none;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .header h1,
+    .header p {
+      display: none;
+    }
+
+    /* Filters - Exact Director Theme Match */
+    .filters {
+      margin-top: 16px;
+      background: var(--director-card-bg);
+      border-radius: 22px;
+      padding: 24px 24px 20px;
+      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .filters::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(37, 99, 235, 0.05), rgba(124, 58, 237, 0.03), rgba(56, 189, 248, 0.03));
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .filters > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .filters-grid {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .filter-group {
+      position: relative;
+    }
+
+    .filter-group label {
+      display: none;
+    }
+
+    .filter-group input,
+    .filter-group select {
+      border-radius: 12px;
+      border: 1px solid rgba(15, 23, 42, 0.1);
+      padding: 10px 14px;
+      background: #f8fafc;
+      font-size: 0.9rem;
+      color: #1f2937;
+      transition: all 0.3s ease;
+      min-width: 180px;
+    }
+
+    .filter-group input:focus,
+    .filter-group select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      background: white;
+    }
+
+    .filter-group input:hover,
+    .filter-group select:hover {
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .filter-group input::placeholder {
+      color: #9ca3af;
+    }
+
+    .filters-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filters-actions .btn {
+      border-radius: 12px;
+      padding: 10px 16px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 120px;
+      justify-content: center;
+    }
+
+    .filters-actions .btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+
+    .filters-actions .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+      filter: brightness(1.05);
+    }
+
+    .filters-actions .btn-secondary {
+      background: #f8fafc;
+      color: #374151;
+      border: 1px solid rgba(15, 23, 42, 0.1);
+    }
+
+    .filters-actions .btn-secondary:hover {
+      background: #e2e8f0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(148, 163, 184, 0.2);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+      filter: brightness(1.05);
+    }
+
+    /* Card - Enhanced with director.html timetable theme */
+    .card {
+      background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+      border: 2px solid rgba(148, 163, 184, 0.15);
+      border-radius: 24px;
+      padding: 2.5rem;
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(59, 130, 246, 0.05), rgba(124, 58, 237, 0.03), rgba(56, 189, 248, 0.03));
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 25px 45px rgba(15, 23, 42, 0.12);
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+
+    .card-header {
+      position: relative;
+      z-index: 1;
+    }
+
+    .view-controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      align-items: center;
+    }
+
+    .view-toggle {
+      display: inline-flex;
+      background: #e5e7eb;
+      border-radius: 999px;
+      padding: 0.25rem;
+      gap: 0.25rem;
+    }
+
+    .view-toggle button {
+      border: none;
+      background: transparent;
+      padding: 0.45rem 1.25rem;
+      border-radius: 999px;
+      font-weight: 600;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .view-toggle button.active {
+      background: white;
+      color: #1f2937;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    }
+
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table.complaints-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+
+    table.complaints-table thead {
+      background: #f3f4f6;
+    }
+
+    table.complaints-table th,
+    table.complaints-table td {
+      text-align: right;
+      padding: 0.85rem;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.9rem;
+      vertical-align: top;
+    }
+
+    table.complaints-table th {
+      font-weight: 700;
+      color: #111827;
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    table.complaints-table th.sortable:hover {
+      background: #f3f4f6;
+    }
+
+    table.complaints-table th .sort-icon {
+      display: inline-block;
+      margin-right: 0.25rem;
+      font-size: 0.75rem;
+      opacity: 0.5;
+    }
+
+    table.complaints-table th.sort-asc .sort-icon::after {
+      content: '▲';
+      opacity: 1;
+    }
+
+    table.complaints-table th.sort-desc .sort-icon::after {
+      content: '▼';
+      opacity: 1;
+    }
+
+    table.complaints-table tbody tr {
+      background: white;
+    }
+
+    table.complaints-table tbody tr:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    table.complaints-table tbody tr:hover {
+      background: #f3f4f6;
+    }
+
+    .status-pending {
+      color: #f59e0b;
+      font-weight: 600;
+    }
+
+    .status-completed {
+      color: #10b981;
+      font-weight: 600;
+    }
+
+    table.complaints-table th.actions-header {
+      text-align: center;
+      min-width: 400px;
+    }
+
+    table.complaints-table td.actions-cell {
+      text-align: center;
+    }
+
+    .table-actions {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 0.35rem;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .table-actions .btn-sm {
+      font-size: 0.8rem;
+      padding: 0.4rem 0.75rem;
+      white-space: nowrap;
+    }
+
+    .table-filters {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .table-filters input,
+    .table-filters select {
+      padding: 0.5rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+
+    .create-complaint-btn {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .create-complaint-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Section Toggle - Director Toolbar Styles (Exact Match) */
+    .section-toggle {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
+      border-radius: 20px;
+      padding: 24px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .section-toggle::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(37, 99, 235, 0.05), rgba(124, 58, 237, 0.03), rgba(56, 189, 248, 0.03));
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .section-toggle > div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      position: relative;
+      z-index: 1;
+      flex-wrap: wrap;
+    }
+
+    .section-toggle .tabs-container {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: rgba(248, 250, 252, 0.6);
+      padding: 6px;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .section-toggle .actions-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .section-btn {
+      border-radius: 12px;
+      padding: 12px 20px;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      font-weight: 500;
+      font-size: 0.875rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .section-btn:hover {
+      background: rgba(241, 245, 249, 0.8);
+      color: #1f2937;
+    }
+
+    .section-btn.active {
+      background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .section-btn.active:hover {
+      background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .section-btn i {
+      font-size: 1rem;
+      color: inherit;
+      transition: all 0.3s ease;
+    }
+
+    .section-btn.active i {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .toolbar-action-btn {
+      border-radius: 12px;
+      padding: 12px 20px;
+      border: none;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+
+    .toolbar-action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+      filter: brightness(1.05);
+    }
+
+    .toolbar-action-btn.secondary {
+      background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+
+    .toolbar-action-btn.secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+      filter: brightness(1.05);
+    }
+
+    .section-content {
+      display: none;
+    }
+
+    .section-content.active {
+      display: block;
+    }
+
+    .photo-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1500;
+      padding: 1rem;
+    }
+
+    .photo-modal.show {
+      display: flex;
+    }
+
+    .photo-modal-content {
+      background: white;
+      border-radius: 12px;
+      max-width: 90vw;
+      max-height: 90vh;
+      padding: 1rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      position: relative;
+    }
+
+    .photo-modal-content img {
+      max-width: 80vw;
+      max-height: 80vh;
+      border-radius: 8px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .photo-modal-close {
+      position: absolute;
+      top: 0.25rem;
+      left: 0.5rem;
+      border: none;
+      background: transparent;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #1f2937;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #f3f4f6;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+.card-count {
+font-size: 0.9rem;
+color: #6b7280;
+}
+
+/* Complaints - Enhanced with director.html timetable theme */
+.complaints-grid {
+display: grid;
+gap: 2rem;
+}
+
+    #complaintsList[data-view-mode="table"] {
+      display: block;
+    }
+
+    .complaint-item {
+      background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+      border: 2px solid rgba(148, 163, 184, 0.15);
+      border-radius: 20px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .complaint-item::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(59, 130, 246, 0.03), rgba(124, 58, 237, 0.02), rgba(56, 189, 248, 0.02));
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .complaint-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+      border-color: #3B82F6;
+    }
+
+    .complaint-item > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .complaint-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      gap: 1rem;
+    }
+
+    .complaint-badges {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      padding: 0.375rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .badge-type {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .badge-status {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-status.pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-priority.high {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-priority.medium {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-priority.low {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-anon {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+
+    .complaint-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 0.5rem;
+    }
+
+    .complaint-desc {
+      color: #6b7280;
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+
+    .complaint-meta {
+      display: flex;
+      gap: 1rem;
+      padding: 0.75rem 0;
+      border-top: 1px solid #f3f4f6;
+      border-bottom: 1px solid #f3f4f6;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+      color: #6b7280;
+      flex-wrap: wrap;
+    }
+
+    .response-section {
+      margin-top: 1rem;
+    }
+
+    .response-section label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+
+    .response-section textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      min-height: 80px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      resize: vertical;
+    }
+
+    .response-section textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    .response-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+
+    .feedback-box {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      background: #fef9c3;
+      border-right: 3px solid #facc15;
+      color: #92400e;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .feedback-rating {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: #b45309;
+    }
+
+    /* Alert */
+    .alert {
+      position: fixed;
+      top: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      z-index: 1000;
+      min-width: 300px;
+      border-right: 4px solid;
+    }
+
+    .alert.show {
+      display: flex;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .alert.success {
+      border-color: #10b981;
+    }
+
+    .alert.error {
+      border-color: #ef4444;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
+
+    .empty {
+      text-align: center;
+      padding: 3rem;
+      color: #9ca3af;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #6b7280;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .filters-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .filters-actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+  <script src="auth.js"></script>
+  <script src="vendor/string-direction.min.js"></script>
+  <script src="vendor/arabic-reshaper.js"></script>
+</head>
+
+<body>
+  <div class="alert" id="alert">
+    <span id="alertIcon"></span>
+    <span id="alertText"></span>
+  </div>
+
+  <div class="alert" id="alert">
+    <span id="alertIcon"></span>
+    <span id="alertText"></span>
+  </div>
+
+  <div class="container">
+    <!-- Header - Hidden for toolbar integration -->
+    <div class="header" style="display: none;">
+      <h1>إدارة الشكاوي والاقتراحات</h1>
+      <p>متابعة ومعالجة شكاوي واقتراحات الموظفين</p>
+      <div style="margin-top:1rem;">
+        <button class="btn btn-primary" id="exportComplaints">📤 تصدير الشكاوي</button>
+      </div>
+      <button class="btn btn-primary" onclick="goToStatistics()">
+        📊 الإحصائيات
+      </button>
+    </div>
+
+    <div class="section-toggle" id="directorSectionToggle">
+      <div class="director-toolbar">
+        <div class="tabs-container">
+          <button class="section-btn active" data-section="complaints">
+            <i class="fas fa-list-check"></i>
+            <span>الشكاوي</span>
+          </button>
+          <button class="section-btn" data-section="suggestions">
+            <i class="fas fa-lightbulb"></i>
+            <span>الاقتراحات</span>
+          </button>
+        </div>
+        <div class="actions-container">
+          <button class="toolbar-action-btn" id="exportComplaints">
+            <i class="fas fa-file-export"></i>
+            <span>تصدير الشكاوي</span>
+          </button>
+          <button class="toolbar-action-btn secondary" onclick="goToStatistics()">
+            <i class="fas fa-chart-bar"></i>
+            <span>الإحصائيات</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Complaints Tab Content -->
+    <div id="complaintsTab" class="section-content active">
+      <!-- Filters -->
+      <div class="filters">
+        <div class="filters-grid">
+          <div class="filter-group">
+            <label>نوع الشكوى</label>
+            <select id="filterType">
+              <option value="">الكل</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>الحالة</label>
+            <select id="filterStatus">
+              <option value="">الكل</option>
+              <option value="pending">قيد المعالجة</option>
+              <option value="completed">تمت المعالجة</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>الأولوية</label>
+            <select id="filterPriority">
+              <option value="">الكل</option>
+              <option value="high">مرتفعة</option>
+              <option value="medium">متوسطة</option>
+              <option value="low">منخفضة</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>بحث</label>
+            <input type="text" id="filterQuery" placeholder="ابحث...">
+          </div>
+        </div>
+        <div class="filters-actions">
+          <button class="btn btn-primary" id="applyFilters">بحث</button>
+          <button class="btn btn-secondary" id="resetFilters">إعادة تعيين</button>
+        </div>
+      </div>
+
+      <div class="view-controls">
+        <div class="view-toggle">
+          <button type="button" class="toggle-btn" data-view-mode="card">🗂️ عرض البطاقات</button>
+          <button type="button" class="toggle-btn" data-view-mode="table">📋 عرض الجدول</button>
+        </div>
+        <div class="view-actions" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <button type="button" class="create-complaint-btn" onclick="openDirectorCreateSuggestionModal()">➕ إضافة
+            اقتراح</button>
+          <button type="button" class="btn btn-primary" id="exportPdfView">📝 تصدير العرض PDF</button>
+        </div>
+      </div>
+
+      <!-- Complaints -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">قائمة الشكاوي</h2>
+          <div class="card-count" id="complaintsCount">جاري التحميل...</div>
+        </div>
+        <div id="complaintsList" class="complaints-grid">
+          <div class="loading">جاري التحميل...</div>
+        </div>
+      </div>
+    </div>
+    <!-- End Complaints Tab -->
+
+    <!-- Suggestions Tab Content -->
+    <div id="suggestionsTab" class="section-content">
+      <div id="suggestionsContent">
+        <div class="loading">جاري التحميل...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="vendor/html2canvas.min.js"></script>
+  <script src="vendor/jspdf.umd.min.js"></script>
+  <script>
+    const API = 'http://localhost:3020/api/complaints';
+    const SUGGESTIONS_API_DIR = 'http://localhost:3020/api/suggestions';
+    const $ = id => document.getElementById(id);
+    const VIEW_MODES = { CARD: 'card', TABLE: 'table' };
+    const DIRECTOR_SECTIONS = { COMPLAINTS: 'complaints', SUGGESTIONS: 'suggestions' };
+    let directorId = '';
+    let notificationSystem;
+    let responseTemplates;
+    let dataExporter;
+    let directorEmployeeId = '';
+    let directorUserId = '';
+    let complaintsCache = [];
+    let directorViewMode = localStorage.getItem('directorComplaintsView') || VIEW_MODES.CARD;
+    let directorActiveSection = localStorage.getItem('directorActiveSection') || DIRECTOR_SECTIONS.COMPLAINTS;
+    let isDepartmentScope = false;
+    directorViewMode = Object.values(VIEW_MODES).includes(directorViewMode) ? directorViewMode : VIEW_MODES.CARD;
+    directorActiveSection = Object.values(DIRECTOR_SECTIONS).includes(directorActiveSection) ? directorActiveSection : DIRECTOR_SECTIONS.COMPLAINTS;
+
+    function initDirectorSectionToggle() {
+      const toggle = document.getElementById('directorSectionToggle');
+      if (!toggle) return;
+      toggle.querySelectorAll('.section-btn').forEach(btn => {
+        btn.addEventListener('click', () => setDirectorSection(btn.dataset.section));
+      });
+    }
+
+    function setDirectorSection(section, { skipStorage } = {}) {
+      if (!Object.values(DIRECTOR_SECTIONS).includes(section)) {
+        section = DIRECTOR_SECTIONS.COMPLAINTS;
+      }
+      directorActiveSection = section;
+      if (!skipStorage) {
+        localStorage.setItem('directorActiveSection', section);
+      }
+      const toggle = document.getElementById('directorSectionToggle');
+      if (toggle) {
+        toggle.querySelectorAll('.section-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.section === section);
+        });
+      }
+      document.querySelectorAll('.section-content').forEach(content => {
+        content.classList.toggle('active', content.id === `${section}Tab`);
+      });
+      if (section === DIRECTOR_SECTIONS.SUGGESTIONS) {
+        loadDirectorSuggestions();
+      }
+    }
+
+    class NotificationSystem {
+      constructor(userId) {
+        this.userId = userId;
+        this.unreadCount = 0;
+        this.interval = null;
+        this.onNotificationClick = null;
+        this.onNewNotifications = null;
+        this.previousCount = null;
+      }
+
+      async init() {
+        if (!this.userId) return;
+        await this.loadUnreadCount();
+        this.startPolling();
+        this.createBadge();
+      }
+
+      async loadUnreadCount() {
+        try {
+          const res = await fetch(`http://localhost:3020/api/complaints/notifications/${this.userId}/unread-count?ts=${Date.now()}`, {
+            cache: 'no-store'
+          });
+          if (!res.ok) throw new Error('failed');
+          const data = await res.json();
+          const prev = this.unreadCount;
+          this.unreadCount = data.count || 0;
+          this.previousCount = prev;
+          this.updateBadge();
+        } catch (e) {
+          console.error('فشل تحميل الإشعارات:', e);
+        }
+      }
+
+      startPolling() {
+        if (this.interval) clearInterval(this.interval);
+        this.interval = setInterval(() => this.loadUnreadCount(), 3000);
+      }
+
+      createBadge() {
+        if (document.getElementById('notificationBadge')) return;
+        const badge = document.createElement('button');
+        badge.id = 'notificationBadge';
+        badge.type = 'button';
+        badge.className = 'notification-button';
+        badge.innerHTML = `
+          <span class="notification-icon">🔔</span>
+          <span class="notification-count">0</span>
+        `;
+        // badge.style.display = 'inline-flex'; // Hidden notification button
+        badge.onclick = () => this.showNotifications();
+        document.body.appendChild(badge);
+      }
+
+      updateBadge() {
+        const badge = document.getElementById('notificationBadge');
+        if (!badge) return;
+        const countEl = badge.querySelector('.notification-count');
+        if (countEl) {
+          countEl.textContent = this.unreadCount > 99 ? '99+' : this.unreadCount;
+        }
+        if (this.unreadCount > 0) {
+          if (this.previousCount !== null && this.unreadCount > this.previousCount) {
+            badge.classList.remove('pulse');
+            void badge.offsetWidth;
+            badge.classList.add('pulse');
+            if (typeof this.onNewNotifications === 'function') {
+              this.onNewNotifications(this.unreadCount - this.previousCount);
+            }
+          }
+          badge.classList.add('has-notifications');
+        } else {
+          badge.classList.remove('has-notifications');
+          badge.classList.remove('pulse');
+        }
+        this.previousCount = this.unreadCount;
+      }
+
+      async showNotifications() {
+        try {
+          const res = await fetch(`http://localhost:3020/api/complaints/notifications/${this.userId}?ts=${Date.now()}`, {
+            cache: 'no-store'
+          });
+          if (!res.ok) throw new Error('failed');
+          const notifications = await res.json();
+          const modal = document.createElement('div');
+          modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000;';
+          modal.innerHTML = `
+            <div style="background:white;border-radius:16px;max-width:600px;width:90%;max-height:80vh;overflow:auto;padding:1.5rem;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:1rem;align-items:center;">
+                <h3>الإشعارات</h3>
+                <button style="border:none;background:none;font-size:1.25rem;cursor:pointer;">✕</button>
+              </div>
+              <div>
+              ${notifications.length ? notifications.map(n => `
+                <button class="notification-item" data-notification-id="${n.id}" data-complaint-id="${n.complaint_id || ''}">
+                  <div>${n.message}</div>
+                  <span class="notification-date">${new Date(n.created_at).toLocaleString('ar-DZ')}</span>
+                </button>
+              `).join('') : '<div class="empty">لا توجد إشعارات</div>'}
+              </div>
+            </div>
+          `;
+          modal.querySelector('button').onclick = () => modal.remove();
+          modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+          modal.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', () => {
+              const complaintId = item.dataset.complaintId;
+              const notificationId = item.dataset.notificationId;
+              if (notificationId) {
+                fetch(`/api/complaints/notifications/${notificationId}/read`, { method: 'POST' }).catch(() => { });
+              }
+              if (complaintId && typeof this.onNotificationClick === 'function') {
+                this.onNotificationClick({ complaintId });
+              }
+              modal.remove();
+            });
+          });
+          document.body.appendChild(modal);
+          await Promise.all(notifications.filter(n => !n.is_read).map(n =>
+            fetch(`http://localhost:3020/api/complaints/notifications/${n.id}/read`, { method: 'POST' })
+          ));
+          this.unreadCount = 0;
+          this.updateBadge();
+        } catch (e) {
+          console.error('فشل عرض الإشعارات', e);
+        }
+      }
+    }
+
+    class ResponseTemplates {
+      constructor() {
+        this.templates = [
+          { id: 1, title: 'تم استلام الشكوى', body: 'تم استلام شكواك وجاري دراستها.' },
+          { id: 2, title: 'قيد المعالجة', body: 'الشكاية قيد المعالجة حالياً.' },
+          { id: 3, title: 'تم الحل', body: 'تم حل الشكوى بنجاح.' },
+          { id: 4, title: 'معلومات إضافية', body: 'نحتاج إلى بعض المعلومات الإضافية:' }
+        ];
+      }
+
+      showTemplates(targetId = 'newMessageBody') {
+        const select = document.createElement('select');
+        select.className = 'form-select';
+        select.innerHTML = '<option value="">اختر رداً جاهزاً</option>' +
+          this.templates.map(t => `<option value="${t.body}">${t.title}</option>`).join('');
+        select.onchange = (e) => {
+          if (e.target.value) document.getElementById(targetId).value = e.target.value;
+        };
+        return select;
+      }
+    }
+
+    class DataExporter {
+      async exportComplaints(filters = {}) {
+        const res = await fetch('http://localhost:3020/api/complaints/export', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filters, format: 'csv' })
+        });
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `complaints_export_${Date.now()}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    }
+    const PRIORITY_LABELS = { high: 'مرتفعة', medium: 'متوسطة', low: 'منخفضة' };
+    const STATUS_LABELS = { completed: 'تمت المعالجة', pending: 'قيد المعالجة' };
+    const PDF_FONT_CONFIG = {
+      url: 'vendor/fonts/NotoSansArabic-Regular.ttf',
+      vfsName: 'NotoSansArabic-Regular.ttf',
+      fontName: 'NotoSansArabic'
+    };
+    let currentComplaintId = null;
+    let pdfBusy = false;
+    let pdfFontData = null;
+    let pdfFontPromise = null;
+
+    function fixArabicText(text) {
+      if (!text) return '';
+      const str = String(text);
+      const segments = [];
+      let current = '';
+      let currentIsArabic = null;
+      const isArabicChar = (char) => {
+        if (!char) return false;
+        const code = char.charCodeAt(0);
+        const dirLib = window.stringDirection;
+        if (dirLib && typeof dirLib.getDirection === 'function') {
+          const dir = dirLib.getDirection(char);
+          if (dir === 'rtl') return true;
+        }
+        return (
+          (code >= 0x0600 && code <= 0x06FF) ||
+          (code >= 0x0750 && code <= 0x077F) ||
+          (code >= 0x08A0 && code <= 0x08FF) ||
+          (code >= 0xFB50 && code <= 0xFDFF) ||
+          (code >= 0xFE70 && code <= 0xFEFF)
+        );
+      };
+      for (let i = 0; i < str.length; i++) {
+        const char = str[i];
+        const charIsArabic = isArabicChar(char);
+        if (currentIsArabic === null) {
+          currentIsArabic = charIsArabic;
+          current = char;
+          continue;
+        }
+        if (charIsArabic === currentIsArabic) {
+          current += char;
+        } else {
+          segments.push({ text: current, isArabic: currentIsArabic });
+          current = char;
+          currentIsArabic = charIsArabic;
+        }
+      }
+      if (current) segments.push({ text: current, isArabic: currentIsArabic });
+      const reshape = (value) => {
+        if (
+          window.ArabicReshaper &&
+          typeof window.ArabicReshaper.convertArabicCharacters === 'function'
+        ) {
+          return window.ArabicReshaper.convertArabicCharacters(value);
+        }
+        return value;
+      };
+      const processed = segments.map(segment => {
+        if (!segment.text) return '';
+        if (segment.isArabic) {
+          const shaped = reshape(segment.text);
+          return shaped.split('').reverse().join('');
+        }
+        return segment.text;
+      });
+      return processed.reverse().join('');
+    }
+    function arrayBufferToBase64(buffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return window.btoa(binary);
+    }
+    function goToStatistics() {
+      const params = new URLSearchParams();
+      if (directorUserId) params.set('directorId', directorUserId);
+      if (directorEmployeeId) params.set('employee_id', directorEmployeeId);
+      window.location.href = `complaints_statistics.html?${params}`;
+    }
+
+    async function ensureArabicFont(doc) {
+      if (!pdfFontData) {
+        if (!pdfFontPromise) {
+          pdfFontPromise = fetch(PDF_FONT_CONFIG.url)
+            .then(res => {
+              if (!res.ok) throw new Error('font fetch failed');
+              return res.arrayBuffer();
+            })
+            .then(arrayBufferToBase64)
+            .then(data => { pdfFontData = data; })
+            .catch(err => {
+              console.error('Arabic font load error', err);
+              pdfFontPromise = null;
+              throw err;
+            });
+        }
+        await pdfFontPromise;
+      }
+      if (pdfFontData) {
+        doc.addFileToVFS(PDF_FONT_CONFIG.vfsName, pdfFontData);
+        doc.addFont(PDF_FONT_CONFIG.vfsName, PDF_FONT_CONFIG.fontName, 'normal');
+        doc.setFont(PDF_FONT_CONFIG.fontName, 'normal');
+      }
+    }
+
+    function createPdfWriter(doc) {
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 60;
+      const maxWidth = pageWidth - margin * 2;
+      const baseLineHeight = 18;
+      const baseFontSize = 12;
+      const headingFontSize = 15;
+      const labelFontSize = 13;
+      let lineHeight = baseLineHeight;
+      let cursorY = margin;
+
+      const ensureSpace = (height = lineHeight) => {
+        if (cursorY + height > pageHeight - margin) {
+          doc.addPage();
+          doc.setFont(PDF_FONT_CONFIG.fontName, 'normal');
+          doc.setFontSize(baseFontSize);
+          cursorY = margin;
+        }
+      };
+
+      const writeParagraph = (text, { allowEmpty = false } = {}) => {
+        if (!allowEmpty && (text === undefined || text === null || text === '')) return;
+        const safeText = text === undefined || text === null || text === '' ? '—' : String(text);
+        const fixedText = fixArabicText(safeText);
+        const lines = doc.splitTextToSize(fixedText, maxWidth);
+        lines.forEach(line => {
+          ensureSpace();
+          doc.text(line, pageWidth - margin, cursorY, { align: 'right' });
+          cursorY += lineHeight;
+        });
+      };
+
+      const writeField = (label, value, fallback = '—') => {
+        const display = value === undefined || value === null || value === '' ? fallback : value;
+        ensureSpace(lineHeight * 2);
+        const prevSize = doc.getFontSize();
+        doc.setFontSize(labelFontSize);
+        doc.text(fixArabicText(label), pageWidth - margin, cursorY, { align: 'right' });
+        cursorY += lineHeight;
+        doc.setFontSize(baseFontSize);
+        doc.text(fixArabicText(String(display)), pageWidth - margin, cursorY, { align: 'right' });
+        cursorY += lineHeight;
+        doc.setFontSize(prevSize);
+      };
+
+      const writeSection = (title) => {
+        ensureSpace(lineHeight);
+        const prevSize = doc.getFontSize();
+        doc.setFontSize(headingFontSize);
+        doc.text(fixArabicText(title), pageWidth - margin, cursorY, { align: 'right' });
+        cursorY += lineHeight;
+        doc.setFontSize(prevSize);
+      };
+
+      const drawDivider = () => {
+        ensureSpace(12);
+        doc.setDrawColor(229, 231, 235);
+        doc.line(margin, cursorY, pageWidth - margin, cursorY);
+        cursorY += 12;
+      };
+
+      const addSpacer = (size = 8) => {
+        ensureSpace(size);
+        cursorY += size;
+      };
+
+      const writeList = (items, fallbackText = '—') => {
+        if (!Array.isArray(items) || !items.length) {
+          writeParagraph(fallbackText, { allowEmpty: true });
+          return;
+        }
+        items.forEach(item => writeParagraph(`• ${item}`, { allowEmpty: true }));
+      };
+
+      return { writeParagraph, writeField, writeSection, writeList, drawDivider, addSpacer, ensureSpace, getY: () => cursorY, setY: (val) => { cursorY = val; }, pageWidth, margin };
+    }
+
+    function getAttachments(complaint) {
+      return Array.isArray(complaint.attachments) ? complaint.attachments : [];
+    }
+
+    function getPrimaryAttachmentPath(complaint) {
+      if (complaint.attachment_path) return complaint.attachment_path;
+      const attachments = getAttachments(complaint);
+      return attachments.length ? attachments[0].file_path : null;
+    }
+
+    function getAttachmentLabel(attachment, index) {
+      if (!attachment) return '';
+      const name = attachment.file_name || '';
+      const path = attachment.file_path || '';
+      return `${index + 1}- ${name || path}`;
+    }
+
+    function formatComplaintDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('ar-DZ', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function getEmployeeName(complaint) {
+      return complaint.employee && complaint.employee.first_name
+        ? `${complaint.employee.first_name} ${complaint.employee.last_name || ''}`.trim()
+        : 'مجهول';
+    }
+
+    function getPhotoButton(complaint) {
+      const photoPath = getPrimaryAttachmentPath(complaint);
+      if (!photoPath) {
+        return `<button class="btn btn-secondary btn-sm" disabled title="لا توجد صورة">📷 لا توجد صورة</button>`;
+      }
+      return `<button class="btn btn-secondary btn-sm" data-photo="${photoPath}" onclick="openPhotoModal(this.dataset.photo)">📷 عرض الصورة</button>`;
+    }
+
+    function getComplaintActions(complaint) {
+      return `
+        <button class="btn btn-success btn-sm" onclick="saveComment('${complaint.id}','completed')">✓ وضع كمنجز</button>
+        <button class="btn btn-secondary btn-sm" onclick="saveComment('${complaint.id}','pending')">⏳ قيد المتابعة</button>
+        <button class="btn btn-primary btn-sm" onclick="openMessagesModal('${complaint.id}')">💬 عرض الردود</button>
+        ${getPhotoButton(complaint)}
+        <button class="btn btn-secondary btn-sm" onclick="exportComplaintPDF('${complaint.id}')">📝 PDF الشكوى</button>
+      `;
+    }
+
+    function renderComplaintCard(complaint) {
+      return `
+        <div class="complaint-item" data-complaint-id="${complaint.id}">
+          <div class="complaint-top">
+            <div class="complaint-badges">
+              <span class="badge badge-type">${complaint.type_name}</span>
+              ${complaint.is_anonymous ? '<span class="badge badge-anon">مجهول</span>' : ''}
+            </div>
+            <span class="badge badge-status ${complaint.status}">${STATUS_LABELS[complaint.status]}</span>
+          </div>
+
+          <h3 class="complaint-title">${complaint.title}</h3>
+          ${complaint.description ? `<p class="complaint-desc">${complaint.description}</p>` : ''}
+
+          <div class="complaint-meta">
+            <span class="badge badge-priority ${complaint.priority}">${PRIORITY_LABELS[complaint.priority]}</span>
+            <span>📅 ${formatComplaintDate(complaint.created_at)}</span>
+            <span>👤 ${getEmployeeName(complaint)}</span>
+            ${getAttachments(complaint).length ? `<span style="color:#3b82f6">📎 ${getAttachments(complaint).length} مرفق</span>` : ''}
+          </div>
+
+          ${complaint.status === 'completed' && complaint.satisfaction_rating ? `
+            <div class="feedback-box">
+              <div class="feedback-rating">⭐ التقييم: ${'⭐'.repeat(complaint.satisfaction_rating)}</div>
+              ${complaint.feedback ? `<div>${complaint.feedback}</div>` : ''}
+            </div>
+          ` : ''}
+
+          <div class="response-actions">
+            ${getComplaintActions(complaint)}
+          </div>
+        </div>
+      `;
+    }
+
+    let sortColumn = null;
+    let sortDirection = 'asc';
+
+    function sortComplaints(complaints, column, direction) {
+      const sorted = [...complaints];
+      sorted.sort((a, b) => {
+        let aVal, bVal;
+        switch (column) {
+          case 'title':
+            aVal = a.title || '';
+            bVal = b.title || '';
+            break;
+          case 'priority':
+            const priorityOrder = { high: 3, medium: 2, low: 1 };
+            aVal = priorityOrder[a.priority] || 0;
+            bVal = priorityOrder[b.priority] || 0;
+            break;
+          case 'status':
+            aVal = a.status || '';
+            bVal = b.status || '';
+            break;
+          default:
+            return 0;
+        }
+        if (typeof aVal === 'string') {
+          return direction === 'asc' ? aVal.localeCompare(bVal, 'ar') : bVal.localeCompare(aVal, 'ar');
+        }
+        return direction === 'asc' ? aVal - bVal : bVal - aVal;
+      });
+      return sorted;
+    }
+
+    function getSortIcon(column) {
+      if (sortColumn !== column) return '<span class="sort-icon"></span>';
+      return `<span class="sort-icon">${sortDirection === 'asc' ? '▲' : '▼'}</span>`;
+    }
+
+    function renderComplaintsTable(complaints) {
+      const sortedComplaints = sortColumn ? sortComplaints(complaints, sortColumn, sortDirection) : complaints;
+      return `
+        <div class="table-filters">
+          <input type="text" id="tableFilterTitle" placeholder="🔍 بحث في العنوان..." style="flex: 1; min-width: 200px;">
+          <select id="tableFilterPriority" style="min-width: 120px;">
+            <option value="">جميع الأولويات</option>
+            <option value="high">مرتفعة</option>
+            <option value="medium">متوسطة</option>
+            <option value="low">منخفضة</option>
+          </select>
+          <select id="tableFilterStatus" style="min-width: 120px;">
+            <option value="">جميع الحالات</option>
+            <option value="pending">قيد المعالجة</option>
+            <option value="completed">تمت المعالجة</option>
+          </select>
+          <button class="btn btn-secondary" onclick="applyTableFilters()" style="padding: 0.5rem 1rem;">تطبيق</button>
+          <button class="btn btn-secondary" onclick="resetTableFilters()" style="padding: 0.5rem 1rem;">إعادة تعيين</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="complaints-table">
+            <thead>
+              <tr>
+                <th>النوع</th>
+                <th class="sortable" onclick="handleSort('title')">العنوان ${getSortIcon('title')}</th>
+                <th>الوصف</th>
+                <th class="sortable" onclick="handleSort('priority')">الأولوية ${getSortIcon('priority')}</th>
+                <th class="sortable" onclick="handleSort('status')">الحالة ${getSortIcon('status')}</th>
+                <th>الموظف</th>
+                <th>التاريخ</th>
+                <th class="actions-header">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sortedComplaints.map(c => `
+                <tr data-complaint-id="${c.id}">
+                  <td>${c.type_name}</td>
+                  <td>${c.title}</td>
+                  <td>${c.description || '-'}</td>
+                  <td>${PRIORITY_LABELS[c.priority]}</td>
+                  <td><span class="status-${c.status}">${STATUS_LABELS[c.status]}</span></td>
+                  <td>${getEmployeeName(c)}</td>
+                  <td>${formatComplaintDate(c.created_at)}</td>
+                  <td class="actions-cell">
+                    <div class="table-actions">
+                      ${getComplaintActions(c)}
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function handleSort(column) {
+      if (sortColumn === column) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortColumn = column;
+        sortDirection = 'asc';
+      }
+      renderComplaintsView();
+    }
+
+    function applyTableFilters() {
+      const titleFilter = document.getElementById('tableFilterTitle')?.value.toLowerCase() || '';
+      const priorityFilter = document.getElementById('tableFilterPriority')?.value || '';
+      const statusFilter = document.getElementById('tableFilterStatus')?.value || '';
+
+      let filtered = complaintsCache.filter(c => {
+        const matchesTitle = !titleFilter || c.title?.toLowerCase().includes(titleFilter);
+        const matchesPriority = !priorityFilter || c.priority === priorityFilter;
+        const matchesStatus = !statusFilter || c.status === statusFilter;
+        return matchesTitle && matchesPriority && matchesStatus;
+      });
+
+      renderComplaintsView(filtered);
+    }
+
+    function resetTableFilters() {
+      document.getElementById('tableFilterTitle').value = '';
+      document.getElementById('tableFilterPriority').value = '';
+      document.getElementById('tableFilterStatus').value = '';
+      sortColumn = null;
+      sortDirection = 'asc';
+      renderComplaintsView();
+    }
+
+    function renderComplaintsView(list = complaintsCache) {
+      $('complaintsCount').textContent = `${list.length} شكوى`;
+      const container = $('complaintsList');
+      container.dataset.viewMode = directorViewMode;
+      if (!list.length) {
+        container.innerHTML = '<div class="empty">لا توجد شكاوي</div>';
+        return;
+      }
+      container.innerHTML = directorViewMode === VIEW_MODES.TABLE
+        ? renderComplaintsTable(list)
+        : list.map(renderComplaintCard).join('');
+
+      // Re-attach filter event listeners
+      if (directorViewMode === VIEW_MODES.TABLE) {
+        const titleFilter = document.getElementById('tableFilterTitle');
+        if (titleFilter) {
+          titleFilter.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') applyTableFilters();
+          });
+        }
+      }
+    }
+
+    function setDirectorViewMode(mode) {
+      if (!Object.values(VIEW_MODES).includes(mode)) return;
+      directorViewMode = mode;
+      localStorage.setItem('directorComplaintsView', mode);
+      updateViewToggleUI();
+      renderComplaintsView();
+    }
+
+    function updateViewToggleUI() {
+      document.querySelectorAll('.toggle-btn[data-view-mode]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.viewMode === directorViewMode);
+      });
+    }
+
+    function initViewToggle() {
+      document.querySelectorAll('.toggle-btn[data-view-mode]').forEach(btn => {
+        btn.addEventListener('click', () => setDirectorViewMode(btn.dataset.viewMode));
+      });
+      updateViewToggleUI();
+    }
+
+    function openPhotoModal(path) {
+      if (!path) return;
+      const modal = $('photoModal');
+      const img = $('photoPreview');
+      img.src = path;
+      modal.classList.add('show');
+    }
+
+    function closePhotoModal() {
+      const modal = $('photoModal');
+      const img = $('photoPreview');
+      img.src = '';
+      modal.classList.remove('show');
+    }
+
+    async function exportComplaintPDF(complaintId) {
+      if (!window.jspdf) {
+        showAlert('خاصية PDF غير متاحة حالياً', true);
+        return;
+      }
+      const complaint = complaintsCache.find(c => c.id === complaintId);
+      if (!complaint) {
+        showAlert('تعذر العثور على الشكوى', true);
+        return;
+      }
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'pt', 'a4');
+        await ensureArabicFont(doc);
+        doc.setR2L(true);
+        doc.setFontSize(12);
+        const writer = createPdfWriter(doc);
+        doc.setFontSize(18);
+        writer.writeParagraph('تقرير الشكوى');
+        doc.setFontSize(12);
+        writer.addSpacer(6);
+        writer.writeField('رقم الشكوى', complaint.id);
+        writer.writeField('العنوان', complaint.title);
+        writer.writeField('النوع', complaint.type_name);
+        writer.writeField('الموظف', getEmployeeName(complaint));
+        writer.writeField('الأولوية', PRIORITY_LABELS[complaint.priority]);
+        writer.writeField('الحالة', STATUS_LABELS[complaint.status]);
+        writer.writeField('تاريخ الإنشاء', formatComplaintDate(complaint.created_at));
+        if (complaint.due_date) writer.writeField('تاريخ الاستحقاق', formatComplaintDate(complaint.due_date));
+        if (complaint.completed_at) writer.writeField('تاريخ الإغلاق', formatComplaintDate(complaint.completed_at));
+        writer.drawDivider();
+        writer.writeSection('الوصف التفصيلي');
+        writer.writeParagraph(complaint.description || 'لا يوجد وصف');
+        writer.drawDivider();
+        if (complaint.manager_comment) {
+          writer.writeSection('ملاحظات المدير');
+          writer.writeParagraph(complaint.manager_comment);
+          writer.drawDivider();
+        }
+        if (complaint.status === 'completed' && complaint.satisfaction_rating) {
+          writer.writeSection('ملاحظات الموظف');
+          writer.writeField('التقييم', `${complaint.satisfaction_rating}/5`);
+          if (complaint.feedback) {
+            writer.writeParagraph(complaint.feedback);
+          }
+          writer.drawDivider();
+        }
+        const attachments = getAttachments(complaint);
+        writer.writeSection('المرفقات');
+        writer.writeList(attachments.map((att, idx) => getAttachmentLabel(att, idx)), 'لا توجد مرفقات');
+        writer.drawDivider();
+        const primaryAttachment = getPrimaryAttachmentPath(complaint);
+        writer.writeSection('رابط المرفق الرئيسي');
+        writer.writeParagraph(primaryAttachment || 'لا يوجد');
+        doc.save(`complaint_${complaint.id}.pdf`);
+      } catch (err) {
+        console.error('complaint pdf error', err);
+        showAlert('تعذر إنشاء ملف PDF للشكوى', true);
+      }
+    }
+
+    async function exportCurrentViewPDF() {
+      if (pdfBusy) return;
+      if (!window.html2canvas || !window.jspdf) {
+        showAlert('خاصية PDF غير متاحة', true);
+        return;
+      }
+      const container = $('complaintsList');
+      if (!container) return;
+      try {
+        pdfBusy = true;
+        const exportBtn = $('exportPdfView');
+        if (exportBtn) exportBtn.disabled = true;
+        const canvas = await html2canvas(container, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'pt', 'a4');
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const ratio = Math.min(pageWidth / canvas.width, pageHeight / canvas.height);
+        const imgWidth = canvas.width * ratio;
+        const imgHeight = canvas.height * ratio;
+        pdf.addImage(imgData, 'PNG', (pageWidth - imgWidth) / 2, 20, imgWidth, imgHeight);
+        pdf.save('complaints_view.pdf');
+      } catch (err) {
+        console.error('pdf export error', err);
+        showAlert('تعذر إنشاء ملف PDF', true);
+      } finally {
+        pdfBusy = false;
+        const exportBtn = $('exportPdfView');
+        if (exportBtn) exportBtn.disabled = false;
+      }
+    }
+
+    function getParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name) || params.get(name.toLowerCase());
+    }
+
+    function showAlert(msg, isError = false) {
+      const alert = $('alert');
+      $('alertIcon').textContent = isError ? '⚠️' : '✓';
+      $('alertText').textContent = msg;
+      alert.className = `alert ${isError ? 'error' : 'success'} show`;
+      setTimeout(() => alert.classList.remove('show'), 3000);
+    }
+
+    async function fetchData(url, options = {}) {
+      const res = await fetch(url, options);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'خطأ في الخادم' }));
+        throw new Error(data.error || 'خطأ');
+      }
+      return res.json();
+    }
+
+    async function loadTypes() {
+      try {
+        const types = await fetchData(`${API}/types`);
+        $('filterType').innerHTML = '<option value="">الكل</option>' +
+          types.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadComplaints() {
+      try {
+        const params = new URLSearchParams();
+        const status = $('filterStatus').value;
+        const typeId = $('filterType').value;
+        const priority = $('filterPriority').value;
+        const query = $('filterQuery').value.trim();
+
+        if (status) params.set('status', status);
+        if (typeId) params.set('typeId', typeId);
+        if (priority) params.set('priority', priority);
+        if (query) params.set('q', query);
+
+        const complaints = await fetchData(`${API}/director?${params}`);
+        complaintsCache = complaints;
+        renderComplaintsView(complaintsCache);
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    async function saveComment(id, status) {
+      try {
+        await fetchData(`${API}/${id}/comment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status, managerId: directorEmployeeId })
+        });
+        showAlert('تم تعديل حالة الشكوى');
+        await loadComplaints();
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    async function openMessagesModal(id) {
+      currentComplaintId = id;
+      try {
+        const messages = await fetchData(`${API}/${id}/messages?viewer=director`);
+        const container = document.getElementById('messagesList');
+        if (!messages.length) {
+          container.innerHTML = '<div class="empty">لا توجد ردود بعد</div>';
+        } else {
+          container.innerHTML = messages.map(m => {
+            const date = new Date(m.created_at).toLocaleString('ar-DZ');
+            const roleLabel = m.sender_role === 'director' ? 'المدير' : 'الموظف';
+            return `
+              <div style="margin-bottom:0.75rem;padding:0.75rem;border-radius:10px;background:#f9fafb;">
+                <div style="font-size:0.85rem;color:#4b5563;margin-bottom:0.25rem;">
+                  <strong>${roleLabel}:</strong> ${m.sender_name}
+                </div>
+                <div style="font-size:0.9rem;color:#111827;margin-bottom:0.25rem;">${m.body}</div>
+                <div style="font-size:0.75rem;color:#9ca3af;">🕒 ${date}</div>
+              </div>
+            `;
+          }).join('');
+        }
+        document.getElementById('newMessageBody').value = '';
+        document.getElementById('messagesModal').style.display = 'flex';
+        const picker = document.getElementById('templatePicker');
+        if (picker && responseTemplates) {
+          picker.innerHTML = '';
+          picker.appendChild(responseTemplates.showTemplates('newMessageBody'));
+        }
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    function closeMessagesModal() {
+      document.getElementById('messagesModal').style.display = 'none';
+      currentComplaintId = null;
+    }
+
+    function focusDirectorComplaint(complaintId) {
+      return new Promise(resolve => {
+        requestAnimationFrame(() => {
+          const card = document.querySelector(`[data-complaint-id="${complaintId}"]`);
+          if (!card) return resolve(false);
+          card.classList.remove('highlight');
+          void card.offsetWidth;
+          card.classList.add('highlight');
+          card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+          setTimeout(() => card.classList.remove('highlight'), 2500);
+          resolve(true);
+        });
+      });
+    }
+
+    async function sendDirectorMessage() {
+      if (!currentComplaintId) return;
+      const body = document.getElementById('newMessageBody').value.trim();
+      if (!body) {
+        showAlert('اكتب الرد أولاً', true);
+        return;
+      }
+      try {
+        await fetchData(`${API}/${currentComplaintId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ senderId: directorEmployeeId, senderRole: 'director', body })
+        });
+        document.getElementById('newMessageBody').value = '';
+        const messages = await fetchData(`${API}/${currentComplaintId}/messages?viewer=director`);
+        const container = document.getElementById('messagesList');
+        container.innerHTML = messages.map(m => {
+          const date = new Date(m.created_at).toLocaleString('ar-DZ');
+          const roleLabel = m.sender_role === 'director' ? 'المدير' : 'الموظف';
+          return `
+            <div style="margin-bottom:0.75rem;padding:0.75rem;border-radius:10px;background:#f9fafb;">
+              <div style="font-size:0.85rem;color:#4b5563;margin-bottom:0.25rem;">
+                <strong>${roleLabel}:</strong> ${m.sender_name}
+              </div>
+              <div style="font-size:0.9rem;color:#111827;margin-bottom:0.25rem;">${m.body}</div>
+              <div style="font-size:0.75rem;color:#9ca3af;">🕒 ${date}</div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    (async function init() {
+      // Get user from AuthManager (primary) or URL params (fallback)
+      const user = authManager?.getUser();
+      directorUserId = user?.id || getParam('directorId') || getParam('user_id') || getParam('userId') || '';
+      directorEmployeeId = user?.employee_id || getParam('employee_id') || getParam('employeeId') || directorUserId;
+      directorId = directorEmployeeId;
+      isDepartmentScope = !directorUserId && Boolean(directorEmployeeId);
+      notificationSystem = new NotificationSystem(directorUserId || directorEmployeeId);
+      notificationSystem.onNotificationClick = ({ complaintId }) => handleDirectorNotification(complaintId);
+      notificationSystem.onNewNotifications = () => showAlert('لديك إشعار جديد', false);
+      notificationSystem.init();
+      responseTemplates = new ResponseTemplates();
+      dataExporter = new DataExporter();
+      const exportBtn = $('exportComplaints');
+      if (exportBtn) exportBtn.addEventListener('click', () => dataExporter.exportComplaints());
+      initViewToggle();
+      initDirectorSectionToggle();
+      setDirectorSection(directorActiveSection, { skipStorage: true });
+      const pdfViewBtn = $('exportPdfView');
+      if (pdfViewBtn) pdfViewBtn.addEventListener('click', exportCurrentViewPDF);
+      await loadTypes();
+      await loadComplaints();
+
+      $('applyFilters').addEventListener('click', loadComplaints);
+      $('resetFilters').addEventListener('click', () => {
+        $('filterType').value = '';
+        $('filterStatus').value = '';
+        $('filterPriority').value = '';
+        $('filterQuery').value = '';
+        loadComplaints();
+      });
+      $('filterQuery').addEventListener('keypress', e => {
+        if (e.key === 'Enter') loadComplaints();
+      });
+
+      window.saveComment = saveComment;
+      window.openMessagesModal = openMessagesModal;
+      window.closeMessagesModal = closeMessagesModal;
+      window.sendDirectorMessage = sendDirectorMessage;
+      window.responseTemplates = responseTemplates;
+      window.openPhotoModal = openPhotoModal;
+      window.closePhotoModal = closePhotoModal;
+      window.exportComplaintPDF = exportComplaintPDF;
+      window.exportCurrentViewPDF = exportCurrentViewPDF;
+      window.handleSort = handleSort;
+      window.applyTableFilters = applyTableFilters;
+      window.resetTableFilters = resetTableFilters;
+      window.switchDirectorTab = setDirectorSection;
+      window.loadDirectorSuggestions = loadDirectorSuggestions;
+      window.markSuggestionReceived = markSuggestionReceived;
+      window.viewSuggestionDetailDirector = viewSuggestionDetailDirector;
+      window.redirectSuggestion = redirectSuggestion;
+      window.submitRedirectSuggestion = submitRedirectSuggestion;
+      window.closeRedirectSuggestionModal = closeRedirectSuggestionModal;
+      window.openDirectorCreateSuggestionModal = openDirectorCreateSuggestionModal;
+      window.closeDirectorCreateSuggestionModal = closeDirectorCreateSuggestionModal;
+      window.submitDirectorSuggestion = submitDirectorSuggestion;
+    })();
+
+    async function handleDirectorNotification(complaintId) {
+      try {
+        let found = await focusDirectorComplaint(complaintId);
+        if (!found) {
+          await loadComplaints();
+          found = await focusDirectorComplaint(complaintId);
+        }
+        if (!found) {
+          showAlert('تعذر فتح الشكوى المطلوبة', true);
+          return;
+        }
+        setTimeout(() => openMessagesModal(complaintId), 350);
+      } catch (err) {
+        console.error('director navigation error', err);
+        showAlert('حدث خطأ أثناء فتح الشكوى', true);
+      }
+    }
+
+    // =====================
+    // SUGGESTIONS FUNCTIONS (DIRECTOR)
+    // =====================
+    const SUGGESTION_STATUS_LABELS_DIR = {
+      under_review: 'قيد الدراسة',
+      accepted: 'تم الاستلام',
+      rejected: 'تم الاستلام'
+    };
+    let directorSuggestionsCache = [];
+
+    async function loadDirectorSuggestions() {
+      try {
+        const container = document.getElementById('suggestionsContent');
+        container.innerHTML = '<div class="loading">جاري التحميل...</div>';
+        const params = new URLSearchParams();
+        const status = document.getElementById('suggestionFilterStatus')?.value;
+        const typeId = document.getElementById('suggestionFilterType')?.value;
+        const departmentId = document.getElementById('suggestionFilterDepartment')?.value;
+        const employeeId = document.getElementById('suggestionFilterEmployee')?.value;
+        const q = document.getElementById('suggestionFilterQuery')?.value.trim();
+
+        if (status) params.set('status', status);
+        if (typeId) params.set('typeId', typeId);
+        if (departmentId) params.set('departmentId', departmentId);
+        if (employeeId) params.set('employeeId', employeeId);
+        if (q) params.set('q', q);
+        if (isDepartmentScope && directorEmployeeId) {
+          params.set('responsibleId', directorEmployeeId);
+        }
+
+        const suggestions = await fetchData(`${SUGGESTIONS_API_DIR}/director?${params}`);
+        directorSuggestionsCache = suggestions;
+        renderDirectorSuggestionsView();
+      } catch (e) {
+        showAlert(e.message, true);
+        document.getElementById('suggestionsContent').innerHTML = '<div class="empty">فشل تحميل الاقتراحات</div>';
+      }
+    }
+
+    function renderDirectorSuggestionsView() {
+      const container = document.getElementById('suggestionsContent');
+      container.innerHTML = `
+        <div class="filters">
+          <div class="filters-grid">
+            <div class="filter-group">
+              <label>بحث</label>
+              <input type="text" id="suggestionFilterQuery" placeholder="ابحث...">
+            </div>
+            <div class="filter-group">
+              <label>الحالة</label>
+              <select id="suggestionFilterStatus">
+                <option value="">الكل</option>
+                <option value="under_review">قيد الدراسة</option>
+                <option value="accepted">تم الاستلام</option>
+                <option value="rejected">تم الاستلام</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>نوع الاقتراح</label>
+              <select id="suggestionFilterType">
+                <option value="">الكل</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>القسم</label>
+              <select id="suggestionFilterDepartment">
+                <option value="">الكل</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>الموظف</label>
+              <input type="text" id="suggestionFilterEmployee" placeholder="معرف الموظف...">
+            </div>
+            <div class="filter-group" style="display: flex; align-items: flex-end;">
+              <button class="btn btn-primary" onclick="loadDirectorSuggestions()" style="width: 100%;">
+                🔍 بحث
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">قائمة الاقتراحات</h2>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <div class="card-count">${directorSuggestionsCache.length} اقتراح</div>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table class="complaints-table">
+              <thead>
+                <tr>
+                  <th>النوع</th>
+                  <th>العنوان</th>
+                  <th>الوصف</th>
+                  <th>الموظف</th>
+                  <th>القسم</th>
+                  <th>التاريخ</th>
+                  <th>الحالة</th>
+                  <th class="actions-header">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${directorSuggestionsCache.map(s => {
+        const statusClass = s.status === 'accepted' ? 'status-completed' :
+          s.status === 'rejected' ? 'status-rejected' : 'status-pending';
+        return `
+                    <tr data-suggestion-id="${s.id}">
+                      <td>${s.type_name || '—'}</td>
+                      <td>${s.title}</td>
+                      <td>${s.description || '-'}</td>
+                      <td>${s.employee.first_name} ${s.employee.last_name}</td>
+                      <td>${s.department_name || '—'}</td>
+                      <td>${formatComplaintDate(s.created_at)}</td>
+                      <td><span class="${statusClass}">${SUGGESTION_STATUS_LABELS_DIR[s.status]}</span></td>
+                      <td class="actions-cell">
+                <div class="table-actions">
+                  <button class="btn btn-primary btn-sm" onclick="viewSuggestionDetailDirector('${s.id}')">👁️ عرض التفاصيل</button>
+                  ${s.status === 'under_review' ? `
+                    <button class="btn btn-success btn-sm" onclick="markSuggestionReceived('${s.id}')">تم الاستلام</button>
+                    <button class="btn btn-secondary btn-sm" onclick="redirectSuggestion('${s.id}')">↪ إعادة توجيه</button>
+                  ` : ''}
+                </div>
+                      </td>
+                    </tr>
+                  `;
+      }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      // Load types and departments for filters
+      loadSuggestionTypesForFilters();
+      loadDepartmentsForFilters();
+
+      // Attach event listeners
+      document.getElementById('suggestionFilterQuery')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') loadDirectorSuggestions();
+      });
+    }
+
+    async function loadSuggestionTypesForFilters() {
+      try {
+        const types = await fetchData(`${SUGGESTIONS_API_DIR}/types`);
+        const select = document.getElementById('suggestionFilterType');
+        if (select) {
+          select.innerHTML = '<option value="">الكل</option>' +
+            types.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadDepartmentsForFilters() {
+      try {
+        const depts = await fetchData('http://localhost:3020/api/departments');
+        const select = document.getElementById('suggestionFilterDepartment');
+        if (select) {
+          select.innerHTML = '<option value="">الكل</option>' +
+            depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function markSuggestionReceived(suggestionId) {
+      const comment = prompt('أدخل ملاحظة (اختياري):');
+      try {
+        await fetchData(`${SUGGESTIONS_API_DIR}/${suggestionId}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'accepted',
+            comment: comment || null,
+            managerId: directorEmployeeId
+          })
+        });
+        showAlert('تم تحديث حالة الاقتراح إلى تم الاستلام');
+        await loadDirectorSuggestions();
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    let currentRedirectSuggestionId = null;
+
+    async function openRedirectDepartmentsForModal() {
+      try {
+        const depts = await fetchData('/api/departments');
+        const select = document.getElementById('redirectDeptSelect');
+        if (select) {
+          select.innerHTML = '<option value="">اختر القسم</option>' +
+            depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function redirectSuggestion(suggestionId) {
+      currentRedirectSuggestionId = suggestionId;
+      const modal = document.getElementById('redirectSuggestionModalDir');
+      if (!modal) return;
+      const msg = document.getElementById('redirectMessage');
+      if (msg) msg.value = '';
+      openRedirectDepartmentsForModal();
+      modal.style.display = 'flex';
+    }
+
+    function closeRedirectSuggestionModal() {
+      const modal = document.getElementById('redirectSuggestionModalDir');
+      if (modal) modal.style.display = 'none';
+      currentRedirectSuggestionId = null;
+    }
+
+    async function submitRedirectSuggestion(event) {
+      if (event) event.preventDefault();
+      if (!currentRedirectSuggestionId) return;
+      const deptSelect = document.getElementById('redirectDeptSelect');
+      const deptId = deptSelect ? deptSelect.value : '';
+      const messageEl = document.getElementById('redirectMessage');
+      const redirectComment = messageEl ? messageEl.value.trim() : '';
+      if (!deptId) {
+        showAlert('اختر القسم لإعادة التوجيه', true);
+        return;
+      }
+      try {
+        await fetchData(`${SUGGESTIONS_API_DIR}/${currentRedirectSuggestionId}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'under_review',
+            redirectedTo: deptId,
+            redirectComment: redirectComment || null,
+            managerId: directorEmployeeId
+          })
+        });
+        showAlert('تم إعادة توجيه الاقتراح إلى القسم المحدد');
+        closeRedirectSuggestionModal();
+        await loadDirectorSuggestions();
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    function viewSuggestionDetailDirector(suggestionId) {
+      const suggestion = directorSuggestionsCache.find(s => s.id === suggestionId);
+      if (!suggestion) {
+        showAlert('الاقتراح غير موجود', true);
+        return;
+      }
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000;';
+      modal.innerHTML = `
+        <div style="background:white;border-radius:16px;max-width:700px;width:95%;max-height:90vh;overflow-y:auto;padding:2rem;box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+            <h3 style="font-size:1.5rem;font-weight:700;">تفاصيل الاقتراح</h3>
+            <button type="button" data-modal-close style="border:none;background:none;font-size:1.5rem;cursor:pointer;">✕</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div><strong>العنوان:</strong> ${suggestion.title}</div>
+            ${suggestion.description ? `<div><strong>الوصف:</strong> ${suggestion.description}</div>` : ''}
+            ${suggestion.type_name ? `<div><strong>النوع:</strong> ${suggestion.type_name}</div>` : ''}
+            ${suggestion.category ? `<div><strong>الفئة:</strong> ${suggestion.category}</div>` : ''}
+            <div><strong>الموظف:</strong> ${suggestion.employee.first_name} ${suggestion.employee.last_name}</div>
+            ${suggestion.department_name ? `<div><strong>القسم:</strong> ${suggestion.department_name}</div>` : ''}
+            <div><strong>الحالة:</strong> <span class="status-${suggestion.status}">${SUGGESTION_STATUS_LABELS_DIR[suggestion.status]}</span></div>
+            <div><strong>التاريخ:</strong> ${formatComplaintDate(suggestion.created_at)}</div>
+            ${suggestion.director_comment ? `<div><strong>تعليق المدير:</strong> ${suggestion.director_comment}</div>` : ''}
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal) modal.remove();
+      });
+      const closeBtn = modal.querySelector('[data-modal-close]');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => modal.remove());
+      }
+    }
+
+    function openDirectorCreateSuggestionModal() {
+      document.getElementById('directorCreateSuggestionModal').style.display = 'flex';
+      loadDirectorSuggestionTypes();
+      loadDirectorSuggestionDepartments();
+    }
+
+    function closeDirectorCreateSuggestionModal() {
+      document.getElementById('directorCreateSuggestionModal').style.display = 'none';
+      document.getElementById('directorNewSuggestionForm').reset();
+    }
+
+    async function loadDirectorSuggestionTypes() {
+      try {
+        const types = await fetchData(`${SUGGESTIONS_API_DIR}/types`);
+        const select = document.getElementById('directorSuggestionTypeId');
+        if (select) {
+          select.innerHTML = '<option value="">اختر النوع (اختياري)</option>' +
+            types.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadDirectorSuggestionDepartments() {
+      try {
+        const depts = await fetchData('http://localhost:3020/api/departments');
+        const select = document.getElementById('directorSuggestionDepartmentId');
+        if (select) {
+          select.innerHTML = '<option value="">اختر القسم (اختياري)</option>' +
+            depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function submitDirectorSuggestion(event) {
+      event.preventDefault();
+      const form = document.getElementById('directorNewSuggestionForm');
+      const formData = new FormData(form);
+
+      const title = formData.get('title');
+      if (!title) {
+        showAlert('العنوان مطلوب', true);
+        return;
+      }
+
+      try {
+        if (!directorEmployeeId) {
+          showAlert('معرف الموظف مفقود. الرجاء تحديث الصفحة', true);
+          return;
+        }
+
+        const payload = {
+          title,
+          description: formData.get('description') || null,
+          category: formData.get('category') || null,
+          typeId: formData.get('typeId') || null,
+          departmentId: formData.get('departmentId') || null
+        };
+
+        await fetchData(`${SUGGESTIONS_API_DIR}/employee/${directorEmployeeId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        showAlert('تم إرسال الاقتراح بنجاح ✓');
+        closeDirectorCreateSuggestionModal();
+        await loadDirectorSuggestions();
+      } catch (error) {
+        showAlert(error.message, true);
+      }
+    }
+  </script>
+
+  <div id="messagesModal"
+    style="position:fixed;inset:0;background:rgba(15,23,42,0.5);display:none;align-items:center;justify-content:center;z-index:1000;">
+    <div
+      style="background:white;border-radius:12px;max-width:600px;width:95%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+      <div
+        style="padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="font-size:1.1rem;font-weight:700;">الردود على الشكوى</h3>
+        <button onclick="closeMessagesModal()"
+          style="border:none;background:none;font-size:1.25rem;cursor:pointer;">✕</button>
+      </div>
+      <div id="messagesList" style="padding:1rem 1.5rem;overflow-y:auto;flex:1;"></div>
+      <div style="padding:1rem 1.5rem;border-top:1px solid #e5e7eb;">
+        <label style="display:block;font-size:0.875rem;font-weight:600;margin-bottom:0.5rem;">إضافة رد جديد</label>
+        <div id="templatePicker" style="margin-bottom:0.5rem;"></div>
+        <textarea id="newMessageBody"
+          style="width:100%;padding:0.75rem;border:1px solid #d1d5db;border-radius:8px;min-height:80px;"></textarea>
+        <button class="btn btn-primary btn-sm" style="margin-top:0.75rem;" onclick="sendDirectorMessage()">إرسال
+          الرد</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="photoModal" class="photo-modal" onclick="event.target.id === 'photoModal' && closePhotoModal()">
+    <div class="photo-modal-content">
+      <button class="photo-modal-close" onclick="closePhotoModal()">✕</button>
+      <img id="photoPreview" src="" alt="صورة الشكوى">
+    </div>
+  </div>
+
+  <!-- Create Suggestion Modal -->
+  <div id="directorCreateSuggestionModal"
+    style="position:fixed;inset:0;background:rgba(15,23,42,0.5);display:none;align-items:center;justify-content:center;z-index:1100;">
+    <div
+      style="background:white;border-radius:16px;max-width:700px;width:95%;max-height:90vh;overflow-y:auto;padding:2rem;box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <h3 style="font-size:1.5rem;font-weight:700;color:#111827;">➕ إضافة اقتراح جديد</h3>
+        <button onclick="closeDirectorCreateSuggestionModal()"
+          style="border:none;background:none;font-size:1.5rem;cursor:pointer;color:#6b7280;">✕</button>
+      </div>
+      <form id="directorNewSuggestionForm" onsubmit="submitDirectorSuggestion(event)">
+        <div
+          style="display:grid;grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));gap:1rem;margin-bottom:1rem;">
+          <div>
+            <label style="display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">
+              نوع الاقتراح (اختياري)
+            </label>
+            <select id="directorSuggestionTypeId" name="typeId"
+              style="width:100%;padding:0.625rem;border:1px solid #d1d5db;border-radius:8px;">
+              <option value="">اختر النوع</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">
+              القسم (اختياري)
+            </label>
+            <select id="directorSuggestionDepartmentId" name="departmentId"
+              style="width:100%;padding:0.625rem;border:1px solid #d1d5db;border-radius:8px;">
+              <option value="">اختر القسم</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">
+            عنوان الاقتراح <span style="color:#ef4444;">*</span>
+          </label>
+          <input type="text" name="title" required
+            style="width:100%;padding:0.625rem;border:1px solid #d1d5db;border-radius:8px;"
+            placeholder="أدخل عنواناً واضحاً للاقتراح">
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">
+            الوصف التفصيلي
+          </label>
+          <textarea name="description"
+            style="width:100%;padding:0.625rem;border:1px solid #d1d5db;border-radius:8px;min-height:120px;resize:vertical;"
+            placeholder="اشرح تفاصيل الاقتراح بوضوح..."></textarea>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">
+            الفئة (اختياري)
+          </label>
+          <input type="text" name="category"
+            style="width:100%;padding:0.625rem;border:1px solid #d1d5db;border-radius:8px;"
+            placeholder="مثال: تحسينات، عمليات، تدريب...">
+        </div>
+        <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeDirectorCreateSuggestionModal()">إلغاء</button>
+          <button type="submit" class="btn btn-primary">إرسال الاقتراح</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!-- Redirect Suggestion Modal (Director) -->
+  <div id="redirectSuggestionModalDir"
+    style="position:fixed;inset:0;background:rgba(15,23,42,0.5);display:none;align-items:center;justify-content:center;z-index:1600;">
+    <div
+      style="background:white;border-radius:16px;max-width:600px;width:95%;max-height:80vh;overflow-y:auto;padding:1.75rem;box-shadow:0 10px 30px rgba(0,0,0,0.25);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+        <h3 style="font-size:1.3rem;font-weight:700;color:#111827;">↪ إعادة توجيه الاقتراح</h3>
+        <button type="button" onclick="closeRedirectSuggestionModal()"
+          style="border:none;background:none;font-size:1.4rem;cursor:pointer;color:#6b7280;">✕</button>
+      </div>
+      <form onsubmit="submitRedirectSuggestion(event)">
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">
+            اختر القسم المستلم <span style="color:#ef4444;">*</span>
+          </label>
+          <select id="redirectDeptSelect"
+            style="width:100%;padding:0.625rem;border:1px solid #d1d5db;border-radius:8px;">
+            <option value="">جاري التحميل...</option>
+          </select>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-size:0.875rem;font-weight:600;color:#374151;margin-bottom:0.5rem;">
+            رسالة للجهة المستلمة (اختياري)
+          </label>
+          <textarea id="redirectMessage"
+            style="width:100%;padding:0.625rem;border:1px solid #d1d5db;border-radius:8px;min-height:100px;resize:vertical;"
+            placeholder="مثال: يرجى دراسة هذا الاقتراح واتخاذ الإجراءات المناسبة..."></textarea>
+        </div>
+        <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.25rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeRedirectSuggestionModal()">إلغاء</button>
+          <button type="submit" class="btn btn-primary">تأكيد إعادة التوجيه</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+
+</html>

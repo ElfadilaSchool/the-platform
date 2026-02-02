@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الإحصائيات - تحليل التقارير</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* Director-themed base styles (mirrored from director-dashboard-stats.html for consistency) */
+        :root {
+            --director-indigo: #4338ca;
+            --director-blue: #2563eb;
+            --director-purple: #7c3aed;
+            --director-slate: #0f172a;
+            --director-card-bg: #ffffff;
+            --director-surface: #f8fafc;
+        }
+
+        body {
+            font-family: 'Outfit', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--director-slate);
+            background: transparent;
+        }
+
+        /* KPI cards & panels to visually match Director dashboard */
+        .kpi-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.95));
+            border-radius: 24px;
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: 0 18px 35px rgba(15, 23, 42, 0.07);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 55%);
+            pointer-events: none;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 25px 45px rgba(15, 23, 42, 0.12);
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(99, 102, 241, 0.35));
+            color: #4338ca;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .kpi-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .kpi-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Director panels */
+        .director-panel {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(15, 23, 42, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.2s ease;
+        }
+
+        .director-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.02) 0%, rgba(99, 102, 241, 0.02) 100%);
+            pointer-events: none;
+        }
+
+        .director-panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .director-panel h3 {
+            color: #1e293b !important;
+            font-weight: 700 !important;
+            margin-bottom: 1rem !important;
+            position: relative;
+            z-index: 1;
+        }
+
+        .director-panel h3 i {
+            margin-right: 0.5rem;
+            font-size: 1.25rem;
+        }
+
+        .director-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .director-panel-title {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .director-panel-title-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(99, 102, 241, 0.35));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4338ca;
+            font-size: 1.25rem;
+        }
+
+        /* Director buttons */
+        .director-btn {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .director-btn:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+        }
+
+        .director-btn.secondary {
+            background: rgba(15, 23, 42, 0.05);
+            color: var(--director-slate);
+            border: 1px solid rgba(15, 23, 42, 0.1);
+            box-shadow: none;
+        }
+
+        .director-btn.secondary:hover {
+            background: rgba(15, 23, 42, 0.1);
+            border-color: rgba(15, 23, 42, 0.2);
+        }
+
+        /* Director inputs */
+        .director-input {
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(15, 23, 42, 0.08);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            color: var(--director-slate);
+        }
+
+        .director-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            background-color: #f9fafb;
+        }
+
+        .director-input:hover {
+            border-color: #94a3b8;
+            background-color: #f8fafc;
+        }
+
+        /* Report Stat Cards - Matching first tab exactly */
+        .report-stat-card-inline {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border: 2px solid rgba(15, 23, 42, 0.1);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .report-stat-card-inline::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.02) 0%, rgba(99, 102, 241, 0.02) 100%);
+            pointer-events: none;
+        }
+
+        .report-stat-card-inline:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .report-stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            position: relative;
+            z-index: 1;
+        }
+
+        .report-stat-icon i {
+            color: white !important;
+            opacity: 1 !important;
+        }
+
+        .report-stat-content {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .report-stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .report-stat-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .report-stat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Reports List Card Styles - Matching first tab exactly */
+        .report-card {
+            background: #ffffff;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .report-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .report-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .report-card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 8px 0;
+            line-height: 1.3;
+        }
+
+        .report-card-description {
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .report-card-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .report-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.04));
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 14px;
+        }
+
+        .report-meta-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #3B82F6, #2563EB);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .report-meta-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .report-meta-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #3B82F6;
+            margin: 0 0 4px 0;
+            font-weight: 600;
+        }
+
+        .report-meta-value {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .report-card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .report-action-btn {
+            padding: 8px 12px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.8);
+            color: #64748b;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .report-action-btn:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: #2563eb;
+        }
+
+        .report-action-btn.primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .report-action-btn.primary:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+
+        /* RTL for reports */
+        [dir="rtl"] .report-card-header {
+            flex-direction: row-reverse;
+        }
+
+        [dir="rtl"] .report-card-actions {
+            justify-content: flex-start;
+        }
+
+        [dir="rtl"] .report-meta-item {
+            flex-direction: row-reverse;
+        }
+
+        [dir="rtl"] .report-meta-content {
+            text-align: right;
+        }
+
+        /* RTL Support for Arabic */
+        [dir="rtl"] .director-panel {
+            direction: rtl;
+        }
+
+        [dir="rtl"] .director-panel .flex {
+            flex-direction: row-reverse;
+        }
+
+        [dir="rtl"] .director-btn {
+            direction: rtl;
+        }
+
+        [dir="rtl"] .director-btn i {
+            margin-left: 0.5rem;
+            margin-right: 0;
+        }
+
+        [dir="rtl"] .director-input {
+            direction: rtl;
+            text-align: right;
+        }
+
+        [dir="rtl"] .report-stat-card-inline {
+            flex-direction: row-reverse;
+        }
+
+        [dir="rtl"] .report-stat-content {
+            text-align: right;
+        }
+
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 1rem 0;
+        }
+        
+        /* Improved icon visibility */
+        .director-panel h3 i {
+            color: inherit !important;
+            opacity: 1 !important;
+        }
+        
+        .director-panel h3 .text-orange-500 {
+            color: #f97316 !important;
+        }
+        
+        .director-panel h3 .text-red-500 {
+            color: #ef4444 !important;
+        }
+        
+        .director-panel h3 .text-purple-500 {
+            color: #a855f7 !important;
+        }
+        
+        .director-panel h3 .text-blue-500 {
+            color: #3b82f6 !important;
+        }
+        
+        .director-panel h3 .text-green-500 {
+            color: #22c55e !important;
+        }
+        
+        .director-panel h3 .text-yellow-500 {
+            color: #eab308 !important;
+        }
+        
+        .director-panel h3 .text-indigo-500 {
+            color: #6366f1 !important;
+        }
+        
+        .director-panel h3 .text-teal-500 {
+            color: #14b8a6 !important;
+        }
+        
+        /* Ensure all icons are visible */
+        .fas, .fa, .fa-solid, .fa-regular {
+            opacity: 1 !important;
+        }
+        
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .badge-critical { background: linear-gradient(135deg, #fee2e2 0%, #fca5a5 100%); color: #991b1b; }
+        .badge-very-high { background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%); color: #9a3412; }
+        .badge-high { background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%); color: #92400e; }
+        .badge-medium { background: linear-gradient(135deg, #bfdbfe 0%, #60a5fa 100%); color: #1e3a8a; }
+        .badge-low { background: linear-gradient(135deg, #a7f3d0 0%, #34d399 100%); color: #065f46; }
+    </style>
+</head>
+<body class="min-h-screen">
+    
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+        <div class="text-center">
+            <div class="loading-spinner rounded-full h-20 w-20 border-4 border-blue-600 border-t-transparent mx-auto mb-6"></div>
+            <p class="text-slate-700 font-bold text-xl mb-2">جاري تحميل الإحصائيات...</p>
+            <p class="text-slate-500 text-sm">الرجاء الانتظار</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="px-6 py-6">
+        
+        <!-- Filters -->
+        <div class="director-panel" style="margin-bottom: 2rem;">
+            <div class="director-panel-header">
+                <div class="director-panel-title">
+                    <div class="director-panel-title-icon">
+                        <i class="fas fa-filter"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">الفلاتر والعرض</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">قم بتصفية الإحصائيات واختر طريقة العرض</p>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="window.history.back()" class="director-btn secondary">
+                        <i class="fas fa-arrow-right"></i>
+                        رجوع
+                    </button>
+                    <button onclick="exportStatistics()" class="director-btn">
+                        <i class="fas fa-file-export"></i>
+                        تصدير التقرير
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">الفترة الزمنية</label>
+                    <select id="periodFilter" onchange="loadStatistics()" class="director-input w-full">
+                        <option value="day">اليوم</option>
+                        <option value="week">هذا الأسبوع</option>
+                        <option value="month" selected>هذا الشهر</option>
+                        <option value="year">هذا العام</option>
+                        <option value="all">جميع الفترات</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">القسم</label>
+                    <select id="departmentFilter" onchange="loadStatistics()" class="director-input w-full">
+                        <option value="">جميع الأقسام</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+            </div>
+        </div>
+
+        <!-- Overview Cards -->
+        <div class="flex flex-wrap gap-4 justify-between mb-6">
+            <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-t-4 !border-blue-600 bg-blue-50">
+                <div class="report-stat-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="report-stat-content">
+                    <p class="report-stat-label">إجمالي التقارير</p>
+                    <h3 class="report-stat-value" id="totalReports">0</h3>
+                    <span class="report-stat-badge" style="background: rgba(59, 130, 246, 0.1); color: #2563eb;">
+                        جميع التقارير
+                    </span>
+                </div>
+            </div>
+
+            <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-t-4 !border-red-600 bg-red-50">
+                <div class="report-stat-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="report-stat-content">
+                    <p class="report-stat-label">حرجة للغاية</p>
+                    <h3 class="report-stat-value" style="color: #dc2626;" id="criticalCount">0</h3>
+                    <span class="report-stat-badge" style="background: rgba(239, 68, 68, 0.1); color: #dc2626;">
+                        تتطلب تدخل فوري
+                    </span>
+                </div>
+            </div>
+
+            <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-t-4 !border-orange-500 bg-orange-50">
+                <div class="report-stat-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <div class="report-stat-content">
+                    <p class="report-stat-label">عالية جداً</p>
+                    <h3 class="report-stat-value" style="color: #ea580c;" id="veryHighCount">0</h3>
+                    <span class="report-stat-badge" style="background: rgba(249, 115, 22, 0.1); color: #ea580c;">
+                        أولوية عالية
+                    </span>
+                </div>
+            </div>
+
+            <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-t-4 !border-yellow-500 bg-yellow-50">
+                <div class="report-stat-icon" style="background: linear-gradient(135deg, #eab308, #ca8a04);">
+                    <i class="fas fa-exclamation"></i>
+                </div>
+                <div class="report-stat-content">
+                    <p class="report-stat-label">عالية</p>
+                    <h3 class="report-stat-value" style="color: #ca8a04;" id="highCount">0</h3>
+                    <span class="report-stat-badge" style="background: rgba(234, 179, 8, 0.1); color: #ca8a04;">
+                        تحتاج متابعة
+                    </span>
+                </div>
+            </div>
+
+            <div class="report-stat-card-inline !p-3 !gap-3 !min-w-0 !border-t-4 !border-green-600 bg-green-50">
+                <div class="report-stat-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="report-stat-content">
+                    <p class="report-stat-label">متوسطة + منخفضة</p>
+                    <h3 class="report-stat-value" style="color: #16a34a;" id="mediumLowCount">0</h3>
+                    <span class="report-stat-badge" style="background: rgba(34, 197, 94, 0.1); color: #16a34a;">
+                        طبيعية
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-2 gap-6 mb-6">
+            <!-- Urgency Chart -->
+            <div class="director-panel">
+                <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-exclamation-triangle text-orange-500"></i>
+                    توزيع حسب الاستعجال
+                </h3>
+                <div class="chart-container">
+                    <canvas id="urgencyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Severity Chart -->
+            <div class="director-panel">
+                <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-radiation text-red-500"></i>
+                    توزيع حسب الخطورة
+                </h3>
+                <div class="chart-container">
+                    <canvas id="severityChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories & Department Stats -->
+        <div class="grid grid-cols-2 gap-6 mb-6">
+            <!-- Categories -->
+            <div class="director-panel">
+                <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-tags text-purple-500"></i>
+                    أكثر الفئات تكراراً
+                </h3>
+                <div id="categoriesList" class="space-y-2 max-h-96 overflow-y-auto"></div>
+            </div>
+
+            <!-- Departments -->
+            <div class="director-panel">
+                <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-building text-blue-500"></i>
+                    إحصائيات حسب القسم
+                </h3>
+                <div id="departmentsList" class="space-y-3 max-h-96 overflow-y-auto"></div>
+            </div>
+        </div>
+
+        <!-- Trend & Sentiment -->
+        <div class="grid grid-cols-2 gap-6 mb-6">
+            <!-- Daily Trend -->
+            <div class="director-panel">
+                <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-bar text-green-500"></i>
+                    عدد التقارير اليومية حسب الأولوية
+                </h3>
+                <div id="trendSummary" class="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200"></div>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="trendChart"></canvas>
+                </div>
+                <p class="text-xs text-slate-500 mt-2 text-center">
+                    📊 كل عمود يمثل يوماً واحداً • الألوان تمثل مستوى الأولوية
+                </p>
+            </div>
+
+            <!-- Sentiment -->
+            <div class="director-panel">
+                <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-smile text-yellow-500"></i>
+                    تحليل المشاعر
+                </h3>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="sentimentChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Keywords & Employees -->
+        <div class="grid grid-cols-2 gap-6 mb-6">
+            <!-- Keywords -->
+            <div class="director-panel">
+                <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-key text-indigo-500"></i>
+                    أكثر الكلمات المفتاحية
+                </h3>
+                <div id="keywordsList" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <!-- Top Employees -->
+            <div class="director-panel">
+                <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-user-tie text-teal-500"></i>
+                    أكثر الموظفين نشاطاً
+                </h3>
+                <div id="employeesList" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- Critical Reports -->
+        <div class="director-panel" id="criticalReportsSection" style="display: none;">
+            <h3 class="text-xl font-bold text-red-600 mb-4 flex items-center gap-2">
+                <i class="fas fa-fire text-red-600"></i>
+                التقارير الحرجة (تتطلب انتباهاً فورياً)
+            </h3>
+            <div id="criticalReportsList" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        // Align API base with director workspace behavior (supports embed + main app config)
+        const API = (function () {
+            try {
+                // Prefer parent API_BASE when embedded in main app
+                if (window.parent && window.parent !== window && window.parent.API_BASE) {
+                    return window.parent.API_BASE;
+                }
+                // Fallback to window-scoped API_BASE if defined
+                if (window.API_BASE) {
+                    return window.API_BASE;
+                }
+                const origin = (window.location && window.location.origin) || '';
+                const hostname = (window.location && window.location.hostname) || '';
+                const port = window.location.port || '';
+                const portNumber = parseInt(port, 10);
+                const isLiveServerPort = !Number.isNaN(portNumber) && portNumber >= 5500 && portNumber <= 5599;
+                const isLocalHost = /^(127\.0\.0\.1|localhost)$/i.test(hostname || '');
+                if ((isLocalHost && isLiveServerPort) || !origin || !/^https?:\/\//i.test(origin)) {
+                    // Use same hostname as current page to avoid CORS issues
+                    const apiHost = hostname === '127.0.0.1' ? '127.0.0.1' : 'localhost';
+                    return `http://${apiHost}:3020`;
+                }
+                return origin;
+            } catch (_) {
+                return 'http://localhost:3020';
+            }
+        })();
+
+        const API_BASE = API + '/api/rapportemp';
+
+        // Helper function to get auth headers
+        function getAuthHeaders() {
+            try {
+                const authToken = (function () {
+                    // First: parent window's authManager (when embedded in main app)
+                    try {
+                        if (window.parent && window.parent !== window && window.parent.authManager) {
+                            const token = window.parent.authManager.getToken();
+                            if (token) {
+                                // Sync to localStorage for fallback
+                                localStorage.setItem('token', token);
+                                return token;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Could not access parent authManager:', e);
+                    }
+
+                    // Second: local authManager (if auth.js is included)
+                    if (typeof authManager !== 'undefined' && authManager && authManager.getToken) {
+                        const token = authManager.getToken();
+                        if (token) return token;
+                    }
+
+                    // Third: localStorage fallback
+                    const localToken = localStorage.getItem('token');
+                    if (localToken) return localToken;
+
+                    return null;
+                })();
+
+                if (!authToken) {
+                    console.warn('No auth token available');
+                    return {};
+                }
+
+                return {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                };
+            } catch (err) {
+                console.error('Error getting auth headers:', err);
+                return {};
+            }
+        }
+
+        let charts = {};
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadDepartments();
+            loadStatistics();
+        });
+
+        async function loadDepartments() {
+            try {
+                const response = await fetch(API + '/api/departments', {
+                    headers: getAuthHeaders()
+                });
+                
+                if (!response.ok) {
+                    console.warn('Failed to load departments:', response.status);
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                const select = document.getElementById('departmentFilter');
+                data.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept.id;
+                    option.textContent = dept.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erreur chargement départements:', error);
+            }
+        }
+
+        async function loadStatistics() {
+            const period = document.getElementById('periodFilter').value;
+            const department = document.getElementById('departmentFilter').value;
+            
+            try {
+                const url = new URL(`${API_BASE}/statistics/dashboard`);
+                url.searchParams.append('period', period);
+                if (department) url.searchParams.append('department_id', department);
+
+                const response = await fetch(url, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error(`Expected JSON, got ${contentType}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderStatistics(data.statistics);
+                }
+                
+                document.getElementById('loadingScreen').style.display = 'none';
+            } catch (error) {
+                console.error('Erreur chargement statistiques:', error);
+                console.error('API_BASE:', API_BASE);
+                console.error('API:', API);
+                document.getElementById('loadingScreen').innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-6xl mb-4"></i>
+                        <p class="text-red-600 font-bold text-xl mb-4">خطأ في تحميل الإحصائيات</p>
+                        <p class="text-slate-600 text-sm mb-4">${error.message}</p>
+                        <p class="text-slate-500 text-xs mb-4">API: ${API_BASE}</p>
+                        <button onclick="location.reload()" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold">
+                            إعادة المحاولة
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderStatistics(stats) {
+            // Overview Cards
+            document.getElementById('totalReports').textContent = stats.total_reports;
+            document.getElementById('criticalCount').textContent = stats.by_urgency.critical;
+            document.getElementById('veryHighCount').textContent = stats.by_urgency.very_high;
+            document.getElementById('highCount').textContent = stats.by_urgency.high;
+            document.getElementById('mediumLowCount').textContent = 
+                stats.by_urgency.medium + stats.by_urgency.low;
+
+            // Urgency Chart
+            renderPieChart('urgencyChart', {
+                labels: ['حرجة (10)', 'عالية جداً (8-9)', 'عالية (6-7)', 'متوسطة (4-5)', 'منخفضة (1-3)'],
+                data: [
+                    stats.by_urgency.critical,
+                    stats.by_urgency.very_high,
+                    stats.by_urgency.high,
+                    stats.by_urgency.medium,
+                    stats.by_urgency.low
+                ],
+                colors: ['#dc2626', '#ea580c', '#ca8a04', '#2563eb', '#10b981']
+            });
+
+            // Severity Chart
+            renderPieChart('severityChart', {
+                labels: ['حرجة (10)', 'عالية جداً (8-9)', 'عالية (6-7)', 'متوسطة (4-5)', 'منخفضة (1-3)'],
+                data: [
+                    stats.by_severity.critical,
+                    stats.by_severity.very_high,
+                    stats.by_severity.high,
+                    stats.by_severity.medium,
+                    stats.by_severity.low
+                ],
+                colors: ['#dc2626', '#ea580c', '#ca8a04', '#2563eb', '#10b981']
+            });
+
+            // Categories List
+            renderCategoriesList(stats.by_category);
+
+            // Departments List
+            renderDepartmentsList(stats.by_department);
+
+            // Daily Trend
+            renderTrendChart(stats.daily_trend);
+
+            // Sentiment Chart
+            renderSentimentChart(stats.by_sentiment);
+
+            // Keywords
+            renderKeywords(stats.top_keywords);
+
+            // Employees
+            renderEmployees(stats.by_employee);
+
+            // Critical Reports
+            renderCriticalReports(stats.critical_reports);
+        }
+
+        function renderPieChart(canvasId, config) {
+            const ctx = document.getElementById(canvasId);
+            
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
+
+            charts[canvasId] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: config.labels,
+                    datasets: [{
+                        data: config.data,
+                        backgroundColor: config.colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            rtl: true,
+                            labels: { font: { size: 11 }, padding: 10 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderCategoriesList(categories) {
+            const container = document.getElementById('categoriesList');
+            const entries = Object.entries(categories).slice(0, 10);
+            
+            if (entries.length === 0) {
+                container.innerHTML = '<p class="text-slate-500 text-center">لا توجد بيانات</p>';
+                return;
+            }
+
+            container.innerHTML = entries.map(([cat, count]) => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition">
+                    <span class="font-bold text-slate-700">${cat}</span>
+                    <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-bold">${count}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderDepartmentsList(departments) {
+            const container = document.getElementById('departmentsList');
+            const entries = Object.entries(departments);
+            
+            if (entries.length === 0) {
+                container.innerHTML = '<p class="text-slate-500 text-center">لا توجد بيانات</p>';
+                return;
+            }
+
+            container.innerHTML = entries.map(([dept, data]) => `
+                <div class="border border-slate-200 rounded-lg p-4 hover:shadow-md transition">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="font-bold text-slate-900">${dept}</h4>
+                        <span class="text-2xl font-black text-blue-600">${data.total}</span>
+                    </div>
+                    <div class="flex gap-2 flex-wrap">
+                        ${data.critical > 0 ? `<span class="badge badge-critical">🚨 ${data.critical}</span>` : ''}
+                        ${data.very_high > 0 ? `<span class="badge badge-very-high">🔴 ${data.very_high}</span>` : ''}
+                        ${data.high > 0 ? `<span class="badge badge-high">🟠 ${data.high}</span>` : ''}
+                        ${data.medium > 0 ? `<span class="badge badge-medium">🟡 ${data.medium}</span>` : ''}
+                        ${data.low > 0 ? `<span class="badge badge-low">🟢 ${data.low}</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTrendChart(trend) {
+            const ctx = document.getElementById('trendChart');
+            const sortedDates = Object.keys(trend).sort();
+            
+            if (charts.trendChart) {
+                charts.trendChart.destroy();
+            }
+
+            // Générer le résumé textuel
+            const summaryContainer = document.getElementById('trendSummary');
+            if (sortedDates.length > 0) {
+                const lastDay = trend[sortedDates[sortedDates.length - 1]];
+                const totalToday = lastDay.total;
+                const criticalToday = lastDay.critical;
+                
+                let summary = `📅 <strong>آخر يوم:</strong> ${totalToday} تقرير`;
+                if (criticalToday > 0) {
+                    summary += ` (<span class="text-red-600 font-bold">${criticalToday} حرجة</span>)`;
+                }
+                
+                // Calculer moyenne
+                const totalReports = sortedDates.reduce((sum, d) => sum + trend[d].total, 0);
+                const avgPerDay = (totalReports / sortedDates.length).toFixed(1);
+                summary += ` • <strong>المعدل اليومي:</strong> ${avgPerDay} تقرير`;
+                
+                summaryContainer.innerHTML = summary;
+            }
+
+            // Créer un graphique en barres empilées plus clair
+            charts.trendChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedDates.map(d => {
+                        const date = new Date(d);
+                        const day = date.getDate();
+                        const month = date.getMonth() + 1;
+                        const weekdays = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+                        return `${weekdays[date.getDay()]}\n${day}/${month}`;
+                    }),
+                    datasets: [
+                        {
+                            label: '🚨 حرجة (10)',
+                            data: sortedDates.map(d => trend[d].critical),
+                            backgroundColor: '#dc2626',
+                            borderColor: '#991b1b',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '🔴 عالية (6-9)',
+                            data: sortedDates.map(d => trend[d].high),
+                            backgroundColor: '#ea580c',
+                            borderColor: '#c2410c',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '🟡 متوسطة (4-5)',
+                            data: sortedDates.map(d => trend[d].medium),
+                            backgroundColor: '#f59e0b',
+                            borderColor: '#d97706',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '🟢 منخفضة (1-3)',
+                            data: sortedDates.map(d => trend[d].low),
+                            backgroundColor: '#10b981',
+                            borderColor: '#059669',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            rtl: true,
+                            labels: { 
+                                font: { size: 11, weight: 'bold' },
+                                padding: 10,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            rtl: true,
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].label.replace('\n', ' - ');
+                                },
+                                footer: function(context) {
+                                    const total = context.reduce((sum, item) => sum + item.parsed.y, 0);
+                                    return `المجموع: ${total} تقرير`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { display: false },
+                            ticks: { 
+                                font: { size: 10, weight: 'bold' },
+                                color: '#475569'
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: { 
+                                precision: 0,
+                                font: { size: 11, weight: 'bold' },
+                                color: '#475569'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            title: {
+                                display: true,
+                                text: 'عدد التقارير',
+                                font: { size: 12, weight: 'bold' },
+                                color: '#1e293b'
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        function renderSentimentChart(sentiment) {
+            const ctx = document.getElementById('sentimentChart');
+            
+            if (charts.sentimentChart) {
+                charts.sentimentChart.destroy();
+            }
+
+            charts.sentimentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['إيجابي', 'محايد', 'سلبي'],
+                    datasets: [{
+                        label: 'عدد التقارير',
+                        data: [sentiment.positive, sentiment.neutral, sentiment.negative],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ],
+                        borderColor: [
+                            '#10b981',
+                            '#3b82f6',
+                            '#ef4444'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderKeywords(keywords) {
+            const container = document.getElementById('keywordsList');
+            const entries = Object.entries(keywords).slice(0, 20);
+            
+            if (entries.length === 0) {
+                container.innerHTML = '<p class="text-slate-500">لا توجد كلمات مفتاحية</p>';
+                return;
+            }
+
+            container.innerHTML = entries.map(([keyword, count]) => `
+                <span class="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg text-sm font-semibold text-indigo-700">
+                    ${keyword}
+                    <span class="px-2 py-0.5 bg-indigo-600 text-white rounded-full text-xs">${count}</span>
+                </span>
+            `).join('');
+        }
+
+        function renderEmployees(employees) {
+            const container = document.getElementById('employeesList');
+            const entries = Object.entries(employees).slice(0, 10);
+            
+            if (entries.length === 0) {
+                container.innerHTML = '<p class="text-slate-500 text-center">لا توجد بيانات</p>';
+                return;
+            }
+
+            container.innerHTML = entries.map(([name, count], index) => {
+                const rankColors = [
+                    'bg-amber-600',
+                    'bg-gray-700', 
+                    'bg-orange-700',
+                    'bg-blue-700',
+                    'bg-teal-700'
+                ];
+                const rankColor = rankColors[index] || 'bg-slate-700';
+                
+                return `
+                <div class="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl hover:from-slate-100 hover:to-blue-100 transition-all shadow-sm hover:shadow-md border border-slate-200">
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-xl ${rankColor} font-bold text-lg shadow-lg" style="background-color: #1e293b; color: white;">
+                            ${index + 1}
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold text-slate-800 text-lg">${name}</p>
+                            <p class="text-slate-500 text-sm">تقارير</p>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center shadow-lg" style="background-color: #0f766e; color: white;">
+                            <span class="font-bold text-2xl" style="color: white !important;">${count}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        function renderCriticalReports(reports) {
+            const section = document.getElementById('criticalReportsSection');
+            const container = document.getElementById('criticalReportsList');
+            
+            if (reports.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            
+            container.innerHTML = reports.slice(0, 10).map(report => {
+                const maxScore = Math.max(report.urgency, report.severity);
+                const date = new Date(report.created_at);
+                const dateStr = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+                
+                return `
+                    <div class="border-r-4 border-red-600 bg-red-50 p-4 rounded-lg hover:shadow-md transition">
+                        <div class="flex items-start justify-between mb-2">
+                            <h4 class="font-bold text-slate-900 flex-1">${report.title}</h4>
+                            <div class="flex gap-2">
+                                <span class="px-3 py-1 bg-red-600 text-white rounded-full text-xs font-bold">
+                                    🚨 استعجال: ${report.urgency}/10
+                                </span>
+                                <span class="px-3 py-1 bg-orange-600 text-white rounded-full text-xs font-bold">
+                                    ⚠️ خطورة: ${report.severity}/10
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 text-sm text-slate-600">
+                            <span><i class="fas fa-user ml-1"></i>${report.employee}</span>
+                            <span><i class="fas fa-clock ml-1"></i>${dateStr}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function exportStatistics() {
+            const period = document.getElementById('periodFilter').value;
+            const department = document.getElementById('departmentFilter').value;
+            
+            // Créer un rapport texte simple
+            let report = '📊 تقرير إحصائيات التقارير\n';
+            report += '='.repeat(50) + '\n\n';
+            report += `الفترة: ${getPeriodLabel(period)}\n`;
+            if (department) {
+                const deptSelect = document.getElementById('departmentFilter');
+                const deptName = deptSelect.options[deptSelect.selectedIndex].text;
+                report += `القسم: ${deptName}\n`;
+            }
+            report += `تاريخ التصدير: ${new Date().toLocaleString('ar-DZ')}\n\n`;
+            
+            report += '📈 ملخص الإحصائيات:\n';
+            report += '-'.repeat(50) + '\n';
+            report += `إجمالي التقارير: ${document.getElementById('totalReports').textContent}\n`;
+            report += `حرجة للغاية: ${document.getElementById('criticalCount').textContent}\n`;
+            report += `عالية جداً: ${document.getElementById('veryHighCount').textContent}\n`;
+            report += `عالية: ${document.getElementById('highCount').textContent}\n`;
+            report += `متوسطة + منخفضة: ${document.getElementById('mediumLowCount').textContent}\n\n`;
+            
+            // Télécharger le fichier
+            const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `statistiques_${period}_${Date.now()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('✅ تم تصدير التقرير بنجاح', 'success');
+        }
+
+        function getPeriodLabel(period) {
+            const labels = {
+                'day': 'اليوم',
+                'week': 'هذا الأسبوع',
+                'month': 'هذا الشهر',
+                'year': 'هذا العام',
+                'all': 'جميع الفترات'
+            };
+            return labels[period] || period;
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600';
+            
+            notification.className = `fixed top-24 left-1/2 transform -translate-x-1/2 ${bgColor} text-white px-8 py-4 rounded-xl shadow-2xl font-bold text-lg z-50`;
+            notification.textContent = message;
+            notification.style.animation = 'fadeIn 0.3s ease';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transition = 'opacity 0.5s';
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

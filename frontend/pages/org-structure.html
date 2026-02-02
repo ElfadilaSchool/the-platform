@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="org.title">Organizational Structure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/rtl.css">
+    <style>
+        .tab-active { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="app" class="min-h-screen flex">
+        <!-- Sidebar injected by main.js -->
+        <div id="sidebarMount"></div>
+
+        <main class="flex-1 overflow-y-auto p-6 ml-16">
+            <div class="max-w-7xl mx-auto">
+                <!-- Top Bar with Language Selector -->
+                <div class="flex items-center justify-end mb-4">
+                    <!-- Language Selector -->
+                    <select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm hover:border-gray-400 transition-colors">
+                        <option value="en">English</option>
+                        <option value="fr">Français</option>
+                        <option value="ar">العربية</option>
+                    </select>
+                </div>
+
+                <!-- Page Header -->
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg p-6 mb-6 text-white">
+                    <div class="flex items-start">
+                        <div class="p-3 bg-white/20 rounded-lg mr-4 flex-shrink-0">
+                            <i class="fas fa-sitemap text-2xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h1 class="text-3xl font-bold mb-2" data-translate="org.title">Organizational Structure</h1>
+                            <p class="text-blue-100 text-base leading-relaxed" data-translate="org.description">Manage branches, levels, subjects, positions and departments</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs Container -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="border-b border-gray-200">
+                        <nav class="flex space-x-8 px-6" aria-label="Tabs" id="orgTabs">
+                            <button data-tab="branches" id="tab-branches" class="tab-active py-4 px-1 border-b-2 font-medium text-sm">
+                                <i class="fas fa-code-branch mr-2"></i><span data-translate="org.tabs.branches">Branches</span>
+                            </button>
+                            <button data-tab="levels" id="tab-levels" class="py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
+                                <i class="fas fa-layer-group mr-2"></i><span data-translate="org.tabs.levels">Levels</span>
+                            </button>
+                            <button data-tab="subjects" id="tab-subjects" class="py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
+                                <i class="fas fa-book-open mr-2"></i><span data-translate="org.tabs.subjects">Subjects</span>
+                            </button>
+                            <button data-tab="positions" id="tab-positions" class="py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
+                                <i class="fas fa-briefcase mr-2"></i><span data-translate="org.tabs.positions">Positions</span>
+                            </button>
+                            <button data-tab="departments" id="tab-departments" class="py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
+                                <i class="fas fa-building mr-2"></i><span data-translate="org.tabs.departments">Departments</span>
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Panels -->
+                    <div id="panel-branches" class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900" data-translate="org.branches.title">Branches</h2>
+                            <button id="addBranchBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"><i class="fas fa-plus mr-2"></i><span data-translate="org.branches.add">Add Branch</span></button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="org.branches.name">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="org.branches.website">Website</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="org.branches.phone">Phone</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="org.branches.levels">Levels</th>
+                                        <th class="px-6 py-3"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="branchesTable" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="panel-levels" class="p-6 hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900" data-translate="org.levels.title">Levels</h2>
+                            <button id="addLevelBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"><i class="fas fa-plus mr-2"></i><span data-translate="org.levels.add">Add Level</span></button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="org.levels.name">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="org.levels.subjects">Subjects</th>
+                                        <th class="px-6 py-3"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="levelsTable" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="panel-subjects" class="p-6 hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900" data-translate="org.subjects.title">Subjects</h2>
+                            <button id="addSubjectBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"><i class="fas fa-plus mr-2"></i><span data-translate="org.subjects.add">Add Subject</span></button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="org.subjects.name">Name</th>
+                                        <th class="px-6 py-3"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="subjectsTable" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="panel-positions" class="p-0 hidden">
+                        <iframe src="payments.html?embed=1" class="w-full h-[70vh] bg-white rounded-b-lg"></iframe>
+                    </div>
+
+                    <div id="panel-departments" class="p-6 hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900" data-translate="org.departments.title">Departments</h2>
+                            <button id="addDepartmentBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"><i class="fas fa-plus mr-2"></i><span data-translate="org.departments.add">Add Department</span></button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="org.departments.department">Department</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="org.departments.responsible">Responsible</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="org.departments.employees">Employees</th>
+                                        <th class="px-6 py-3"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="departmentsTable" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/translations.js"></script>
+    <script src="../components/api.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script>
+        // Language selector
+        document.addEventListener('DOMContentLoaded', function() {
+            const languageSelector = document.getElementById('languageSelector');
+            if (languageSelector) {
+                languageSelector.value = currentLanguage || 'en';
+                languageSelector.addEventListener('change', (e) => {
+                    if (typeof setLanguage === 'function') {
+                        setLanguage(e.target.value);
+                    }
+                });
+            }
+            
+            // Initialize translations
+            if (typeof updatePageTranslations === 'function') {
+                updatePageTranslations();
+            }
+        });
+    </script>
+    <script>
+        if (!checkAuth()) { /* redirected by checkAuth */ }
+
+        const TABS = ['branches','levels','subjects','positions','departments'];
+        const state = { branches: [], levels: [], subjects: [] };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCollapsibleSidebar();
+            bindTabs();
+            loadAll();
+            document.getElementById('addSubjectBtn').addEventListener('click', openAddSubjectModal);
+            document.getElementById('addLevelBtn').addEventListener('click', openAddLevelModal);
+            document.getElementById('addBranchBtn').addEventListener('click', openAddBranchModal);
+            const adb = document.getElementById('addDepartmentBtn');
+            if (adb) adb.addEventListener('click', openAddDepartmentModal);
+            
+            // Listen for language changes to re-render dynamic content
+            window.addEventListener('languageChanged', () => {
+                // Re-render all tables with translated messages
+                if (state.subjects) renderSubjects();
+                if (state.levels) renderLevels();
+                if (state.branches) renderBranches();
+                if (state.departments) renderDepartments();
+            });
+        });
+
+        function bindTabs() {
+            const buttons = document.querySelectorAll('#orgTabs [data-tab]');
+            buttons.forEach(btn => btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tab = btn.getAttribute('data-tab');
+                buttons.forEach(b => b.className = 'py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm');
+                btn.className = 'tab-active py-4 px-1 border-b-2 font-medium text-sm';
+                TABS.forEach(t => {
+                    document.getElementById(`panel-${t}`).classList.toggle('hidden', t !== tab);
+                });
+            }));
+        }
+
+        async function loadAll() {
+            await Promise.all([loadSubjects(), loadLevels(), loadBranches(), loadDepartments()]);
+        }
+
+        // Subjects
+        async function loadSubjects() {
+            try {
+                state.subjects = await APIService.request('departments', '/subjects');
+                renderSubjects();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderSubjects() {
+            const tbody = document.getElementById('subjectsTable');
+            if (!state.subjects.length) {
+                const noDataMsg = typeof translate === 'function' ? translate('org.subjects.no_data') : 'No subjects yet';
+                tbody.innerHTML = `<tr><td colspan="2" class="text-center py-6 text-gray-500">${noDataMsg}</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = state.subjects.map(s => `
+                <tr>
+                    <td class="px-4 py-3">${s.name}</td>
+                    <td class="px-4 py-3 text-right space-x-2">
+                        <button class="text-blue-600" onclick="editSubject('${s.id}','${encodeURIComponent(s.name)}')"><i class="fas fa-edit"></i></button>
+                        <button class="text-red-600" onclick="deleteSubject('${s.id}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openAddSubjectModal() {
+            const title = typeof translate === 'function' ? translate('org.subjects.add') : 'Add Subject';
+            const nameLabel = typeof translate === 'function' ? translate('org.modal.name') : 'Name';
+            const saveText = typeof translate === 'function' ? translate('org.modal.save') : 'Save';
+            const modal = Utils.showModal(title, `
+                <form id="subjectForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${nameLabel}</label>
+                        <input name="name" type="text" class="w-full border rounded px-3 py-2" required />
+                    </div>
+                </form>
+            `, [
+                { text: saveText, class: 'bg-blue-600 text-white', onclick: 'submitSubjectForm()' }
+            ]);
+        }
+
+        window.submitSubjectForm = async function() {
+            const form = document.getElementById('subjectForm');
+            const payload = { name: form.name.value.trim() };
+            if (!payload.name) return;
+            await APIService.request('departments', '/subjects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            document.querySelector('.modal-overlay')?.remove();
+            await loadSubjects();
+        }
+
+        window.editSubject = function(id, encName) {
+            const name = decodeURIComponent(encName);
+            const title = typeof translate === 'function' ? translate('org.subjects.edit') : 'Edit Subject';
+            const nameLabel = typeof translate === 'function' ? translate('org.modal.name') : 'Name';
+            const saveText = typeof translate === 'function' ? translate('org.modal.save') : 'Save';
+            const modal = Utils.showModal(title, `
+                <form id="subjectForm" class="space-y-4">
+                    <input type="hidden" name="id" value="${id}" />
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${nameLabel}</label>
+                        <input name="name" type="text" class="w-full border rounded px-3 py-2" value="${name}" required />
+                    </div>
+                </form>
+            `, [
+                { text: saveText, class: 'bg-blue-600 text-white', onclick: 'submitEditSubjectForm()' }
+            ]);
+        }
+
+        window.submitEditSubjectForm = async function() {
+            const form = document.getElementById('subjectForm');
+            const id = form.id.value;
+            const payload = { name: form.name.value.trim() };
+            await APIService.request('departments', `/subjects/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            document.querySelector('.modal-overlay')?.remove();
+            await loadSubjects();
+        }
+
+        window.deleteSubject = async function(id) {
+            await APIService.request('departments', `/subjects/${id}`, { method: 'DELETE' });
+            await loadSubjects();
+        }
+
+        // Levels
+        async function loadLevels() {
+            try {
+                state.levels = await APIService.request('departments', '/levels');
+                renderLevels();
+            } catch (e) { console.error(e); }
+        }
+
+        function renderLevels() {
+            const tbody = document.getElementById('levelsTable');
+            if (!state.levels.length) {
+                const noDataMsg = typeof translate === 'function' ? translate('org.levels.no_data') : 'No levels yet';
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-gray-500">${noDataMsg}</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = state.levels.map(l => {
+                const subjects = (l.subjects || []).map(s => s.name).join(', ');
+                return `
+                <tr>
+                    <td class="px-4 py-3">${l.name}</td>
+                    <td class="px-4 py-3">${subjects}</td>
+                    <td class="px-4 py-3 text-right space-x-2">
+                        <button class="text-blue-600" onclick="editLevel('${l.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="text-red-600" onclick="deleteLevel('${l.id}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function openAddLevelModal() {
+            const options = (state.subjects || []).map(s => `<label class="flex items-center space-x-2"><input type="checkbox" value="${s.id}" class="subject-checkbox"> <span>${s.name}</span></label>`).join('');
+            const title = typeof translate === 'function' ? translate('org.levels.add') : 'Add Level';
+            const nameLabel = typeof translate === 'function' ? translate('org.modal.name') : 'Name';
+            const subjectsLabel = typeof translate === 'function' ? translate('org.modal.subjects') : 'Subjects';
+            const saveText = typeof translate === 'function' ? translate('org.modal.save') : 'Save';
+            Utils.showModal(title, `
+                <form id="levelForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${nameLabel}</label>
+                        <input name="name" type="text" class="w-full border rounded px-3 py-2" required />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${subjectsLabel}</label>
+                        <div class="grid grid-cols-2 gap-2 max-h-48 overflow-auto">${options}</div>
+                    </div>
+                </form>
+            `, [
+                { text: saveText, class: 'bg-blue-600 text-white', onclick: 'submitLevelForm()' }
+            ]);
+        }
+
+        window.submitLevelForm = async function() {
+            const form = document.getElementById('levelForm');
+            const name = form.name.value.trim();
+            const subjectIds = Array.from(document.querySelectorAll('.subject-checkbox:checked')).map(i => i.value);
+            await APIService.request('departments', '/levels', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, subject_ids: subjectIds }) });
+            document.querySelector('.modal-overlay')?.remove();
+            await loadLevels();
+        }
+
+        window.editLevel = async function(id) {
+            const lvl = state.levels.find(x => x.id === id);
+            const selected = new Set((lvl.subjects || []).map(s => s.id));
+            const options = (state.subjects || []).map(s => `<label class=\"flex items-center space-x-2\"><input type=\"checkbox\" value=\"${s.id}\" class=\"subject-checkbox\" ${selected.has(s.id)?'checked':''}> <span>${s.name}</span></label>`).join('');
+            const title = typeof translate === 'function' ? translate('org.levels.edit') : 'Edit Level';
+            const nameLabel = typeof translate === 'function' ? translate('org.modal.name') : 'Name';
+            const subjectsLabel = typeof translate === 'function' ? translate('org.modal.subjects') : 'Subjects';
+            const saveText = typeof translate === 'function' ? translate('org.modal.save') : 'Save';
+            Utils.showModal(title, `
+                <form id="levelForm" class="space-y-4">
+                    <input type="hidden" name="id" value="${lvl.id}" />
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${nameLabel}</label>
+                        <input name="name" type="text" class="w-full border rounded px-3 py-2" value="${lvl.name}" required />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${subjectsLabel}</label>
+                        <div class="grid grid-cols-2 gap-2 max-h-48 overflow-auto">${options}</div>
+                    </div>
+                </form>
+            `, [
+                { text: saveText, class: 'bg-blue-600 text-white', onclick: 'submitEditLevelForm()' }
+            ]);
+        }
+
+        window.submitEditLevelForm = async function() {
+            const form = document.getElementById('levelForm');
+            const id = form.id.value;
+            const name = form.name.value.trim();
+            const subjectIds = Array.from(document.querySelectorAll('.subject-checkbox:checked')).map(i => i.value);
+            await APIService.request('departments', `/levels/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, subject_ids: subjectIds }) });
+            document.querySelector('.modal-overlay')?.remove();
+            await loadLevels();
+        }
+
+        window.deleteLevel = async function(id) {
+            await APIService.request('departments', `/levels/${id}`, { method: 'DELETE' });
+            await loadLevels();
+        }
+
+        // Branches
+        async function loadBranches() {
+            try {
+                state.branches = await APIService.request('departments', '/branches');
+                renderBranches();
+            } catch (e) { console.error(e); }
+        }
+
+        function renderBranches() {
+            const tbody = document.getElementById('branchesTable');
+            if (!state.branches.length) {
+                const noDataMsg = typeof translate === 'function' ? translate('org.branches.no_data') : 'No branches yet';
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-gray-500">${noDataMsg}</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = state.branches.map(b => {
+                const levels = (b.levels || []).map(l => l.name).join(', ');
+                return `
+                <tr>
+                    <td class="px-4 py-3">${b.name}</td>
+                    <td class="px-4 py-3">${b.website || ''}</td>
+                    <td class="px-4 py-3">${b.phone || ''}</td>
+                    <td class="px-4 py-3">${levels}</td>
+                    <td class="px-4 py-3 text-right space-x-2">
+                        <button class="text-blue-600" onclick="editBranch('${b.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="text-red-600" onclick="deleteBranch('${b.id}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function openAddBranchModal() {
+            const options = (state.levels || []).map(l => `<label class="flex items-center space-x-2"><input type="checkbox" value="${l.id}" class="level-checkbox"> <span>${l.name}</span></label>`).join('');
+            const title = typeof translate === 'function' ? translate('org.branches.add') : 'Add Branch';
+            const nameLabel = typeof translate === 'function' ? translate('org.modal.name') : 'Name';
+            const websiteLabel = typeof translate === 'function' ? translate('org.modal.website') : 'Website';
+            const phoneLabel = typeof translate === 'function' ? translate('org.modal.phone') : 'Phone';
+            const descLabel = typeof translate === 'function' ? translate('org.modal.description') : 'Description';
+            const levelsLabel = typeof translate === 'function' ? translate('org.modal.levels') : 'Levels';
+            const saveText = typeof translate === 'function' ? translate('org.modal.save') : 'Save';
+            Utils.showModal(title, `
+                <form id="branchForm" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">${nameLabel}</label>
+                            <input name="name" type="text" class="w-full border rounded px-3 py-2" required />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">${websiteLabel}</label>
+                            <input name="website" type="url" class="w-full border rounded px-3 py-2" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">${phoneLabel}</label>
+                            <input name="phone" type="text" class="w-full border rounded px-3 py-2" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${descLabel}</label>
+                        <textarea name="description" class="w-full border rounded px-3 py-2" rows="3"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${levelsLabel}</label>
+                        <div class="grid grid-cols-2 gap-2 max-h-48 overflow-auto">${options}</div>
+                    </div>
+                </form>
+            `, [
+                { text: saveText, class: 'bg-blue-600 text-white', onclick: 'submitBranchForm()' }
+            ]);
+        }
+
+        window.submitBranchForm = async function() {
+            const form = document.getElementById('branchForm');
+            const name = form.name.value.trim();
+            const website = form.website.value.trim() || null;
+            const phone = form.phone.value.trim() || null;
+            const description = form.description.value.trim() || null;
+            const levelIds = Array.from(document.querySelectorAll('.level-checkbox:checked')).map(i => i.value);
+            await APIService.request('departments', '/branches', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, website, phone, description, level_ids: levelIds }) });
+            document.querySelector('.modal-overlay')?.remove();
+            await loadBranches();
+        }
+
+        window.editBranch = function(id) {
+            const b = state.branches.find(x => x.id === id);
+            const selected = new Set((b.levels || []).map(l => l.id));
+            const options = (state.levels || []).map(l => `<label class=\"flex items-center space-x-2\"><input type=\"checkbox\" value=\"${l.id}\" class=\"level-checkbox\" ${selected.has(l.id)?'checked':''}> <span>${l.name}</span></label>`).join('');
+            const title = typeof translate === 'function' ? translate('org.branches.edit') : 'Edit Branch';
+            const nameLabel = typeof translate === 'function' ? translate('org.modal.name') : 'Name';
+            const websiteLabel = typeof translate === 'function' ? translate('org.modal.website') : 'Website';
+            const phoneLabel = typeof translate === 'function' ? translate('org.modal.phone') : 'Phone';
+            const descLabel = typeof translate === 'function' ? translate('org.modal.description') : 'Description';
+            const levelsLabel = typeof translate === 'function' ? translate('org.modal.levels') : 'Levels';
+            const saveText = typeof translate === 'function' ? translate('org.modal.save') : 'Save';
+            Utils.showModal(title, `
+                <form id="branchForm" class="space-y-4">
+                    <input type="hidden" name="id" value="${b.id}" />
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">${nameLabel}</label>
+                            <input name="name" type="text" class="w-full border rounded px-3 py-2" value="${b.name}" required />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">${websiteLabel}</label>
+                            <input name="website" type="url" class="w-full border rounded px-3 py-2" value="${b.website || ''}" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">${phoneLabel}</label>
+                            <input name="phone" type="text" class="w-full border rounded px-3 py-2" value="${b.phone || ''}" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${descLabel}</label>
+                        <textarea name="description" class="w-full border rounded px-3 py-2" rows="3">${b.description || ''}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${levelsLabel}</label>
+                        <div class="grid grid-cols-2 gap-2 max-h-48 overflow-auto">${options}</div>
+                    </div>
+                </form>
+            `, [
+                { text: saveText, class: 'bg-blue-600 text-white', onclick: 'submitEditBranchForm()' }
+            ]);
+        }
+
+        window.submitEditBranchForm = async function() {
+            const form = document.getElementById('branchForm');
+            const id = form.id.value;
+            const name = form.name.value.trim();
+            const website = form.website.value.trim() || null;
+            const phone = form.phone.value.trim() || null;
+            const description = form.description.value.trim() || null;
+            const levelIds = Array.from(document.querySelectorAll('.level-checkbox:checked')).map(i => i.value);
+            await APIService.request('departments', `/branches/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, website, phone, description, level_ids: levelIds }) });
+            document.querySelector('.modal-overlay')?.remove();
+            await loadBranches();
+        }
+
+        window.deleteBranch = async function(id) {
+            await APIService.request('departments', `/branches/${id}`, { method: 'DELETE' });
+            await loadBranches();
+        }
+
+        // Departments
+        async function loadDepartments() {
+            try {
+                const list = await APIService.request('departments', '/departments');
+                state.departments = Array.isArray(list) ? list : (list.departments || []);
+                renderDepartments();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderDepartments() {
+            const tbody = document.getElementById('departmentsTable');
+            const depts = state.departments || [];
+            if (!depts.length) {
+                const noDataMsg = typeof translate === 'function' ? translate('org.departments.no_data') : 'No departments yet';
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-gray-500">${noDataMsg}</td></tr>`;
+                return;
+            }
+            const expandTitle = typeof translate === 'function' ? translate('org.departments.expand') : 'Expand';
+            const employeesLabel = typeof translate === 'function' ? translate('org.departments.employees_list') : 'Employees';
+            const deptLabel = typeof translate === 'function' ? translate('org.departments.department_label') : 'Department';
+            const fullNameLabel = typeof translate === 'function' ? translate('org.departments.full_name') : 'Full Name';
+            const positionLabel = typeof translate === 'function' ? translate('org.departments.position') : 'Position';
+            const phoneLabel = typeof translate === 'function' ? translate('org.departments.phone') : 'Phone';
+            const loadingMsg = typeof translate === 'function' ? translate('org.departments.loading') : 'Loading...';
+            const noResp = typeof translate === 'function' ? translate('org.departments.no_responsible') : '—';
+            tbody.innerHTML = depts.map(d => {
+                const respName = d.responsible_first_name && d.responsible_last_name ? `${d.responsible_first_name} ${d.responsible_last_name}` : noResp;
+                const count = d.employee_count || 0;
+                const rowId = `dept-row-${d.id}`;
+                const subId = `dept-sub-${d.id}`;
+                return `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-3">
+                        <button class="text-gray-600 hover:text-blue-600 mr-2" title="${expandTitle}" onclick="toggleDept('${subId}', this)"><i class="fas fa-chevron-right"></i></button>
+                        <span class="font-medium text-gray-900">${d.name}</span>
+                    </td>
+                    <td class="px-6 py-3">${respName !== noResp ? `<span class=\"inline-flex items-center\"><i class=\"fas fa-user-shield text-blue-600 mr-2\"></i>${respName}</span>` : noResp}</td>
+                    <td class="px-6 py-3">${count}</td>
+                    <td class="px-6 py-3 text-right space-x-2">
+                        <button class="text-blue-600" onclick="openEditDepartmentModal('${d.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="text-red-600" onclick="deleteDepartment('${d.id}', '${d.name.replace(/'/g, "\\'")}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+                <tr id="${subId}" class="hidden">
+                    <td colspan="4" class="px-6 pb-6">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-medium text-gray-900">${employeesLabel}</h3>
+                                <div class="text-sm text-gray-500">${deptLabel}: ${d.name}</div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-100">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${fullNameLabel}</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${positionLabel}</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${phoneLabel}</th>
+                                            <th class="px-4 py-2"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="${subId}-tbody" class="bg-white divide-y divide-gray-200">
+                                        <tr><td colspan="4" class="px-4 py-4 text-gray-500">${loadingMsg}</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        window.toggleDept = async function(subId, btn) {
+            const row = document.getElementById(subId);
+            const icon = btn.querySelector('i');
+            const nowHidden = row.classList.contains('hidden');
+            row.classList.toggle('hidden');
+            if (icon) icon.className = `fas ${nowHidden ? 'fa-chevron-down' : 'fa-chevron-right'}`;
+            if (nowHidden) {
+                // load employees
+                const deptId = subId.replace('dept-sub-', '');
+                const tbody = document.getElementById(`${subId}-tbody`);
+                try {
+                    const details = await APIService.request('departments', `/departments/${deptId}`);
+                    const employees = (details && details.employees) || [];
+                    // Put responsible on top and styled
+                    const responsibleId = details.responsible_id;
+                    employees.sort((a,b) => (a.id === responsibleId ? -1 : 0) - (b.id === responsibleId ? -1 : 0));
+                    const noEmployeesMsg = typeof translate === 'function' ? translate('org.departments.no_employees') : 'No employees assigned';
+                    const respLabel = typeof translate === 'function' ? translate('org.departments.responsible_label') : 'Responsible';
+                    const failedMsg = typeof translate === 'function' ? translate('org.departments.failed_load') : 'Failed to load employees';
+                    if (!employees.length) {
+                        tbody.innerHTML = `<tr><td colspan=\"4\" class=\"px-4 py-4 text-gray-500\">${noEmployeesMsg}</td></tr>`;
+                    } else {
+                        tbody.innerHTML = employees.map(e => {
+                            const isResp = responsibleId && e.id === responsibleId;
+                            const full = `${e.first_name || e.firstName || ''} ${e.last_name || e.lastName || ''}`.trim();
+                            const pos = e.position_name || e.position || '—';
+                            const phone = e.phone || '—';
+                            const trClass = isResp ? 'bg-blue-50' : '';
+                            const respIcon = isResp ? '<i class=\"fas fa-user-shield text-blue-600 mr-2\"></i>' : '';
+                            return `
+                            <tr class="${trClass}">
+                                <td class="px-4 py-2">${respIcon}${full || '—'}</td>
+                                <td class="px-4 py-2">${pos}</td>
+                                <td class="px-4 py-2">${phone}</td>
+                                <td class="px-4 py-2 text-right">
+                                    ${isResp ? `<span class=\"text-gray-400 text-sm\">${respLabel}</span>` : `<button class=\"text-red-600\" onclick=\"unassignEmployeeFromDept('${details.id}','${e.id}')\"><i class=\"fas fa-user-minus\"></i></button>`}
+                                </td>
+                            </tr>`;
+                        }).join('');
+                    }
+                } catch (e) {
+                    tbody.innerHTML = `<tr><td colspan=\"4\" class=\"px-4 py-4 text-red-600\">${failedMsg}</td></tr>`;
+                }
+            }
+        }
+
+        window.unassignEmployeeFromDept = async function(deptId, employeeId) {
+            try {
+                await APIService.request('departments', `/departments/${deptId}/employees/${employeeId}`, { method: 'DELETE' });
+                await loadDepartments();
+            } catch (e) { console.error(e); }
+        }
+
+        window.deleteDepartment = async function(id, name) {
+            const confirmMsg = typeof translate === 'function' ? translate('org.delete.confirm').replace('{name}', name) : `Are you sure you want to delete the department "${name}"? This action cannot be undone.`;
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+            
+            try {
+                await APIService.request('departments', `/departments/${id}`, { method: 'DELETE' });
+                const successMsg = typeof translate === 'function' ? translate('org.delete.success') : 'Department deleted successfully';
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    Utils.showNotification(successMsg, 'success');
+                } else {
+                    alert(successMsg);
+                }
+                await loadDepartments();
+            } catch (error) {
+                console.error('Error deleting department:', error);
+                const failedMsg = typeof translate === 'function' ? translate('org.delete.failed') : 'Failed to delete department';
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    Utils.showNotification(failedMsg, 'error');
+                } else {
+                    alert(failedMsg + ': ' + (error.message || 'Unknown error'));
+                }
+            }
+        }
+
+        function openAddDepartmentModal() {
+            const title = typeof translate === 'function' ? translate('org.departments.add') : 'Add Department';
+            const nameLabel = typeof translate === 'function' ? translate('org.modal.name') : 'Name';
+            const respLabel = typeof translate === 'function' ? translate('org.modal.responsible') : 'Responsible';
+            const empLabel = typeof translate === 'function' ? translate('org.modal.employees') : 'Employees';
+            const searchPlaceholder = typeof translate === 'function' ? translate('org.modal.search_employee') : 'Search employee...';
+            const saveText = typeof translate === 'function' ? translate('org.modal.save') : 'Save';
+            Utils.showModal(title, `
+                <form id="departmentForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${nameLabel}</label>
+                        <input name="name" type="text" class="w-full border rounded px-3 py-2" required />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${respLabel}</label>
+                        <input id="respSearch" type="text" placeholder="${searchPlaceholder}" class="w-full border rounded px-3 py-2 mb-2" />
+                        <div id="respList" class="max-h-40 overflow-auto border rounded p-2 text-sm"></div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${empLabel}</label>
+                        <input id="empSearch" type="text" placeholder="${searchPlaceholder}" class="w-full border rounded px-3 py-2 mb-2" />
+                        <div id="empList" class="max-h-48 overflow-auto border rounded p-2 text-sm"></div>
+                    </div>
+                </form>
+            `, [
+                { text: saveText, class: 'bg-blue-600 text-white', onclick: 'submitDepartmentForm()' }
+            ]);
+            initDepartmentPickers();
+        }
+
+        window.openEditDepartmentModal = async function(id) {
+            // preload department details
+            let details = null;
+            try { details = await APIService.request('departments', `/departments/${id}`); } catch (e) {}
+            const title = typeof translate === 'function' ? translate('org.departments.edit') : 'Edit Department';
+            const nameLabel = typeof translate === 'function' ? translate('org.modal.name') : 'Name';
+            const respLabel = typeof translate === 'function' ? translate('org.modal.responsible') : 'Responsible';
+            const empLabel = typeof translate === 'function' ? translate('org.modal.employees') : 'Employees';
+            const searchPlaceholder = typeof translate === 'function' ? translate('org.modal.search_employee') : 'Search employee...';
+            const saveText = typeof translate === 'function' ? translate('org.modal.save') : 'Save';
+            Utils.showModal(title, `
+                <form id="departmentForm" class="space-y-4">
+                    <input type="hidden" name="id" value="${id}" />
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${nameLabel}</label>
+                        <input name="name" type="text" class="w-full border rounded px-3 py-2" value="${details?.name || ''}" required />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${respLabel}</label>
+                        <input id="respSearch" type="text" placeholder="${searchPlaceholder}" class="w-full border rounded px-3 py-2 mb-2" />
+                        <div id="respList" class="max-h-40 overflow-auto border rounded p-2 text-sm"></div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">${empLabel}</label>
+                        <input id="empSearch" type="text" placeholder="${searchPlaceholder}" class="w-full border rounded px-3 py-2 mb-2" />
+                        <div id="empList" class="max-h-48 overflow-auto border rounded p-2 text-sm"></div>
+                    </div>
+                </form>
+            `, [
+                { text: saveText, class: 'bg-blue-600 text-white', onclick: 'submitDepartmentForm()' }
+            ]);
+            initDepartmentPickers(details);
+        }
+
+        function normalizeEmployeeName(e) {
+            return `${e.first_name || e.firstName || ''} ${e.last_name || e.lastName || ''}`.trim();
+        }
+
+        async function initDepartmentPickers(details = null) {
+            let allEmployees = [];
+            try { allEmployees = await APIService.getEmployees(); } catch (e) {}
+            const respList = document.getElementById('respList');
+            const empList = document.getElementById('empList');
+            const respSearch = document.getElementById('respSearch');
+            const empSearch = document.getElementById('empSearch');
+            let responsibleId = details?.responsible_id || null;
+            const selectedEmployeeIds = new Set();
+            // preselect assigned employees for edit
+            if (details && Array.isArray(details.employees)) {
+                details.employees.forEach(e => selectedEmployeeIds.add(e.id));
+            }
+
+            function renderResp(list) {
+                respList.innerHTML = list.map(e => `
+                    <label class="flex items-center justify-between py-1">
+                        <span class="mr-2">${normalizeEmployeeName(e)}</span>
+                        <input type="radio" name="responsible" value="${e.id}" ${responsibleId===e.id?'checked':''} />
+                    </label>
+                `).join('');
+                respList.querySelectorAll('input[type="radio"]').forEach(r => r.addEventListener('change', () => { responsibleId = r.value; }));
+            }
+
+            function renderEmp(list) {
+                empList.innerHTML = list.map(e => `
+                    <label class="flex items-center justify-between py-1">
+                        <span class="mr-2">${normalizeEmployeeName(e)}</span>
+                        <input type="checkbox" value="${e.id}" ${selectedEmployeeIds.has(e.id)?'checked':''} />
+                    </label>
+                `).join('');
+                empList.querySelectorAll('input[type="checkbox"]').forEach(c => c.addEventListener('change', () => {
+                    if (c.checked) selectedEmployeeIds.add(c.value); else selectedEmployeeIds.delete(c.value);
+                }));
+            }
+
+            function filterBy(term) {
+                const t = term.toLowerCase();
+                return allEmployees.filter(e => normalizeEmployeeName(e).toLowerCase().includes(t));
+            }
+
+            renderResp(allEmployees);
+            renderEmp(allEmployees);
+            respSearch.addEventListener('input', () => renderResp(filterBy(respSearch.value)));
+            empSearch.addEventListener('input', () => renderEmp(filterBy(empSearch.value)));
+
+            // attach submit helper to form dataset
+            const form = document.getElementById('departmentForm');
+            form.dataset.responsibleId = responsibleId || '';
+            form.dataset.selectedEmployees = JSON.stringify(Array.from(selectedEmployeeIds));
+            // keep updated on change
+            const updateDatasets = () => {
+                form.dataset.responsibleId = responsibleId || '';
+                form.dataset.selectedEmployees = JSON.stringify(Array.from(selectedEmployeeIds));
+            };
+            respList.addEventListener('change', updateDatasets);
+            empList.addEventListener('change', updateDatasets);
+        }
+
+        window.submitDepartmentForm = async function() {
+            const form = document.getElementById('departmentForm');
+            const id = form.querySelector('input[name="id"]')?.value;
+            const name = form.name.value.trim();
+            const responsible_id = form.dataset.responsibleId || null;
+            const employeeIds = JSON.parse(form.dataset.selectedEmployees || '[]');
+            if (!name) return;
+            try {
+                if (id) {
+                    await APIService.request('departments', `/departments/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, responsible_id }) });
+                } else {
+                    await APIService.request('departments', '/departments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, responsible_id }) });
+                }
+                // Assign selected employees (ignore failures per employee)
+                const deptList = await APIService.request('departments', '/departments');
+                const created = Array.isArray(deptList) ? deptList.find(d=>d.name===name) : (deptList.departments||[]).find(d=>d.name===name);
+                const deptId = id || created?.id;
+                if (deptId && employeeIds.length) {
+                    for (const empId of employeeIds) {
+                        try { await APIService.request('departments', `/departments/${deptId}/employees`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ employee_id: empId }) }); } catch (_) {}
+                    }
+                }
+                document.querySelector('.modal-overlay')?.remove();
+                await loadDepartments();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>
+
+

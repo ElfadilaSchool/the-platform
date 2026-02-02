@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title data-translate="nav.attendance">Attendance - HR Operations Platform</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+	<link href="../assets/css/style.css" rel="stylesheet">
+	<style>
+		.embed-container { height: 100vh; }
+		.embed-frame { width: 100%; height: 100%; border: 0; background: #fff; }
+	</style>
+</head>
+<body class="bg-gray-50">
+
+	<main class="min-h-screen">
+		<div class="embed-container">
+			<iframe id="attendanceFrame" class="embed-frame" title="Attendance"></iframe>
+		</div>
+	</main>
+
+	<script src="../assets/js/auth.js"></script>
+	<script src="../assets/js/translations.js"></script>
+	<script src="../assets/js/main.js"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			if (!requireAuth()) return;
+			initializeCollapsibleSidebar();
+			// Load the Attendance service inside an iframe in embed mode (hides its own sidebar)
+			var frame = document.getElementById('attendanceFrame');
+			// Get current language and include it in the URL
+			const currentLang = localStorage.getItem('language') || localStorage.getItem('lang') || 'en';
+			// Load from attendance service on port 3000
+			frame.src = 'http://localhost:3000/attendance-master.html?embed=1&lang=' + currentLang;
+			
+			// Initialize translations
+			if (typeof updatePageTranslations === 'function') {
+				updatePageTranslations();
+			}
+			
+			// Function to send language to iframe
+			function sendLanguageToIframe(lang) {
+				try {
+					if (frame && frame.contentWindow) {
+						frame.contentWindow.postMessage({
+							type: 'languageChange',
+							language: lang
+						}, 'http://localhost:3000');
+						console.log('[attendance.html] Sent language to iframe:', lang);
+					}
+				} catch (e) {
+					console.warn('[attendance.html] Could not send language to iframe:', e);
+				}
+			}
+			
+			// Send initial language when iframe loads
+			frame.addEventListener('load', function() {
+				const currentLang = localStorage.getItem('language') || localStorage.getItem('lang') || 'en';
+				sendLanguageToIframe(currentLang);
+			});
+			
+			// Listen for language changes from the parent page
+			document.addEventListener('languageChanged', function(event) {
+				const lang = event.detail ? event.detail.language : (localStorage.getItem('language') || localStorage.getItem('lang') || 'en');
+				sendLanguageToIframe(lang);
+			});
+			
+			// Also listen for localStorage changes (in case language is changed elsewhere)
+			window.addEventListener('storage', function(e) {
+				if (e.key === 'language' || e.key === 'lang') {
+					const lang = e.newValue || localStorage.getItem('language') || localStorage.getItem('lang') || 'en';
+					sendLanguageToIframe(lang);
+				}
+			});
+			
+			// Poll for language changes (fallback method)
+			let lastLanguage = localStorage.getItem('language') || localStorage.getItem('lang') || 'en';
+			setInterval(function() {
+				const currentLang = localStorage.getItem('language') || localStorage.getItem('lang') || 'en';
+				if (currentLang !== lastLanguage) {
+					lastLanguage = currentLang;
+					sendLanguageToIframe(currentLang);
+				}
+			}, 500);
+			
+			// Listen for navigation messages from iframe
+			window.addEventListener('message', function(event) {
+				// Verify origin for security (allow localhost:3000)
+				if (event.origin !== 'http://localhost:3000' && !event.origin.includes('localhost:3000') && !event.origin.includes('127.0.0.1:3000')) {
+					return;
+				}
+				
+				if (event.data && event.data.type === 'navigateToDailyAttendance') {
+					const params = event.data.params;
+					console.log('[attendance.html] Received navigation request with params:', params);
+					
+					// Determine the attendance service URL
+					// If we're on frontend (port 5502/5503), navigate to attendance service on port 3000
+					const currentPort = window.location.port;
+					let targetUrl;
+					
+					if (currentPort === '5502' || currentPort === '5503') {
+						// Frontend is running, navigate to attendance service
+						targetUrl = `http://localhost:3000/daily-attendance.html?${params}`;
+					} else {
+						// Get current page base URL
+						const currentUrl = window.location.href;
+						const urlObj = new URL(currentUrl);
+						const basePath = urlObj.pathname.substring(0, urlObj.pathname.lastIndexOf('/') + 1);
+						targetUrl = `${urlObj.protocol}//${urlObj.host}${basePath}daily-attendance.html?${params}`;
+					}
+					
+					console.log('[attendance.html] Navigating to:', targetUrl);
+					window.location.href = targetUrl;
+				}
+			});
+		});
+	</script>
+</body>
+</html>
+

@@ -1,0 +1,308 @@
+/* RTL (Right-to-Left) styles for Arabic language */
+
+/* Apply RTL styles when dir="rtl" */
+[dir="rtl"] {
+    text-align: right;
+}
+
+/* Sidebar positioning for RTL */
+[dir="rtl"] .sidebar {
+    right: 0;
+    left: auto;
+}
+
+[dir="rtl"] .main-content {
+    margin-right: 16rem; /* w-64 = 16rem */
+    margin-left: 0;
+}
+
+/* Flex direction adjustments */
+[dir="rtl"] .flex {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .flex-row {
+    flex-direction: row-reverse;
+}
+
+/* Keep some flex containers in normal direction */
+[dir="rtl"] .flex-keep-direction,
+[dir="rtl"] .grid,
+[dir="rtl"] .space-x-2,
+[dir="rtl"] .space-x-4 {
+    flex-direction: row;
+}
+
+/* Margin and padding adjustments */
+[dir="rtl"] .mr-2 {
+    margin-right: 0;
+    margin-left: 0.5rem;
+}
+
+[dir="rtl"] .mr-3 {
+    margin-right: 0;
+    margin-left: 0.75rem;
+}
+
+[dir="rtl"] .ml-2 {
+    margin-left: 0;
+    margin-right: 0.5rem;
+}
+
+[dir="rtl"] .ml-3 {
+    margin-left: 0;
+    margin-right: 0.75rem;
+}
+
+[dir="rtl"] .pl-6 {
+    padding-left: 0;
+    padding-right: 1.5rem;
+}
+
+[dir="rtl"] .pr-6 {
+    padding-right: 0;
+    padding-left: 1.5rem;
+}
+
+/* Text alignment */
+[dir="rtl"] .text-left {
+    text-align: right;
+}
+
+[dir="rtl"] .text-right {
+    text-align: left;
+}
+
+/* Border radius adjustments */
+[dir="rtl"] .rounded-l-md {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 0.375rem;
+    border-bottom-right-radius: 0.375rem;
+}
+
+[dir="rtl"] .rounded-r-md {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: 0.375rem;
+    border-bottom-left-radius: 0.375rem;
+}
+
+/* Icon positioning */
+[dir="rtl"] .fas,
+[dir="rtl"] .far,
+[dir="rtl"] .fab {
+    margin-left: 0.5rem;
+    margin-right: 0;
+}
+
+/* Specific component adjustments */
+[dir="rtl"] .sidebar-item {
+    padding-right: 1.5rem;
+    padding-left: 1.5rem;
+}
+
+[dir="rtl"] .sidebar-item i {
+    margin-left: 0.75rem;
+    margin-right: 0;
+}
+
+/* Form elements */
+[dir="rtl"] input,
+[dir="rtl"] select,
+[dir="rtl"] textarea {
+    text-align: right;
+}
+
+[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="url"] {
+    direction: ltr;
+    text-align: left;
+}
+
+/* Table adjustments */
+[dir="rtl"] table {
+    direction: rtl;
+}
+
+[dir="rtl"] th,
+[dir="rtl"] td {
+    text-align: right;
+}
+
+/* Modal positioning */
+[dir="rtl"] .modal {
+    direction: rtl;
+}
+
+/* Dropdown positioning */
+[dir="rtl"] .dropdown-menu {
+    right: 0;
+    left: auto;
+}
+
+/* Navigation adjustments */
+[dir="rtl"] .nav-item {
+    margin-left: 0;
+    margin-right: 1rem;
+}
+
+/* Button icon spacing */
+[dir="rtl"] .btn i {
+    margin-left: 0.5rem;
+    margin-right: 0;
+}
+
+[dir="rtl"] .btn i:first-child {
+    margin-left: 0;
+    margin-right: 0.5rem;
+}
+
+/* Breadcrumb adjustments */
+[dir="rtl"] .breadcrumb {
+    direction: rtl;
+}
+
+[dir="rtl"] .breadcrumb-item::before {
+    content: "\\";
+    transform: scaleX(-1);
+}
+
+/* Card header adjustments */
+[dir="rtl"] .card-header {
+    text-align: right;
+}
+
+/* Pagination adjustments */
+[dir="rtl"] .pagination {
+    direction: rtl;
+}
+
+/* Specific layout fixes */
+[dir="rtl"] .flex.items-center.justify-between {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .flex.items-center.space-x-4 > * + * {
+    margin-left: 0;
+    margin-right: 1rem;
+}
+
+[dir="rtl"] .flex.items-center.space-x-2 > * + * {
+    margin-left: 0;
+    margin-right: 0.5rem;
+}
+
+/* Language selector positioning */
+[dir="rtl"] #languageSelector {
+    direction: ltr;
+}
+
+/* User profile section */
+[dir="rtl"] .user-profile {
+    flex-direction: row-reverse;
+}
+
+/* Search input */
+[dir="rtl"] .search-input {
+    padding-right: 2.5rem;
+    padding-left: 1rem;
+}
+
+/* Action buttons */
+[dir="rtl"] .action-buttons {
+    flex-direction: row-reverse;
+}
+
+/* Status badges */
+[dir="rtl"] .status-badge {
+    direction: ltr;
+}
+
+/* Date inputs */
+[dir="rtl"] input[type="date"],
+[dir="rtl"] input[type="time"],
+[dir="rtl"] input[type="datetime-local"] {
+    direction: ltr;
+}
+
+/* Number inputs */
+[dir="rtl"] input[type="number"] {
+    direction: ltr;
+    text-align: left;
+}
+
+/* Specific fixes for the HR platform */
+[dir="rtl"] .sidebar {
+    border-left: 1px solid #e5e7eb;
+    border-right: none;
+}
+
+[dir="rtl"] .main-content {
+    border-right: 1px solid #e5e7eb;
+    border-left: none;
+}
+
+/* Employee table adjustments */
+[dir="rtl"] .employee-avatar {
+    margin-left: 0.75rem;
+    margin-right: 0;
+}
+
+/* Department cards */
+[dir="rtl"] .department-card {
+    text-align: right;
+}
+
+/* Payment calculator */
+[dir="rtl"] .payment-calculator {
+    direction: rtl;
+}
+
+/* Meeting scheduler */
+[dir="rtl"] .meeting-scheduler {
+    direction: rtl;
+}
+
+/* Task list */
+[dir="rtl"] .task-list {
+    direction: rtl;
+}
+
+/* Notification positioning */
+[dir="rtl"] .notification {
+    right: auto;
+    left: 1rem;
+}
+
+/* Mobile responsive adjustments for RTL */
+@media (max-width: 768px) {
+    [dir="rtl"] .sidebar {
+        right: -100%;
+        left: auto;
+    }
+    
+    [dir="rtl"] .sidebar.open {
+        right: 0;
+    }
+    
+    [dir="rtl"] .main-content {
+        margin-right: 0;
+    }
+}
+
+/* Print styles for RTL */
+@media print {
+    [dir="rtl"] {
+        direction: rtl;
+    }
+    
+    [dir="rtl"] .sidebar {
+        display: none;
+    }
+    
+    [dir="rtl"] .main-content {
+        margin-right: 0;
+    }
+}
+

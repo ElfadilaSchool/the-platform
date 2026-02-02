@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title data-translate="page.signals_employee.title">Signals - Employee</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+	<link href="../assets/css/style.css" rel="stylesheet">
+	<style>
+		.embed-container { height: calc(100vh - 96px); }
+		.embed-frame { width: 100%; height: 100%; border: 0; background: #fff; }
+
+		@media (max-width: 640px) {
+			.embed-container { height: calc(100vh - 132px); }
+		}
+	</style>
+</head>
+<body class="bg-gray-50">
+
+	<header class="bg-white border-b shadow-sm">
+		<div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
+			<div>
+				<h1 class="text-xl font-semibold text-gray-900" data-translate="page.signals_employee.title">My Signals</h1>
+				<p class="text-sm text-gray-600" data-translate="page.signals_employee.subtitle">Submit and follow up on signals</p>
+			</div>
+			<div class="flex items-center space-x-2">
+				<label for="languageSelector" class="text-sm font-medium text-gray-700" data-translate="profile.language">Language</label>
+				<select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm">
+					<option value="en" data-translate="common.english">English</option>
+					<option value="fr" data-translate="common.french">French</option>
+					<option value="ar" data-translate="common.arabic">Arabic</option>
+				</select>
+			</div>
+		</div>
+	</header>
+
+	<main class="min-h-screen">
+		<div class="embed-container">
+			<iframe id="signalsEmployeeFrame" class="embed-frame" title="Employee Signals"></iframe>
+		</div>
+	</main>
+
+	<script src="../assets/js/auth.js"></script>
+	<script src="../assets/js/translations.js"></script>
+	<script src="../assets/js/main.js"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			if (!requireAuth()) return;
+
+			function getEmployeeId() {
+				const user = authManager?.getUser?.() || {};
+				let id = user.employee_id || user.employeeId || user.employee?.id || user.id;
+				if (!id) {
+					try {
+						const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+						id = storedUser?.employee_id || storedUser?.employeeId || storedUser?.employee?.id || storedUser?.id || id;
+					} catch (e) {}
+				}
+				if (!id) {
+					const token = authManager?.getToken?.();
+					if (token && token.split('.').length === 3) {
+						try {
+							const payload = JSON.parse(atob(token.split('.')[1]));
+							id = payload.employee_id || payload.employeeId || payload.id || payload.userId || id;
+						} catch (e) {}
+					}
+				}
+				return id || localStorage.getItem('employeeId') || localStorage.getItem('employee_id');
+			}
+
+			// Wait for translations before building sidebar to keep labels in sync
+			function waitForTranslations(callback, maxAttempts = 20) {
+				let attempts = 0;
+				const checkTranslations = setInterval(function() {
+					attempts++;
+					if (typeof window.translations !== 'undefined' &&
+						typeof window.updatePageTranslations === 'function' &&
+						typeof window.setLanguage === 'function') {
+						clearInterval(checkTranslations);
+						callback();
+					} else if (attempts >= maxAttempts) {
+						clearInterval(checkTranslations);
+						callback(); // Proceed anyway
+					}
+				}, 50);
+			}
+
+			waitForTranslations(function() {
+				const languageSelector = document.getElementById('languageSelector');
+				const savedLanguage = localStorage.getItem('language') || localStorage.getItem('lang') || 'fr';
+				if (typeof window.setLanguage === 'function') {
+					window.setLanguage(savedLanguage);
+				}
+				if (languageSelector) {
+					languageSelector.value = savedLanguage;
+					languageSelector.addEventListener('change', function(event) {
+						if (typeof window.setLanguage === 'function') {
+							window.setLanguage(event.target.value);
+						}
+					});
+				}
+
+				initializeCollapsibleSidebar();
+
+				setTimeout(function() {
+					if (typeof window.updatePageTranslations === 'function') {
+						window.updatePageTranslations();
+					}
+				}, 200);
+
+				// Load the HR Tasks employee signals UI in embed mode (port 3020 service)
+				const frame = document.getElementById('signalsEmployeeFrame');
+				const employeeId = getEmployeeId();
+				const qs = employeeId ? `?embed=1&employeeId=${encodeURIComponent(employeeId)}` : '?embed=1';
+				frame.src = `../../hr_tasks/hr_tasks/public/signals_employee.html${qs}`;
+				if (!employeeId) {
+					console.warn('⚠️ No employeeId found for signals iframe; page may request it.');
+				}
+			});
+		});
+	</script>
+</body>
+</html>
+

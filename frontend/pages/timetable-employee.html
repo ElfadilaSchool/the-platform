@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Timetable - HR Operations Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    
+    <style>
+        .time-slot {
+            transition: all 0.2s ease;
+        }
+        .time-slot:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .working-time {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .break-time {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .weekend-day {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+        }
+        .day-header {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+        }
+        .hour-cell {
+            border-left: 1px solid #e2e8f0;
+        }
+        .hour-cell:first-child {
+            border-left: none;
+        }
+        .interval-bar {
+            position: relative;
+            border-radius: 6px;
+            padding: 8px;
+            margin: 2px 0;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- The reusable navbar will be automatically inserted here -->
+    
+    <!-- Main Content -->
+    <div class="main-content flex-1 flex flex-col overflow-hidden">
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6">
+            <div class="max-w-7xl mx-auto">
+                <!-- Page Header -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900" data-translate="timetable.title">My Timetable</h1>
+                            <p class="text-gray-600" data-translate="timetable.description">View your weekly schedule and working hours</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <!-- Language Selector -->
+                            <select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="en">English</option>
+                                <option value="fr">Français</option>
+                                <option value="ar">العربية</option>
+                            </select>
+                            
+                            <!-- View Toggle -->
+                            <div class="bg-white rounded-lg border border-gray-200 p-1 flex">
+                                <button id="weeklyViewBtn" class="px-4 py-2 rounded-md text-sm font-medium bg-blue-600 text-white transition-all" onclick="switchView('weekly')">
+                                    <i class="fas fa-calendar-week mr-1"></i><span data-translate="timetable.weekly">Weekly</span>
+                                </button>
+                                <button id="dailyViewBtn" class="px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-all" onclick="switchView('daily')">
+                                    <i class="fas fa-calendar-day mr-1"></i><span data-translate="timetable.daily">Daily</span>
+                                </button>
+                                <button id="hourlyViewBtn" class="px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-all" onclick="switchView('hourly')">
+                                    <i class="fas fa-clock mr-1"></i><span data-translate="timetable.hourly">Hourly</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timetable Info Card -->
+                <div id="timetableInfo" class="mb-6 hidden">
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-3 mb-4">
+                                        <div class="p-3 bg-white bg-opacity-20 rounded-lg">
+                                            <i class="fas fa-calendar-alt text-white text-2xl"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-2xl font-bold text-white" id="timetableName">-</h3>
+                                            <p class="text-blue-100 text-sm mt-1" id="timetableType">-</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                                        <!-- Total Intervals -->
+                                        <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4">
+                                            <div class="flex items-center space-x-2 mb-2">
+                                                <i class="fas fa-clock text-blue-200"></i>
+                                                <p class="text-xs text-blue-200 font-medium" data-translate="timetable.total_intervals">Total Intervals</p>
+                                            </div>
+                                            <p class="text-2xl font-bold text-white" id="totalIntervals">0</p>
+                                        </div>
+                                        
+                                        <!-- Working Days -->
+                                        <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4">
+                                            <div class="flex items-center space-x-2 mb-2">
+                                                <i class="fas fa-calendar-check text-blue-200"></i>
+                                                <p class="text-xs text-blue-200 font-medium" data-translate="timetable.working_days">Working Days</p>
+                                            </div>
+                                            <p class="text-2xl font-bold text-white" id="workingDays">0</p>
+                                        </div>
+                                        
+                                        <!-- Effective From -->
+                                        <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4">
+                                            <div class="flex items-center space-x-2 mb-2">
+                                                <i class="fas fa-calendar-plus text-blue-200"></i>
+                                                <p class="text-xs text-blue-200 font-medium" data-translate="timetable.effective_from">Effective From</p>
+                                            </div>
+                                            <p class="text-lg font-semibold text-white" id="effectiveFrom">-</p>
+                                        </div>
+                                        
+                                        <!-- Effective To -->
+                                        <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4">
+                                            <div class="flex items-center space-x-2 mb-2">
+                                                <i class="fas fa-calendar-times text-blue-200"></i>
+                                                <p class="text-xs text-blue-200 font-medium" data-translate="timetable.effective_to">Effective To</p>
+                                            </div>
+                                            <p class="text-lg font-semibold text-white" id="effectiveTo">-</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly View -->
+                <div id="weeklyView" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="p-4 border-b border-gray-200 bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-900" data-translate="timetable.weekly_schedule">Weekly Schedule</h3>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="previousWeek()" class="p-2 hover:bg-gray-200 rounded-lg transition-colors">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span id="weekRange" class="text-sm font-medium text-gray-700">Week of ...</span>
+                                <button onclick="nextWeek()" class="p-2 hover:bg-gray-200 rounded-lg transition-colors">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                                <button onclick="goToToday()" class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                    <span data-translate="timetable.today">Today</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div id="weeklyCalendar" class="grid grid-cols-7 gap-4">
+                            <!-- Days will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily View -->
+                <div id="dailyView" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hidden">
+                    <div class="p-4 border-b border-gray-200 bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-900" data-translate="timetable.daily_schedule">Daily Schedule</h3>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="previousDay()" class="p-2 hover:bg-gray-200 rounded-lg transition-colors">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <input type="date" id="dailyDatePicker" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" onchange="loadDailyView()">
+                                <button onclick="nextDay()" class="p-2 hover:bg-gray-200 rounded-lg transition-colors">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                                <button onclick="goToTodayDaily()" class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors ml-2">
+                                    <span data-translate="timetable.today">Today</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div id="dailyCalendar" class="space-y-4">
+                            <!-- Daily schedule will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hourly View -->
+                <div id="hourlyView" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hidden">
+                    <div class="p-4 border-b border-gray-200 bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-900" data-translate="timetable.hourly_schedule">Hourly Schedule</h3>
+                            <div class="flex items-center space-x-2">
+                                <select id="hourlyDaySelector" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" onchange="loadHourlyView()">
+                                    <option value="0">Sunday</option>
+                                    <option value="1">Monday</option>
+                                    <option value="2">Tuesday</option>
+                                    <option value="3">Wednesday</option>
+                                    <option value="4">Thursday</option>
+                                    <option value="5">Friday</option>
+                                    <option value="6">Saturday</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div id="hourlyCalendar" class="space-y-2">
+                            <!-- Hourly schedule will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="text-center py-12 hidden">
+                    <div class="mx-auto h-24 w-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-calendar-times text-gray-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2" data-translate="timetable.no_timetable_assigned">No Timetable Assigned</h3>
+                    <p class="text-gray-500" data-translate="timetable.contact_hr">You don't have a timetable assigned yet. Please contact HR.</p>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="text-center py-12 hidden">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <p class="mt-2 text-gray-600" data-translate="timetable.loading">Loading timetable...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/translations.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../components/api.js"></script>
+    <script>
+        const API_BASE_URL = window.API_SERVICES?.timetable || 'http://localhost:3011';
+        let currentEmployeeId = null;
+        let timetableData = null;
+        let currentWeekStart = new Date();
+        let currentDay = new Date();
+        let currentView = 'weekly';
+
+        const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const weekdaysShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        
+        // Function to get translated weekday
+        function getTranslatedWeekday(index) {
+            const keys = ['day.sunday', 'day.monday', 'day.tuesday', 'day.wednesday', 'day.thursday', 'day.friday', 'day.saturday'];
+            return (typeof translate === 'function') ? translate(keys[index]) : weekdays[index];
+        }
+        
+        function getTranslatedWeekdayShort(index) {
+            const keys = ['day.sun', 'day.mon', 'day.tue', 'day.wed', 'day.thu', 'day.fri', 'day.sat'];
+            return (typeof translate === 'function') ? translate(keys[index]) : weekdaysShort[index];
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!authManager.isAuthenticated()) {
+                window.location.href = '../index.html';
+                return;
+            }
+
+            // Get current employee ID
+            getUserEmployeeId().then(id => {
+                if (id) {
+                    currentEmployeeId = id;
+                    loadTimetable();
+                } else {
+                    showEmptyState();
+                    const errorMsg = (typeof translate === 'function') ? translate('message.cannot_identify_employee') : 'Cannot identify employee. Please contact support.';
+                    Utils.showNotification(errorMsg, 'error');
+                }
+            }).catch(err => {
+                console.error('Failed to get employee ID:', err);
+                showEmptyState();
+            });
+
+            // Initialize week start to Sunday of current week
+            const today = new Date();
+            const day = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+            const diff = today.getDate() - day; // Adjust to Sunday (day 0)
+            currentWeekStart = new Date(today.setDate(diff));
+            currentWeekStart.setHours(0, 0, 0, 0);
+
+            // Initialize daily view date
+            currentDay = new Date();
+            document.getElementById('dailyDatePicker').valueAsDate = currentDay;
+            
+            // Update day selector options on load
+            function updateDaySelectorOptions() {
+                const daySelector = document.getElementById('hourlyDaySelector');
+                if (daySelector) {
+                    for (let i = 0; i < 7; i++) {
+                        daySelector.options[i].textContent = getTranslatedWeekday(i);
+                    }
+                }
+            }
+            
+            // Update options after translations load
+            setTimeout(updateDaySelectorOptions, 100);
+            
+            // Listen for language changes and reload views
+            document.addEventListener('languageChanged', function() {
+                if (timetableData) {
+                    // Reload current view with new translations
+                    if (currentView === 'weekly') {
+                        loadWeeklyView();
+                    } else if (currentView === 'daily') {
+                        loadDailyView();
+                    } else if (currentView === 'hourly') {
+                        loadHourlyView();
+                    }
+                }
+                
+                // Update day selector options
+                updateDaySelectorOptions();
+            });
+        });
+
+        async function getUserEmployeeId() {
+            try {
+                const user = authManager.getUser();
+                if (!user || !user.id) {
+                    throw new Error('User not found');
+                }
+
+                // Try multiple approaches to get employee ID
+                const usersApiBase = window.API_SERVICES?.users || 'http://localhost:3002';
+                
+                // Approach 1: Try /profile endpoint first (most reliable, always exists)
+                try {
+                    const response = await fetch(`${usersApiBase}/profile`, {
+                        headers: {
+                            'Authorization': `Bearer ${authManager.getToken()}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const profile = await response.json();
+                        // Profile endpoint returns employee object with id field (employee ID)
+                        // If it has employee-specific fields like position_name, it's an employee record
+                        if (profile.id && (profile.position_name || profile.department || profile.employee_id)) {
+                            return profile.id;
+                        }
+                        // Check for employee_id field explicitly
+                        if (profile.employee_id) {
+                            return profile.employee_id;
+                        }
+                        // If id exists and is different from user.id, assume it's employee ID
+                        if (profile.id && profile.id !== user.id) {
+                            return profile.id;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Profile endpoint failed, trying alternative:', e);
+                }
+
+                // Approach 2: Try /employees endpoint with user_id filter
+                try {
+                    const response = await fetch(`${usersApiBase}/employees?user_id=${user.id}`, {
+                        headers: {
+                            'Authorization': `Bearer ${authManager.getToken()}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const employees = await response.json();
+                        if (Array.isArray(employees) && employees.length > 0) {
+                            const employee = employees.find(emp => emp.user_id === user.id) || employees[0];
+                            if (employee && employee.id) {
+                                return employee.id;
+                            }
+                        }
+                        // If returned as single object
+                        if (employees && employees.id) {
+                            return employees.id;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Employees endpoint failed, trying alternative:', e);
+                }
+
+                // Approach 3: Try /employees/by-user endpoint (might not exist in all services)
+                try {
+                    const response = await fetch(`${usersApiBase}/employees/by-user/${user.id}`, {
+                        headers: {
+                            'Authorization': `Bearer ${authManager.getToken()}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.employee && data.employee.id) {
+                            return data.employee.id;
+                        }
+                    }
+                } catch (e) {
+                    // Silently fail - this endpoint may not exist in all services
+                }
+
+                // Approach 4: Check if user has employeeId directly
+                if (user.employeeId) {
+                    return user.employeeId;
+                }
+
+                throw new Error('Could not find employee ID through any method');
+            } catch (error) {
+                console.error('Error getting employee ID:', error);
+                return null;
+            }
+        }
+
+        async function loadTimetable() {
+            if (!currentEmployeeId) return;
+
+            try {
+                showLoading(true);
+                const response = await fetch(`${API_BASE_URL}/employee-assignments/${currentEmployeeId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authManager.getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        showEmptyState();
+                        return;
+                    }
+                    throw new Error('Failed to load timetable');
+                }
+
+                const data = await response.json();
+                timetableData = data;
+
+                if (!data.assignment || !data.intervals || data.intervals.length === 0) {
+                    showEmptyState();
+                    return;
+                }
+
+                // Show timetable info
+                document.getElementById('timetableInfo').classList.remove('hidden');
+                
+                // Update basic info
+                document.getElementById('timetableName').textContent = data.assignment.timetable_name || 'Unnamed Timetable';
+                const timetableType = data.assignment.timetable_type || 'N/A';
+                const timetableTypeText = (typeof translate === 'function') ? translate('timetable.timetable_type') : 'Timetable';
+                document.getElementById('timetableType').textContent = `${timetableType} ${timetableTypeText}`;
+                
+                // Format dates
+                const effectiveFrom = data.assignment.effective_from 
+                    ? new Date(data.assignment.effective_from).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                    })
+                    : 'Not set';
+                const effectiveTo = data.assignment.effective_to 
+                    ? new Date(data.assignment.effective_to).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                    })
+                    : 'Ongoing';
+                
+                document.getElementById('effectiveFrom').textContent = effectiveFrom;
+                document.getElementById('effectiveTo').textContent = effectiveTo;
+                
+                // Calculate statistics
+                const intervals = data.intervals || [];
+                const uniqueWeekdays = new Set(intervals.map(i => i.weekday));
+                const workingDays = uniqueWeekdays.size;
+                
+                document.getElementById('totalIntervals').textContent = intervals.length;
+                document.getElementById('workingDays').textContent = workingDays;
+
+                // Initialize and load weekly view (default selection)
+                switchView('weekly');
+
+                showLoading(false);
+            } catch (error) {
+                console.error('Error loading timetable:', error);
+                const errorMsg = (typeof translate === 'function') ? translate('message.failed_to_load') : 'Failed to load timetable';
+                Utils.showNotification(errorMsg, 'error');
+                showLoading(false);
+                showEmptyState();
+            }
+        }
+
+        function loadWeeklyView() {
+            if (!timetableData || !timetableData.intervals) return;
+
+            const container = document.getElementById('weeklyCalendar');
+            container.innerHTML = '';
+
+            // Calculate week dates
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(currentWeekStart.getDate() + i);
+                weekDates.push(date);
+            }
+
+            // Update week range display
+            const startDate = weekDates[0];
+            const endDate = weekDates[6];
+            const weekOfText = (typeof translate === 'function') ? translate('timetable.week_of') : 'Week of';
+            document.getElementById('weekRange').textContent = 
+                `${weekOfText} ${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+            // Group intervals by weekday
+            const intervalsByDay = {};
+            timetableData.intervals.forEach(interval => {
+                if (!intervalsByDay[interval.weekday]) {
+                    intervalsByDay[interval.weekday] = [];
+                }
+                intervalsByDay[interval.weekday].push(interval);
+            });
+
+            // Render each day
+            weekDates.forEach((date, index) => {
+                const weekday = date.getDay();
+                const isWeekend = weekday === 0 || weekday === 6;
+                const intervals = intervalsByDay[weekday] || [];
+
+                const dayCard = document.createElement('div');
+                dayCard.className = `rounded-lg border-2 p-4 ${isWeekend ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'}`;
+                
+                const noScheduleText = (typeof translate === 'function') ? translate('timetable.no_schedule') : 'No schedule';
+                const breakText = (typeof translate === 'function') ? translate('timetable.break') : 'Break';
+                const onCallText = (typeof translate === 'function') ? translate('timetable.on_call') : 'On Call';
+                const overnightText = (typeof translate === 'function') ? translate('timetable.overnight') : 'Overnight';
+                
+                dayCard.innerHTML = `
+                    <div class="day-header text-white rounded-lg p-2 mb-3 text-center">
+                        <div class="font-semibold">${getTranslatedWeekdayShort(weekday)}</div>
+                        <div class="text-sm opacity-90">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                    </div>
+                    <div class="space-y-2">
+                        ${intervals.length === 0 ? `
+                            <div class="text-center text-gray-400 py-4">
+                                <i class="fas fa-calendar-times text-2xl mb-2"></i>
+                                <p class="text-xs">${noScheduleText}</p>
+                            </div>
+                        ` : intervals.map(interval => {
+                            const startTime = formatTime(interval.start_time);
+                            const endTime = formatTime(interval.end_time);
+                            const breakTime = interval.break_minutes > 0 ? ` • ${breakText}: ${interval.break_minutes}min` : '';
+                            const flags = [];
+                            if (interval.on_call_flag) flags.push(onCallText);
+                            if (interval.overnight) flags.push(overnightText);
+                            
+                            return `
+                                <div class="interval-bar working-time">
+                                    <div class="font-semibold">${startTime} - ${endTime}</div>
+                                    ${breakTime ? `<div class="text-xs opacity-90 mt-1">${breakTime}</div>` : ''}
+                                    ${flags.length > 0 ? `<div class="text-xs opacity-90 mt-1"><i class="fas fa-info-circle mr-1"></i>${flags.join(', ')}</div>` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+
+                container.appendChild(dayCard);
+            });
+        }
+
+        function loadDailyView() {
+            if (!timetableData || !timetableData.intervals) return;
+
+            const datePicker = document.getElementById('dailyDatePicker');
+            const selectedDate = new Date(datePicker.value);
+            const weekday = selectedDate.getDay();
+
+            const container = document.getElementById('dailyCalendar');
+            container.innerHTML = '';
+
+            // Get intervals for this weekday
+            const intervals = timetableData.intervals.filter(i => i.weekday === weekday);
+            
+            // Create hourly grid (24 hours)
+            const hourlyGrid = Array.from({ length: 24 }, (_, i) => ({
+                hour: i,
+                intervals: []
+            }));
+
+            intervals.forEach(interval => {
+                const startHour = parseInt(interval.start_time.split(':')[0]);
+                const endHour = parseInt(interval.end_time.split(':')[0]);
+                const startMin = parseInt(interval.start_time.split(':')[1]);
+                const endMin = parseInt(interval.end_time.split(':')[1]);
+
+                for (let h = startHour; h <= endHour; h++) {
+                    if (hourlyGrid[h]) {
+                        hourlyGrid[h].intervals.push({
+                            ...interval,
+                            startHour,
+                            startMin,
+                            endHour,
+                            endMin
+                        });
+                    }
+                }
+            });
+
+            const isWeekend = weekday === 0 || weekday === 6;
+            const noScheduleDayText = (typeof translate === 'function') ? translate('timetable.no_schedule_day') : 'No schedule for this day';
+            const breakText = (typeof translate === 'function') ? translate('timetable.break') : 'Break';
+            const minutesText = (typeof translate === 'function') ? translate('time.minutes') : 'minutes';
+            const onCallText = (typeof translate === 'function') ? translate('timetable.on_call') : 'On Call';
+            const overnightText = (typeof translate === 'function') ? translate('timetable.overnight') : 'Overnight';
+
+            container.innerHTML = `
+                <div class="mb-4">
+                    <h4 class="text-xl font-semibold text-gray-900 mb-2">${getTranslatedWeekday(weekday)}, ${selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</h4>
+                    ${intervals.length === 0 ? `
+                        <div class="text-center py-8 bg-gray-50 rounded-lg">
+                            <i class="fas fa-calendar-times text-4xl text-gray-400 mb-3"></i>
+                            <p class="text-gray-500">${noScheduleDayText}</p>
+                        </div>
+                    ` : `
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="grid grid-cols-12 gap-1">
+                                ${hourlyGrid.map((slot, index) => {
+                                    const hasInterval = slot.intervals.length > 0;
+                                    return `
+                                        <div class="hour-cell text-center py-2 ${hasInterval ? 'bg-blue-100' : 'bg-white'} border-t border-gray-200">
+                                            <div class="text-xs text-gray-600 font-medium mb-1">${formatHour(index)}</div>
+                                            ${hasInterval ? '<div class="w-2 h-2 bg-blue-600 rounded-full mx-auto"></div>' : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                        <div class="mt-4 space-y-2">
+                            ${intervals.map(interval => {
+                                const startTime = formatTime(interval.start_time);
+                                const endTime = formatTime(interval.end_time);
+                                return `
+                                    <div class="interval-bar working-time p-4 rounded-lg">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <div class="font-semibold text-lg">${startTime} - ${endTime}</div>
+                                                ${interval.break_minutes > 0 ? `<div class="text-sm opacity-90 mt-1">${breakText}: ${interval.break_minutes} ${minutesText}</div>` : ''}
+                                            </div>
+                                            <div class="text-right">
+                                                ${interval.on_call_flag ? `<span class="px-2 py-1 bg-white bg-opacity-30 rounded text-xs">${onCallText}</span>` : ''}
+                                                ${interval.overnight ? `<span class="px-2 py-1 bg-white bg-opacity-30 rounded text-xs ml-2">${overnightText}</span>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function loadHourlyView() {
+            if (!timetableData || !timetableData.intervals) return;
+
+            const daySelector = document.getElementById('hourlyDaySelector');
+            const selectedWeekday = parseInt(daySelector.value);
+
+            const container = document.getElementById('hourlyCalendar');
+            container.innerHTML = '';
+
+            // Get intervals for selected weekday
+            const intervals = timetableData.intervals.filter(i => i.weekday === selectedWeekday);
+            intervals.sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+            // Generate hourly slots (6 AM to 11 PM)
+            const hourlySlots = [];
+            for (let hour = 6; hour <= 23; hour++) {
+                const slotIntervals = intervals.filter(interval => {
+                    const startHour = parseInt(interval.start_time.split(':')[0]);
+                    const endHour = parseInt(interval.end_time.split(':')[0]);
+                    return hour >= startHour && hour <= endHour;
+                });
+
+                hourlySlots.push({
+                    hour,
+                    intervals: slotIntervals
+                });
+            }
+
+            const noScheduleDayText = (typeof translate === 'function') ? translate('timetable.no_schedule_day') : 'No schedule for this day';
+            const freeText = (typeof translate === 'function') ? translate('timetable.free') : 'Free';
+            const breakText = (typeof translate === 'function') ? translate('timetable.break') : 'Break';
+            const minText = (typeof translate === 'function') ? translate('time.minute') : 'min';
+            const timeIntervalsSummaryText = (typeof translate === 'function') ? translate('timetable.time_intervals_summary') : 'Time Intervals Summary';
+            const onCallText = (typeof translate === 'function') ? translate('timetable.on_call') : 'On Call';
+            const overnightText = (typeof translate === 'function') ? translate('timetable.overnight') : 'Overnight';
+
+            container.innerHTML = `
+                <div class="mb-4">
+                    <h4 class="text-xl font-semibold text-gray-900 mb-4">${getTranslatedWeekday(selectedWeekday)} ${(typeof translate === 'function') ? translate('timetable.weekly_schedule').replace('Weekly', '').trim() : 'Schedule'}</h4>
+                    ${intervals.length === 0 ? `
+                        <div class="text-center py-8 bg-gray-50 rounded-lg">
+                            <i class="fas fa-calendar-times text-4xl text-gray-400 mb-3"></i>
+                            <p class="text-gray-500">${noScheduleDayText.replace('this day', getTranslatedWeekday(selectedWeekday))}</p>
+                        </div>
+                    ` : `
+                        <div class="space-y-1">
+                            ${hourlySlots.map(slot => {
+                                const hasInterval = slot.intervals.length > 0;
+                                const activeInterval = slot.intervals[0];
+                                const timeLabel = formatHour(slot.hour);
+                                
+                                return `
+                                    <div class="flex items-center border-b border-gray-200 py-3 ${hasInterval ? 'bg-blue-50' : ''}">
+                                        <div class="w-24 font-semibold text-gray-700">${timeLabel}</div>
+                                        <div class="flex-1">
+                                            ${hasInterval ? `
+                                                <div class="interval-bar working-time inline-block">
+                                                    <div class="font-semibold">${formatTime(activeInterval.start_time)} - ${formatTime(activeInterval.end_time)}</div>
+                                                    ${activeInterval.break_minutes > 0 ? `<div class="text-xs opacity-90 mt-1">${breakText}: ${activeInterval.break_minutes} ${minText}</div>` : ''}
+                                                </div>
+                                            ` : `<span class="text-gray-400">${freeText}</span>`}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        <div class="mt-6 space-y-2">
+                            <h5 class="font-semibold text-gray-900">${timeIntervalsSummaryText}</h5>
+                            ${intervals.map(interval => {
+                                const startTime = formatTime(interval.start_time);
+                                const endTime = formatTime(interval.end_time);
+                                return `
+                                    <div class="interval-bar working-time p-3 rounded-lg">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <span class="font-semibold">${startTime} - ${endTime}</span>
+                                                ${interval.break_minutes > 0 ? `<span class="text-sm opacity-90 ml-3">${breakText}: ${interval.break_minutes} ${minText}</span>` : ''}
+                                            </div>
+                                            <div>
+                                                ${interval.on_call_flag ? `<span class="px-2 py-1 bg-white bg-opacity-30 rounded text-xs">${onCallText}</span>` : ''}
+                                                ${interval.overnight ? `<span class="px-2 py-1 bg-white bg-opacity-30 rounded text-xs ml-2">${overnightText}</span>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function switchView(view) {
+            currentView = view;
+
+            // Update buttons
+            document.getElementById('weeklyViewBtn').classList.remove('bg-blue-600', 'text-white');
+            document.getElementById('weeklyViewBtn').classList.add('text-gray-700', 'hover:bg-gray-100');
+            document.getElementById('dailyViewBtn').classList.remove('bg-blue-600', 'text-white');
+            document.getElementById('dailyViewBtn').classList.add('text-gray-700', 'hover:bg-gray-100');
+            document.getElementById('hourlyViewBtn').classList.remove('bg-blue-600', 'text-white');
+            document.getElementById('hourlyViewBtn').classList.add('text-gray-700', 'hover:bg-gray-100');
+
+            // Hide all views
+            document.getElementById('weeklyView').classList.add('hidden');
+            document.getElementById('dailyView').classList.add('hidden');
+            document.getElementById('hourlyView').classList.add('hidden');
+
+            // Show selected view
+            if (view === 'weekly') {
+                document.getElementById('weeklyView').classList.remove('hidden');
+                document.getElementById('weeklyViewBtn').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('weeklyViewBtn').classList.remove('text-gray-700', 'hover:bg-gray-100');
+                loadWeeklyView();
+            } else if (view === 'daily') {
+                document.getElementById('dailyView').classList.remove('hidden');
+                document.getElementById('dailyViewBtn').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('dailyViewBtn').classList.remove('text-gray-700', 'hover:bg-gray-100');
+                loadDailyView();
+            } else if (view === 'hourly') {
+                document.getElementById('hourlyView').classList.remove('hidden');
+                document.getElementById('hourlyViewBtn').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('hourlyViewBtn').classList.remove('text-gray-700', 'hover:bg-gray-100');
+                loadHourlyView();
+            }
+        }
+
+        function previousWeek() {
+            currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+            loadWeeklyView();
+        }
+
+        function nextWeek() {
+            currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+            loadWeeklyView();
+        }
+
+        function goToToday() {
+            const today = new Date();
+            const day = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+            const diff = today.getDate() - day; // Adjust to Sunday (day 0)
+            currentWeekStart = new Date(today.setDate(diff));
+            currentWeekStart.setHours(0, 0, 0, 0);
+            loadWeeklyView();
+        }
+
+        function previousDay() {
+            const datePicker = document.getElementById('dailyDatePicker');
+            const currentDate = new Date(datePicker.value);
+            currentDate.setDate(currentDate.getDate() - 1);
+            datePicker.valueAsDate = currentDate;
+            loadDailyView();
+        }
+
+        function nextDay() {
+            const datePicker = document.getElementById('dailyDatePicker');
+            const currentDate = new Date(datePicker.value);
+            currentDate.setDate(currentDate.getDate() + 1);
+            datePicker.valueAsDate = currentDate;
+            loadDailyView();
+        }
+
+        function goToTodayDaily() {
+            const today = new Date();
+            document.getElementById('dailyDatePicker').valueAsDate = today;
+            loadDailyView();
+        }
+
+        function formatTime(timeString) {
+            if (!timeString) return '';
+            const [hours, minutes] = timeString.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        }
+
+        function formatHour(hour) {
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:00 ${ampm}`;
+        }
+
+        function showLoading(show) {
+            const loadingState = document.getElementById('loadingState');
+            const views = ['weeklyView', 'dailyView', 'hourlyView'];
+            
+            if (show) {
+                loadingState.classList.remove('hidden');
+                views.forEach(view => document.getElementById(view).classList.add('hidden'));
+            } else {
+                loadingState.classList.add('hidden');
+            }
+        }
+
+        function showEmptyState() {
+            document.getElementById('emptyState').classList.remove('hidden');
+            document.getElementById('weeklyView').classList.add('hidden');
+            document.getElementById('dailyView').classList.add('hidden');
+            document.getElementById('hourlyView').classList.add('hidden');
+            document.getElementById('timetableInfo').classList.add('hidden');
+        }
+    </script>
+    <script src="../assets/js/navbar.js"></script>
+</body>
+</html>
+

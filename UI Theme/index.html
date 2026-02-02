@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مكتبة مكونات النظام - EL FADILA SCHOOL</title>
+    <link rel="stylesheet" href="theme.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- Sidebar Mount Point -->
+    <div id="sidebarMount"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Hero Header -->
+        <section class="page-hero">
+            <div class="page-hero-content">
+                <div class="flex flex-wrap items-center justify-between gap-6">
+                    <!-- User Profile Section -->
+                    <div class="header-user-section">
+                        <div class="header-avatar">
+                            <span>م</span>
+                        </div>
+                        <div class="header-user-info">
+                            <h2 class="header-user-name">مكتبة المكونات</h2>
+                            <span class="header-user-role">نظام إدارة الموارد البشرية</span>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="header-actions">
+                        <!-- Notification Bell -->
+                        <div class="notification-bell">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </div>
+
+                        <!-- Language Selector -->
+                        <select class="hero-select">
+                            <option value="ar">العربية</option>
+                            <option value="fr">Français</option>
+                            <option value="en">English</option>
+                        </select>
+
+                        <!-- Date Display -->
+                        <div class="header-date">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>27 يناير 2026</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Component Showcase Container -->
+        <div class="component-showcase">
+            <!-- Buttons Section -->
+            <section class="showcase-section">
+                <h2 class="section-title">
+                    <i class="fas fa-mouse-pointer"></i>
+                    الأزرار (Buttons)
+                </h2>
+                <div class="component-grid">
+                    <div class="component-card">
+                        <h3 class="component-title">الزر الأساسي</h3>
+                        <button class="btn-primary">
+                            <i class="fas fa-plus"></i>
+                            إضافة جديد
+                        </button>
+                    </div>
+                    <div class="component-card">
+                        <h3 class="component-title">الزر الثانوي</h3>
+                        <button class="btn-secondary">
+                            <i class="fas fa-times"></i>
+                            إلغاء
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cards Section -->
+            <section class="showcase-section">
+                <h2 class="section-title">
+                    <i class="fas fa-th-large"></i>
+                    البطاقات (Cards)
+                </h2>
+                <div class="component-grid">
+                    <!-- Task Card -->
+                    <div class="task-card">
+                        <div class="task-card-header">
+                            <div class="task-card-badges">
+                                <span class="badge badge-priority-high">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    عالية
+                                </span>
+                                <span class="badge badge-status-pending">
+                                    <i class="fas fa-clock"></i>
+                                    قيد الانتظار
+                                </span>
+                            </div>
+                            <div class="task-card-actions">
+                                <button class="icon-btn">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="icon-btn">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <h3 class="task-card-title">مهمة نموذجية للعرض</h3>
+                        <p class="task-card-description">
+                            هذا نص تجريبي لوصف المهمة. يمكن أن يحتوي على تفاصيل المهمة والمتطلبات.
+                        </p>
+                        <div class="task-card-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-calendar"></i>
+                                <span>27 يناير 2026</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-user"></i>
+                                <span>أحمد محمد</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stat Card -->
+                    <div class="stat-card">
+                        <div class="stat-card-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <p class="stat-card-label">إجمالي المهام</p>
+                            <h3 class="stat-card-value">42</h3>
+                            <div class="stat-card-badges">
+                                <span class="badge badge-success">
+                                    مكتملة: 28
+                                </span>
+                                <span class="badge badge-warning">
+                                    نشطة: 14
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metric Card (Compact) -->
+                    <div class="dir-task-metric-card">
+                        <div class="dir-task-metric-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="dir-task-metric-content">
+                            <p class="dir-task-metric-label">الموظفون النشطون</p>
+                            <h3 class="dir-task-metric-value">156</h3>
+                        </div>
+                    </div>
+
+                    <!-- Metric Card with Trend -->
+                    <div class="dir-task-metric-card" style="border-left: 4px solid #10b981;">
+                        <div class="dir-task-metric-icon"
+                            style="background: linear-gradient(135deg, #10b981, #059669);">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="dir-task-metric-content">
+                            <p class="dir-task-metric-label">معدل الإنجاز</p>
+                            <h3 class="dir-task-metric-value">
+                                87%
+                                <span style="font-size: 0.9rem; color: #10b981; margin-right: 8px;">
+                                    <i class="fas fa-arrow-up"></i> +5%
+                                </span>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Form Elements Section -->
+            <section class="showcase-section">
+                <h2 class="section-title">
+                    <i class="fas fa-edit"></i>
+                    عناصر النماذج (Form Elements)
+                </h2>
+                <div class="form-showcase">
+                    <div class="input-field">
+                        <label for="demo-input">حقل إدخال نصي</label>
+                        <input type="text" id="demo-input" placeholder="أدخل النص هنا...">
+                    </div>
+
+                    <div class="input-field">
+                        <label for="demo-select">قائمة منسدلة</label>
+                        <select id="demo-select">
+                            <option>اختر خياراً</option>
+                            <option>الخيار الأول</option>
+                            <option>الخيار الثاني</option>
+                            <option>الخيار الثالث</option>
+                        </select>
+                    </div>
+
+                    <div class="input-field">
+                        <label for="demo-textarea">منطقة نص</label>
+                        <textarea id="demo-textarea" placeholder="أدخل وصفاً مفصلاً..."></textarea>
+                    </div>
+
+                    <div class="input-field">
+                        <label for="demo-date">تاريخ</label>
+                        <input type="date" id="demo-date">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tabs Section -->
+            <section class="showcase-section">
+                <h2 class="section-title">
+                    <i class="fas fa-folder"></i>
+                    التبويبات (Tabs)
+                </h2>
+                <div class="tabs-container">
+                    <div class="tabs-header">
+                        <button class="director-tab active">
+                            <i class="fas fa-tasks"></i>
+                            المهام
+                        </button>
+                        <button class="director-tab">
+                            <i class="fas fa-bullhorn"></i>
+                            التعليمات
+                        </button>
+                        <button class="director-tab">
+                            <i class="fas fa-users"></i>
+                            المسؤولون
+                        </button>
+                    </div>
+                    <div class="tabs-content">
+                        <p>محتوى التبويب النشط يظهر هنا</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Table Section -->
+            <section class="showcase-section">
+                <h2 class="section-title">
+                    <i class="fas fa-table"></i>
+                    الجداول مع الإجراءات (Tables with Actions)
+                </h2>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>العنوان</th>
+                                <th>الحالة</th>
+                                <th>الأولوية</th>
+                                <th>التاريخ</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;">
+                                        </div>
+                                        <span style="font-weight: 600;">مهمة نموذجية 1</span>
+                                    </div>
+                                </td>
+                                <td><span class="badge badge-status-completed">مكتملة</span></td>
+                                <td><span class="badge badge-priority-low">منخفضة</span></td>
+                                <td>25 يناير 2026</td>
+                                <td>
+                                    <div style="display: flex; gap: 6px;">
+                                        <button class="icon-btn" title="عرض">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="icon-btn" title="تعديل">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="icon-btn"
+                                            style="background: rgba(239, 68, 68, 0.1); color: #ef4444;" title="حذف">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <div class="dropdown" style="position: relative;">
+                                            <button class="icon-btn" title="المزيد">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="width: 8px; height: 8px; background: #f59e0b; border-radius: 50%;">
+                                        </div>
+                                        <span style="font-weight: 600;">مهمة نموذجية 2</span>
+                                    </div>
+                                </td>
+                                <td><span class="badge badge-status-inprogress">قيد التنفيذ</span></td>
+                                <td><span class="badge badge-priority-medium">متوسطة</span></td>
+                                <td>26 يناير 2026</td>
+                                <td>
+                                    <div style="display: flex; gap: 6px;">
+                                        <button class="icon-btn">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="icon-btn">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="icon-btn"
+                                            style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <button class="icon-btn">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="width: 8px; height: 8px; background: #ef4444; border-radius: 50%;">
+                                        </div>
+                                        <span style="font-weight: 600;">مهمة نموذجية 3</span>
+                                    </div>
+                                </td>
+                                <td><span class="badge badge-status-pending">معلقة</span></td>
+                                <td><span class="badge badge-priority-high">عالية</span></td>
+                                <td>27 يناير 2026</td>
+                                <td>
+                                    <div style="display: flex; gap: 6px;">
+                                        <button class="icon-btn">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="icon-btn">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="icon-btn"
+                                            style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <button class="icon-btn">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+
+            <!-- Advanced Filters Section (من director.html) -->
+            <section class="showcase-section">
+                <h2 class="section-title">
+                    <i class="fas fa-filter"></i>
+                    الفلاتر المتقدمة (Advanced Filters)
+                </h2>
+
+                <!-- Filter Card -->
+                <div class="dir-task-filters">
+                    <!-- Header -->
+                    <div class="dir-task-filters-header">
+                        <div class="dir-task-filters-title">
+                            <div class="dir-task-filters-title-icon">
+                                <i class="fas fa-sliders-h"></i>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0;">تصفية المهام
+                                </h3>
+                                <p class="dir-task-filters-subtitle">اختر المعايير للبحث</p>
+                            </div>
+                        </div>
+                        <button class="btn-secondary" style="font-size: 0.85rem;">
+                            <i class="fas fa-redo"></i>
+                            إعادة تعيين
+                        </button>
+                    </div>
+
+                    <!-- Filter Chips (Active Filters) -->
+                    <div class="dir-task-filter-chips">
+                        <span class="dir-task-filter-chip">
+                            <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                            مكتملة
+                            <i class="fas fa-times" style="cursor: pointer; opacity: 0.6;"></i>
+                        </span>
+                        <span class="dir-task-filter-chip">
+                            <i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>
+                            أولوية عالية
+                            <i class="fas fa-times" style="cursor: pointer; opacity: 0.6;"></i>
+                        </span>
+                    </div>
+
+                    <!-- Filter Grid -->
+                    <div class="dir-task-filter-grid">
+                        <div>
+                            <label class="dir-task-field-label">الحالة</label>
+                            <select class="dir-task-select">
+                                <option>الكل</option>
+                                <option>مكتملة</option>
+                                <option>قيد التنفيذ</option>
+                                <option>معلقة</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="dir-task-field-label">الأولوية</label>
+                            <select class="dir-task-select">
+                                <option>الكل</option>
+                                <option>عالية</option>
+                                <option>متوسطة</option>
+                                <option>منخفضة</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="dir-task-field-label">النوع</label>
+                            <select class="dir-task-select">
+                                <option>الكل</option>
+                                <option>يومية</option>
+                                <option>خاصة</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="dir-task-field-label">البحث</label>
+                            <div class="dir-task-search-wrap">
+                                <i class="fas fa-search"></i>
+                                <input type="text" class="dir-task-search" placeholder="ابحث في المهام...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View Switcher Section -->
+            <section class="showcase-section">
+                <h2 class="section-title">
+                    <i class="fas fa-eye"></i>
+                    محول العرض (View Switcher)
+                </h2>
+                <div class="view-switcher">
+                    <button class="view-btn active">
+                        <i class="fas fa-th-large"></i>
+                        بطاقات
+                    </button>
+                    <button class="view-btn">
+                        <i class="fas fa-list"></i>
+                        قائمة
+                    </button>
+                    <button class="view-btn">
+                        <i class="fas fa-table"></i>
+                        جدول
+                    </button>
+                </div>
+            </section>
+
+            <!-- Badges Section -->
+            <section class="showcase-section">
+                <h2 class="section-title">
+                    <i class="fas fa-tags"></i>
+                    الشارات (Badges)
+                </h2>
+                <div class="badges-showcase">
+                    <h3 class="component-subtitle">حالات المهام</h3>
+                    <div class="badge-group">
+                        <span class="badge badge-status-completed">مكتملة</span>
+                        <span class="badge badge-status-inprogress">قيد التنفيذ</span>
+                        <span class="badge badge-status-pending">معلقة</span>
+                        <span class="badge badge-status-cancelled">ملغاة</span>
+                    </div>
+
+                    <h3 class="component-subtitle">مستويات الأولوية</h3>
+                    <div class="badge-group">
+                        <span class="badge badge-priority-critical">حرجة</span>
+                        <span class="badge badge-priority-high">عالية</span>
+                        <span class="badge badge-priority-medium">متوسطة</span>
+                        <span class="badge badge-priority-low">منخفضة</span>
+                    </div>
+
+                    <h3 class="component-subtitle">شارات عامة</h3>
+                    <div class="badge-group">
+                        <span class="badge badge-success">نجاح</span>
+                        <span class="badge badge-warning">تحذير</span>
+                        <span class="badge badge-error">خطأ</span>
+                        <span class="badge badge-info">معلومة</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Toast Notifications -->
+            <section class="showcase-section">
+                <h2 class="section-title">
+                    <i class="fas fa-bell"></i>
+                    الإشعارات (Toast Notifications)
+                </h2>
+                <div class="component-grid">
+                    <button class="btn-primary" onclick="showToast('success')">
+                        <i class="fas fa-check"></i>
+                        إشعار نجاح
+                    </button>
+                    <button class="btn-secondary" onclick="showToast('error')">
+                        <i class="fas fa-times"></i>
+                        إشعار خطأ
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toastRoot" class="toast-container"></div>
+
+    <script src="theme.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interface Directeur - Rapports</title>
+    <link rel="stylesheet" href="tailwind.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .filter-button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        .filter-button:hover {
+            background-color: #f9fafb;
+        }
+        .filter-button.active {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        .report-card {
+            transition: all 0.3s ease;
+        }
+        .report-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .modal {
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-scroll {
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        .modal-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+        .modal-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .modal-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        #reportDetailsModal {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .acknowledge-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            transition: all 0.3s ease;
+        }
+        .acknowledge-btn:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        .acknowledged-badge {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .loading-spinner {
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .report-type-tab {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        .report-type-tab:hover {
+            background-color: #f9fafb;
+        }
+        .report-type-tab.active {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 bg-purple-600 rounded-full flex items-center justify-center text-white">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-semibold text-gray-900">Interface Directeur</h1>
+                        <p class="text-gray-500 text-sm">Gestion des rapports d'activité</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-sm text-gray-600">
+                        <span id="currentUser">Directeur</span>
+                    </div>
+                    <button onclick="window.history.back()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>Retour
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto p-6">
+        <div class="space-y-6">
+            <!-- Statistiques -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500">
+                    <div class="flex items-center">
+                        <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-inbox text-blue-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-600">Total Rapports</p>
+                            <p id="totalReports" class="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
+                    <div class="flex items-center">
+                        <div class="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-600">Accusés</p>
+                            <p id="acknowledgedReports" class="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-yellow-500">
+                    <div class="flex items-center">
+                        <div class="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-600">En Attente</p>
+                            <p id="pendingReports" class="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-purple-500">
+                    <div class="flex items-center">
+                        <div class="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-calendar-day text-purple-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-600">Aujourd'hui</p>
+                            <p id="todayReports" class="text-2xl font-bold text-gray-900">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Actions</h2>
+                </div>
+                <div class="flex gap-4">
+                    <button id="acknowledgeAllBtn" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                        <i class="fas fa-check-double"></i> Accuser Tous
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtres -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Filtres</h3>
+                
+                <!-- Type de rapport -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Type de Rapport</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="report-type-tab active" data-type="all" onclick="selectReportType('all')">
+                            <i class="fas fa-list mr-1"></i> Tous les rapports
+                        </button>
+                        <button class="report-type-tab" data-type="employee" onclick="selectReportType('employee')">
+                            <i class="fas fa-user mr-1"></i> Rapports Employés
+                        </button>
+                        <button class="report-type-tab" data-type="responsible" onclick="selectReportType('responsible')">
+                            <i class="fas fa-user-tie mr-1"></i> Rapports Responsables
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filtres dynamiques selon le type de rapport -->
+                <div id="filterContainer" class="mb-4">
+                    <!-- Filtres pour "Tous les rapports" -->
+                    <div id="allReportsFilters" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Département</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500" id="departmentFilter" onchange="loadDepartmentData()">
+                                <option value="all">Tous les départements</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Employé</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500" id="employeeFilter" onchange="applyFilters()">
+                                <option value="all">Tous les employés</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Responsable</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500" id="responsibleFilter" onchange="applyFilters()">
+                                <option value="all">Tous les responsables</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Filtres pour "Rapports Employés" -->
+                    <div id="employeeReportsFilters" class="grid grid-cols-1 md:grid-cols-2 gap-4" style="display: none;">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Département</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500" id="employeeDeptFilter" onchange="loadEmployeeDepartmentData()">
+                                <option value="all">Tous les départements</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Employé</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500" id="employeeOnlyFilter" onchange="applyFilters()">
+                                <option value="all">Tous les employés</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Filtres pour "Rapports Responsables" -->
+                    <div id="responsibleReportsFilters" class="grid grid-cols-1 md:grid-cols-2 gap-4" style="display: none;">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Département</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500" id="responsibleDeptFilter" onchange="loadResponsibleDepartmentData()">
+                                <option value="all">Tous les départements</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Responsable</label>
+                            <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500" id="responsibleOnlyFilter" onchange="applyFilters()">
+                                <option value="all">Tous les responsables</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtres communs -->
+                <div class="flex flex-col md:flex-row md:justify-between gap-4">
+                    <!-- Groupe Status -->
+                    <div class="flex flex-wrap gap-2">
+                        <button class="filter-button active" data-status="all" onclick="selectFilter('status', 'all')">Tous</button>
+                        <button class="filter-button" data-status="pending" onclick="selectFilter('status', 'pending')">En Attente</button>
+                        <button class="filter-button" data-status="acknowledged" onclick="selectFilter('status', 'acknowledged')">Accusés</button>
+                    </div>
+                    <!-- Groupe Period -->
+                    <div class="flex flex-wrap gap-2">
+                        <button class="filter-button active" data-period="all" onclick="selectFilter('period', 'all')">Toutes Périodes</button>
+                        <button class="filter-button" data-period="today" onclick="selectFilter('period', 'today')">Aujourd'hui</button>
+                        <button class="filter-button" data-period="week" onclick="selectFilter('period', 'week')">Cette Semaine</button>
+                        <button class="filter-button" data-period="month" onclick="selectFilter('period', 'month')">Ce Mois</button>
+                    </div>
+                    <!-- Période personnalisée -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <input id="customStart" type="date" class="px-2 py-1 text-sm border border-gray-300 rounded" />
+                        <span class="text-gray-500">→</span>
+                        <input id="customEnd" type="date" class="px-2 py-1 text-sm border border-gray-300 rounded" />
+                        <button class="filter-button" type="button" onclick="applyCustomDateRange()">Appliquer</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liste des rapports -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6 border-b">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">Rapports</h3>
+                        <div class="flex gap-2">
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full" id="reportsCount">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="reportsList" class="p-6">
+                    <div class="flex justify-center items-center py-12">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                        <span class="ml-3 text-gray-600">Chargement des rapports...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de détails du rapport -->
+    <div id="reportDetailsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Détails du Rapport</h3>
+                <button onclick="closeReportDetails()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modalContent" class="p-6 overflow-y-auto max-h-[70vh]">
+                <!-- Contenu chargé dynamiquement -->
+            </div>
+            <div class="p-4 border-t flex justify-end gap-2">
+                <button id="modalAcknowledgeBtn" class="px-4 py-2 acknowledge-btn text-white rounded hover:bg-green-700 mr-2 hidden">
+                    <i class="fas fa-check mr-1"></i>Accuser Réception
+                </button>
+                <button onclick="closeReportDetails()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const API = (location.origin && /^https?:\/\//i.test(location.origin)) ? location.origin : 'http://localhost:3020';
+        let currentUser = null;
+        let reports = [];
+        let departments = [];
+        let employees = [];
+        let responsibles = [];
+        let currentFilters = {
+            type: 'all',
+            department_id: 'all',
+            employee_id: 'all',
+            responsible_id: 'all',
+            status: 'all',
+            period: 'all'
+        };
+        let departmentEmployees = new Map(); // Cache pour les employés par département
+        let departmentResponsibles = new Map(); // Cache pour les responsables par département
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadInitialData();
+            setupEventListeners();
+            await loadAllEmployeesAndResponsibles();
+            loadReports();
+        });
+
+        // Charger les données initiales
+        async function loadInitialData() {
+            try {
+                // Récupérer les paramètres depuis l'URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const userId = urlParams.get('user_id');
+                const employeeId = urlParams.get('employee_id');
+                const username = urlParams.get('username');
+                const firstName = urlParams.get('first');
+                const lastName = urlParams.get('last');
+                const role = urlParams.get('role');
+
+                // Créer l'objet utilisateur avec les paramètres de l'URL
+                currentUser = {
+                    id: userId || employeeId || 'director-1',
+                    employee_id: employeeId,
+                    user_id: userId,
+                    username: username,
+                    first_name: firstName || 'Directeur',
+                    last_name: lastName || 'Général',
+                    department: 'Direction Générale',
+                    role: role || 'Director'
+                };
+
+                // Afficher le directeur
+                document.getElementById('currentUser').textContent = `${currentUser.first_name} ${currentUser.last_name}`;
+
+                // Charger les départements
+                await loadDepartments();
+            } catch (error) {
+                console.error('Erreur lors du chargement des données:', error);
+            }
+        }
+
+        // Charger les départements
+        async function loadDepartments() {
+            try {
+                const response = await fetch(`${API}/api/rapportemp/director/departments`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    departments = data.departments;
+                    
+                    // Remplir tous les selecteurs de départements
+                    const departmentSelects = [
+                        'departmentFilter',
+                        'employeeDeptFilter', 
+                        'responsibleDeptFilter'
+                    ];
+                    
+                    departmentSelects.forEach(selectId => {
+                        const select = document.getElementById(selectId);
+                        if (select) {
+                            select.innerHTML = '<option value="all">Tous les départements</option>';
+                            departments.forEach(dept => {
+                                const option = new Option(`${dept.name} (${dept.employee_count} employés)`, dept.id);
+                                select.add(option);
+                            });
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Erreur chargement départements:', error);
+            }
+        }
+
+        // Charger tous les employés et responsables au démarrage
+        async function loadAllEmployeesAndResponsibles() {
+            try {
+                console.log('🔄 Chargement des employés et responsables...');
+                
+                // Charger tous les employés
+                const employeesResponse = await fetch(`${API}/employees`);
+                if (employeesResponse.ok) {
+                    employees = await employeesResponse.json();
+                    console.log('✅ Employés chargés:', employees.length);
+                } else {
+                    console.error('❌ Erreur chargement employés:', employeesResponse.status);
+                }
+
+                // Charger tous les responsables
+                console.log('🔄 Chargement des responsables...');
+                const responsiblesResponse = await fetch(`${API}/api/rapportemp/responsibles`);
+                console.log('📡 Réponse responsables:', responsiblesResponse.status);
+                
+                if (responsiblesResponse.ok) {
+                    const responsiblesData = await responsiblesResponse.json();
+                    console.log('📊 Données responsables:', responsiblesData);
+                    
+                    if (responsiblesData.success) {
+                        responsibles = responsiblesData.responsibles;
+                        console.log('✅ Responsables chargés:', responsibles.length);
+                    } else {
+                        console.error('❌ Erreur dans la réponse responsables:', responsiblesData.error);
+                    }
+                } else {
+                    console.error('❌ Erreur HTTP chargement responsables:', responsiblesResponse.status);
+                    const errorText = await responsiblesResponse.text();
+                    console.error('❌ Détails erreur:', errorText);
+                }
+
+                // Initialiser les selecteurs avec tous les employés et responsables
+                populateAllEmployeesAndResponsibles();
+            } catch (error) {
+                console.error('❌ Erreur chargement employés et responsables:', error);
+            }
+        }
+
+        // Remplir les selecteurs avec tous les employés et responsables
+        function populateAllEmployeesAndResponsibles() {
+            // Remplir tous les selecteurs d'employés
+            const employeeSelects = ['employeeFilter', 'employeeOnlyFilter'];
+            employeeSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    select.innerHTML = '<option value="all">Tous les employés</option>';
+                    employees.forEach(emp => {
+                        const option = new Option(`${emp.first_name} ${emp.last_name}`, emp.id);
+                        select.add(option);
+                    });
+                }
+            });
+
+            // Remplir tous les selecteurs de responsables
+            const responsibleSelects = ['responsibleFilter', 'responsibleOnlyFilter'];
+            responsibleSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    select.innerHTML = '<option value="all">Tous les responsables</option>';
+                    responsibles.forEach(resp => {
+                        const option = new Option(`${resp.first_name} ${resp.last_name} (${resp.department_name || 'Département'})`, resp.id);
+                        select.add(option);
+                    });
+                }
+            });
+        }
+
+        // Charger les données du département sélectionné (pour "Tous les rapports")
+        async function loadDepartmentData() {
+            const departmentId = document.getElementById('departmentFilter').value;
+            const employeeSelect = document.getElementById('employeeFilter');
+            const responsibleSelect = document.getElementById('responsibleFilter');
+            
+            // Réinitialiser les filtres
+            currentFilters.department_id = departmentId;
+            currentFilters.employee_id = 'all';
+            currentFilters.responsible_id = 'all';
+            
+            if (departmentId === 'all') {
+                // Afficher tous les employés et responsables
+                populateAllEmployeesAndResponsibles();
+            } else {
+                try {
+                    // Charger les employés du département
+                    const employeesResponse = await fetch(`${API}/api/rapportemp/director/employees-by-department/${departmentId}?type=employee`);
+                    const employeesData = await employeesResponse.json();
+                    
+                    if (employeesData.success) {
+                        departmentEmployees.set(departmentId, employeesData.employees);
+                        employeeSelect.innerHTML = '<option value="all">Tous les employés</option>';
+                        employeesData.employees.forEach(emp => {
+                            const option = new Option(`${emp.first_name} ${emp.last_name}`, emp.id);
+                            employeeSelect.add(option);
+                        });
+                    }
+                    
+                    // Charger les responsables du département
+                    const responsiblesResponse = await fetch(`${API}/api/rapportemp/director/employees-by-department/${departmentId}?type=responsible`);
+                    const responsiblesData = await responsiblesResponse.json();
+                    
+                    if (responsiblesData.success) {
+                        departmentResponsibles.set(departmentId, responsiblesData.employees);
+                        responsibleSelect.innerHTML = '<option value="all">Tous les responsables</option>';
+                        responsiblesData.employees.forEach(resp => {
+                            const option = new Option(`${resp.first_name} ${resp.last_name}`, resp.id);
+                            responsibleSelect.add(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Erreur chargement données département:', error);
+                }
+            }
+            
+            // Appliquer les filtres automatiquement
+            applyFilters();
+        }
+
+        // Charger les employés par département (pour "Rapports Employés")
+        async function loadEmployeeDepartmentData() {
+            const departmentId = document.getElementById('employeeDeptFilter').value;
+            const employeeSelect = document.getElementById('employeeOnlyFilter');
+            
+            // Réinitialiser les filtres
+            currentFilters.department_id = departmentId;
+            currentFilters.employee_id = 'all';
+            
+            if (departmentId === 'all') {
+                // Afficher tous les employés
+                employeeSelect.innerHTML = '<option value="all">Tous les employés</option>';
+                employees.forEach(emp => {
+                    const option = new Option(`${emp.first_name} ${emp.last_name}`, emp.id);
+                    employeeSelect.add(option);
+                });
+            } else {
+                try {
+                    // Charger les employés du département
+                    const employeesResponse = await fetch(`${API}/api/rapportemp/director/employees-by-department/${departmentId}?type=employee`);
+                    const employeesData = await employeesResponse.json();
+                    
+                    if (employeesData.success) {
+                        employeeSelect.innerHTML = '<option value="all">Tous les employés</option>';
+                        employeesData.employees.forEach(emp => {
+                            const option = new Option(`${emp.first_name} ${emp.last_name}`, emp.id);
+                            employeeSelect.add(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Erreur chargement employés département:', error);
+                }
+            }
+            
+            // Appliquer les filtres automatiquement
+            applyFilters();
+        }
+
+        // Charger les responsables par département (pour "Rapports Responsables")
+        async function loadResponsibleDepartmentData() {
+            const departmentId = document.getElementById('responsibleDeptFilter').value;
+            const responsibleSelect = document.getElementById('responsibleOnlyFilter');
+            
+            // Réinitialiser les filtres
+            currentFilters.department_id = departmentId;
+            currentFilters.responsible_id = 'all';
+            
+            if (departmentId === 'all') {
+                // Afficher tous les responsables
+                responsibleSelect.innerHTML = '<option value="all">Tous les responsables</option>';
+                responsibles.forEach(resp => {
+                    const option = new Option(`${resp.first_name} ${resp.last_name} (${resp.department_name || 'Département'})`, resp.id);
+                    responsibleSelect.add(option);
+                });
+            } else {
+                try {
+                    // Charger les responsables du département
+                    const responsiblesResponse = await fetch(`${API}/api/rapportemp/director/employees-by-department/${departmentId}?type=responsible`);
+                    const responsiblesData = await responsiblesResponse.json();
+                    
+                    if (responsiblesData.success) {
+                        responsibleSelect.innerHTML = '<option value="all">Tous les responsables</option>';
+                        responsiblesData.employees.forEach(resp => {
+                            const option = new Option(`${resp.first_name} ${resp.last_name}`, resp.id);
+                            responsibleSelect.add(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Erreur chargement responsables département:', error);
+                }
+            }
+            
+            // Appliquer les filtres automatiquement
+            applyFilters();
+        }
+
+        // Sélectionner un filtre (status ou period)
+        function selectFilter(type, value) {
+            // Mettre à jour l'interface
+            document.querySelectorAll(`.filter-button[data-${type}]`).forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-${type}="${value}"]`).classList.add('active');
+            
+            // Mettre à jour les filtres
+            currentFilters[type] = value;
+            
+            // Appliquer les filtres automatiquement
+            applyFilters();
+        }
+
+        // Effacer tous les filtres
+        function clearAllFilters() {
+            // Réinitialiser tous les sélecteurs
+            const allSelects = [
+                'departmentFilter', 'employeeFilter', 'responsibleFilter',
+                'employeeDeptFilter', 'employeeOnlyFilter',
+                'responsibleDeptFilter', 'responsibleOnlyFilter'
+            ];
+            
+            allSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    select.value = 'all';
+                }
+            });
+            
+            // Réinitialiser les boutons de statut et période
+            document.querySelectorAll('.filter-button[data-status]').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.filter-button[data-status="all"]').classList.add('active');
+            
+            document.querySelectorAll('.filter-button[data-period]').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.filter-button[data-period="all"]').classList.add('active');
+            
+            // Réinitialiser le type de rapport
+            document.querySelectorAll('.report-type-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector('.report-type-tab[data-type="all"]').classList.add('active');
+            
+            // Afficher les filtres pour "Tous les rapports"
+            selectReportType('all');
+            
+            // Réinitialiser les filtres
+            currentFilters = {
+                type: 'all',
+                department_id: 'all',
+                employee_id: 'all',
+                responsible_id: 'all',
+                status: 'all',
+                period: 'all'
+            };
+            
+            // Remplir à nouveau tous les employés et responsables
+            populateAllEmployeesAndResponsibles();
+            
+            // Recharger les rapports
+            loadReports();
+        }
+
+        // Sélectionner le type de rapport
+        function selectReportType(type) {
+            // Mettre à jour l'interface
+            document.querySelectorAll('.report-type-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-type="${type}"]`).classList.add('active');
+            
+            // Afficher/masquer les filtres appropriés
+            const allReportsFilters = document.getElementById('allReportsFilters');
+            const employeeReportsFilters = document.getElementById('employeeReportsFilters');
+            const responsibleReportsFilters = document.getElementById('responsibleReportsFilters');
+            
+            // Masquer tous les filtres
+            allReportsFilters.style.display = 'none';
+            employeeReportsFilters.style.display = 'none';
+            responsibleReportsFilters.style.display = 'none';
+            
+            // Afficher les filtres appropriés
+            if (type === 'all') {
+                allReportsFilters.style.display = 'grid';
+                // Réinitialiser les filtres pour "Tous les rapports"
+                currentFilters.employee_id = 'all';
+                currentFilters.responsible_id = 'all';
+            } else if (type === 'employee') {
+                employeeReportsFilters.style.display = 'grid';
+                // Réinitialiser les filtres pour "Rapports Employés"
+                currentFilters.responsible_id = 'all';
+                currentFilters.employee_id = 'all';
+            } else if (type === 'responsible') {
+                responsibleReportsFilters.style.display = 'grid';
+                // Réinitialiser les filtres pour "Rapports Responsables"
+                currentFilters.employee_id = 'all';
+                currentFilters.responsible_id = 'all';
+            }
+            
+            currentFilters.type = type;
+            
+            // Appliquer les filtres automatiquement
+            applyFilters();
+        }
+
+        // Configuration des événements
+        function setupEventListeners() {
+            document.getElementById('acknowledgeAllBtn').addEventListener('click', acknowledgeAllPendingReports);
+        }
+
+        // Charger les rapports
+        async function loadReports() {
+            try {
+                showLoading(true);
+                
+                // Construire les paramètres de filtrage
+                const params = new URLSearchParams();
+                
+                // Filtre par type
+                if (currentFilters.type && currentFilters.type !== 'all') {
+                    params.append('type', currentFilters.type);
+                }
+                
+                // Filtre par département
+                if (currentFilters.department_id && currentFilters.department_id !== 'all') {
+                    params.append('department_id', currentFilters.department_id);
+                }
+                
+                // Filtre par employé spécifique
+                if (currentFilters.employee_id && currentFilters.employee_id !== 'all') {
+                    params.append('employee_id', currentFilters.employee_id);
+                }
+                
+                // Filtre par responsable spécifique
+                if (currentFilters.responsible_id && currentFilters.responsible_id !== 'all') {
+                    params.append('responsible_id', currentFilters.responsible_id);
+                }
+                
+                // Filtre par statut
+                if (currentFilters.status && currentFilters.status !== 'all') {
+                    params.append('status', currentFilters.status);
+                }
+                
+                // Filtre par période
+                if (currentFilters.period && currentFilters.period !== 'all') {
+                    params.append('period', currentFilters.period);
+                }
+                
+                console.log('Paramètres de filtrage:', params.toString());
+                
+                const response = await fetch(`${API}/api/rapportemp/director/all-reports?${params}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    reports = data.reports || [];
+                    console.log('Rapports chargés:', reports.length);
+                    updateStatistics();
+                    displayReports();
+                } else {
+                    console.error('Erreur chargement rapports:', data.error);
+                    showNoReports();
+                }
+            } catch (error) {
+                console.error('Erreur chargement rapports:', error);
+                showNoReports();
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Mettre à jour les statistiques
+        async function updateStatistics() {
+            try {
+                const response = await fetch(`${API}/api/rapportemp/director/stats`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('totalReports').textContent = data.stats.total_reports || 0;
+                    document.getElementById('pendingReports').textContent = data.stats.pending || 0;
+                    document.getElementById('acknowledgedReports').textContent = data.stats.acknowledged || 0;
+                    document.getElementById('todayReports').textContent = data.stats.today || 0;
+                }
+            } catch (error) {
+                console.error('Erreur chargement statistiques:', error);
+            }
+        }
+
+        // Afficher les rapports
+        function displayReports() {
+            const filteredReports = getFilteredReports();
+            const reportsList = document.getElementById('reportsList');
+            const reportsCount = document.getElementById('reportsCount');
+
+            reportsCount.textContent = filteredReports.length;
+
+            if (filteredReports.length === 0) {
+                reportsList.innerHTML = `
+                    <div class="text-center py-12 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-4"></i>
+                        <p>Aucun rapport trouvé</p>
+                    </div>
+                `;
+                return;
+            }
+
+            reportsList.innerHTML = filteredReports.map(report => {
+                const isAcknowledged = report.status === 'acknowledged';
+                
+                return `
+                <div class="report-card bg-white border border-gray-200 rounded-lg p-4 mb-3">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-start justify-between mb-2">
+                                <h4 class="text-base font-semibold text-gray-900">${report.title || 'Rapport'}</h4>
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                                        ${report.employee_name}
+                                    </span>
+                                    <span class="px-3 py-1 text-xs rounded-full ${getStatusClass(report.status)}">
+                                        ${getStatusText(report.status)}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <p><i class="fas fa-building mr-2"></i>Département: ${report.department_name || 'Non spécifié'}</p>
+                                <p><i class="fas fa-tag mr-2"></i>Sujet: ${report.subject}</p>
+                        <p><i class="fas fa-calendar mr-2"></i>Date: ${new Date(report.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${report.pdf_url ? `
+                                <a href="${report.pdf_url}" target="_blank" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-download mr-1"></i>Télécharger
+                                </a>
+                            ` : ''}
+                            <button onclick="viewReportDetails('${report.id}')" class="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 transition-colors">
+                                <i class="fas fa-eye mr-1"></i>Voir
+                            </button>
+                            ${!isAcknowledged ? `
+                                <button onclick="acknowledgeReport('${report.id}')" class="px-3 py-1 acknowledge-btn text-white text-sm rounded hover:bg-green-700 transition-colors">
+                                    <i class="fas fa-check mr-1"></i>Accusé
+                                </button>
+                            ` : `
+                                <span class="px-3 py-1 acknowledged-badge text-white text-sm rounded">
+                                    <i class="fas fa-check-circle mr-1"></i>Accusé
+                                </span>
+                            `}
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // Charger les accusés de réception pour un rapport
+        async function loadAcknowledgements(reportId) {
+            try {
+                const response = await fetch(`${API}/api/rapportemp/${reportId}/acknowledgements`);
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement des accusés');
+                }
+                const data = await response.json();
+                return data.success ? data : { acknowledgements: [], total: 0, acknowledged: 0 };
+            } catch (error) {
+                console.error('Erreur lors du chargement des accusés:', error);
+                return { acknowledgements: [], total: 0, acknowledged: 0 };
+            }
+        }
+
+        // Voir les détails d'un rapport
+        async function viewReportDetails(reportId) {
+            try {
+                const response = await fetch(`${API}/api/rapportemp/${reportId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const report = data.report;
+
+                    // Charger les informations des accusés de réception
+                    const acknowledgementsData = await loadAcknowledgements(reportId);
+                    const acknowledgements = acknowledgementsData.acknowledgements || [];
+                    const acknowledgedCount = acknowledgementsData.acknowledged || 0;
+                    const totalRecipients = acknowledgementsData.total || 0;
+                    
+                    const modalContent = document.getElementById('modalContent');
+                    modalContent.innerHTML = `
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div><strong>Titre:</strong> ${report.title || 'Non spécifié'}</div>
+                            <div><strong>Statut:</strong> <span class="${getStatusClass(report.status)} px-2 py-1 rounded">${getStatusText(report.status)}</span></div>
+                            <div><strong>De:</strong> ${report.first_name} ${report.last_name}</div>
+                            <div><strong>Date:</strong> ${formatDate(report.created_at)}</div>
+                            <div><strong>Département:</strong> ${report.department_name || 'Non spécifié'}</div>
+                            ${report.subject ? `<div><strong>Sujet:</strong> ${report.subject}</div>` : ''}
+                        </div>
+                        
+                        <!-- Section Accusés de réception -->
+                        <div class="border-t pt-4 mb-4">
+                            <h4 class="font-semibold mb-2">Accusés de réception:</h4>
+                            <div class="bg-gray-50 p-4 rounded">
+                                <p class="text-sm mb-2">${acknowledgedCount}/${totalRecipients} destinataires ont accusé réception</p>
+                                ${acknowledgements.length > 0 ? `
+                                    <div class="space-y-2 mt-2">
+                                        ${acknowledgements.map(ack => `
+                                            <div class="flex items-center justify-between text-sm">
+                                                <span>${ack.first_name} ${ack.last_name}${ack.department_name ? ` (${ack.department_name})` : ''}</span>
+                                                <span class="${ack.acknowledged ? 'text-green-600' : 'text-yellow-600'}">
+                                                    ${ack.acknowledged ? `✔️ Accusé le ${formatDateTime(ack.acknowledged_at)}` : '⏳ En attente'}
+                                                </span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : `
+                                    <p class="text-gray-500 text-sm">Aucun destinataire spécifié</p>
+                                `}
+                            </div>
+                        </div>
+                        
+                        <div class="border-t pt-4">
+                            <h4 class="font-semibold mb-2">Contenu du rapport:</h4>
+                            <div class="bg-gray-50 p-4 rounded whitespace-pre-wrap text-sm">${report.content || 'Aucun contenu'}</div>
+                        </div>
+                    `;
+
+                    // Gérer le bouton d'accusé de réception dans le modal
+                    const modalAckBtn = document.getElementById('modalAcknowledgeBtn');
+                    if (report.status === 'pending') {
+                        modalAckBtn.classList.remove('hidden');
+                        modalAckBtn.onclick = () => {
+                            acknowledgeReport(reportId);
+                            closeReportDetails();
+                        };
+                    } else {
+                        modalAckBtn.classList.add('hidden');
+                    }
+
+                    document.getElementById('reportDetailsModal').classList.remove('hidden');
+                    document.body.classList.add('overflow-hidden');
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement des détails:', error);
+                showNotification('Impossible de charger les détails du rapport: ' + error.message, 'error');
+            }
+        }
+
+        // Accuser réception d'un rapport
+        async function acknowledgeReport(reportId) {
+            try {
+                const directorId = currentUser.id;
+                
+                const response = await fetch(`${API}/api/rapportemp/director/${reportId}/acknowledge`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ director_id: directorId })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erreur lors de l\'accusé de réception');
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    // Mettre à jour le rapport dans la liste locale
+                    const reportIndex = reports.findIndex(r => r.id === reportId);
+                    if (reportIndex !== -1) {
+                        reports[reportIndex].status = 'acknowledged';
+                    }
+
+                    // Rafraîchir l'affichage
+                    updateStatistics();
+                    displayReports();
+
+                    // Recharger les détails si le modal est ouvert
+                    if (!document.getElementById('reportDetailsModal').classList.contains('hidden')) {
+                        await viewReportDetails(reportId);
+                    }
+
+                    // Notification de succès
+                    showNotification('Accusé de réception envoyé avec succès', 'success');
+                } else {
+                    throw new Error(result.error || 'Erreur inconnue');
+                }
+            } catch (error) {
+                console.error('Erreur accusé réception:', error);
+                showNotification('Erreur lors de l\'accusé de réception: ' + error.message, 'error');
+            }
+        }
+
+        // Accuser réception de tous les rapports en attente
+        async function acknowledgeAllPendingReports() {
+            const pendingReports = reports.filter(r => r.status === 'pending');
+            
+            if (pendingReports.length === 0) {
+                showNotification('Aucun rapport en attente', 'info');
+                return;
+            }
+
+            if (!confirm(`Voulez-vous vraiment accuser réception de tous les ${pendingReports.length} rapports en attente ?`)) {
+                return;
+            }
+
+            const btn = document.getElementById('acknowledgeAllBtn');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<div class="loading-spinner"></div> Traitement...';
+            btn.disabled = true;
+
+            try {
+                let successCount = 0;
+                let errorCount = 0;
+
+                for (const report of pendingReports) {
+                    try {
+                        await acknowledgeReport(report.id);
+                        successCount++;
+                    } catch (error) {
+                        errorCount++;
+                        console.error(`Erreur pour rapport ${report.id}:`, error);
+                    }
+                }
+
+                if (successCount > 0) {
+                    showNotification(`${successCount} rapports accusés avec succès${errorCount > 0 ? `, ${errorCount} erreurs` : ''}`, 
+                                   successCount > errorCount ? 'success' : 'warning');
+                } else {
+                    showNotification('Aucun rapport n\'a pu être accusé', 'error');
+                }
+            } catch (error) {
+                console.error('Erreur accusé global:', error);
+                showNotification('Erreur lors du traitement global', 'error');
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        }
+
+        // Fermer le modal des détails
+        function closeReportDetails() {
+            const modal = document.getElementById('reportDetailsModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        // Obtenir les rapports filtrés
+        function getFilteredReports() {
+            let filtered = [...reports];
+            
+            const statusFilter = document.querySelector('.filter-button[data-status].active')?.dataset.status;
+            if (statusFilter && statusFilter !== 'all') {
+                filtered = filtered.filter(r => r.status === statusFilter);
+            }
+            
+            const periodFilter = document.querySelector('.filter-button[data-period].active')?.dataset.period;
+            if (periodFilter && periodFilter !== 'all') {
+                const now = new Date();
+                filtered = filtered.filter(r => {
+                    const reportDate = new Date(r.created_at);
+                    switch (periodFilter) {
+                        case 'today':
+                            return reportDate.toDateString() === now.toDateString();
+                        case 'week':
+                            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            return reportDate >= weekAgo;
+                        case 'month':
+                            return reportDate.getMonth() === now.getMonth() && reportDate.getFullYear() === now.getFullYear();
+                        default:
+                            return true;
+                    }
+                });
+            }
+            // Période personnalisée (client-side)
+            const startEl = document.getElementById('customStart');
+            const endEl = document.getElementById('customEnd');
+            const startVal = startEl ? startEl.value : null;
+            const endVal = endEl ? endEl.value : null;
+            if (startVal || endVal) {
+                const start = startVal ? new Date(startVal) : null;
+                const end = endVal ? new Date(endVal) : null;
+                if (end) end.setHours(23, 59, 59, 999);
+                filtered = filtered.filter(r => {
+                    const d = new Date(r.created_at);
+                    if (start && d < start) return false;
+                    if (end && d > end) return false;
+                    return true;
+                });
+            }
+            
+            return filtered;
+        }
+
+        // Appliquer les filtres
+        function applyFilters() {
+            // Mettre à jour les filtres selon les sélections actuelles
+            currentFilters.type = document.querySelector('.report-type-tab.active')?.dataset.type || 'all';
+            currentFilters.status = document.querySelector('.filter-button[data-status].active')?.dataset.status || 'all';
+            currentFilters.period = document.querySelector('.filter-button[data-period].active')?.dataset.period || 'all';
+            
+            // Mettre à jour les filtres selon le type de rapport
+            if (currentFilters.type === 'all') {
+                // Filtres pour "Tous les rapports"
+                currentFilters.department_id = document.getElementById('departmentFilter').value;
+                currentFilters.employee_id = document.getElementById('employeeFilter').value;
+                currentFilters.responsible_id = document.getElementById('responsibleFilter').value;
+            } else if (currentFilters.type === 'employee') {
+                // Filtres pour "Rapports Employés"
+                currentFilters.department_id = document.getElementById('employeeDeptFilter').value;
+                currentFilters.employee_id = document.getElementById('employeeOnlyFilter').value;
+                currentFilters.responsible_id = 'all'; // Pas de filtre responsable pour les rapports employés
+            } else if (currentFilters.type === 'responsible') {
+                // Filtres pour "Rapports Responsables"
+                currentFilters.department_id = document.getElementById('responsibleDeptFilter').value;
+                currentFilters.employee_id = 'all'; // Pas de filtre employé pour les rapports responsables
+                currentFilters.responsible_id = document.getElementById('responsibleOnlyFilter').value;
+            }
+            
+            console.log('Filtres appliqués:', currentFilters);
+            
+            // Recharger les rapports avec les nouveaux filtres
+            loadReports();
+        }
+
+        // Obtenir la classe CSS du statut
+        function getStatusClass(status) {
+            const classes = {
+                'acknowledged': 'bg-green-100 text-green-800',
+                'pending': 'bg-yellow-100 text-yellow-800'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        // Obtenir le texte du statut
+        function getStatusText(status) {
+            const texts = {
+                'acknowledged': 'Accusé de réception',
+                'pending': 'En attente'
+            };
+            return texts[status] || 'Inconnu';
+        }
+
+        // Formater la date
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('fr-FR');
+        }
+
+        // Formater la date et l'heure
+        function formatDateTime(dateString) {
+            if (!dateString) return '-';
+            return new Date(dateString).toLocaleString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Afficher le loading
+        function showLoading(show) {
+            const reportsList = document.getElementById('reportsList');
+            if (show) {
+                reportsList.innerHTML = `
+                    <div class="flex justify-center items-center py-12">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                        <span class="ml-3 text-gray-600">Chargement des rapports...</span>
+                    </div>
+                `;
+            }
+        }
+
+        // Afficher le message "aucun rapport"
+        function showNoReports() {
+            const reportsList = document.getElementById('reportsList');
+            reportsList.innerHTML = `
+                <div class="text-center py-12 text-gray-500">
+                    <i class="fas fa-inbox text-4xl mb-4"></i>
+                    <p>Aucun rapport trouvé</p>
+                </div>
+            `;
+            document.getElementById('reportsCount').textContent = '0';
+        }
+
+        // Afficher une notification
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 transform translate-x-full`;
+            notification.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : type === 'warning' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 4000);
+        }
+
+        // Appliquer la période personnalisée
+        function applyCustomDateRange() {
+            const startEl = document.getElementById('customStart');
+            const endEl = document.getElementById('customEnd');
+            const startVal = startEl ? startEl.value : null;
+            const endVal = endEl ? endEl.value : null;
+
+            if (!startVal || !endVal) {
+                showNotification('Veuillez sélectionner une date de début et une date de fin.', 'warning');
+                return;
+            }
+
+            const start = new Date(startVal);
+            const end = new Date(endVal);
+            if (end) end.setHours(23, 59, 59, 999); // Fin de la journée pour la date de fin
+
+            currentFilters.period = 'custom';
+            currentFilters.start_date = start.toISOString();
+            currentFilters.end_date = end.toISOString();
+
+            console.log('Filtres appliqués (période personnalisée):', currentFilters);
+            loadReports();
+        }
+
+
+        // Fonctions globales
+        window.viewReportDetails = viewReportDetails;
+        window.closeReportDetails = closeReportDetails;
+        window.acknowledgeReport = acknowledgeReport;
+        window.selectReportType = selectReportType;
+        window.selectFilter = selectFilter;
+        window.applyFilters = applyFilters;
+        window.clearAllFilters = clearAllFilters;
+        window.loadDepartmentData = loadDepartmentData;
+        window.loadEmployeeDepartmentData = loadEmployeeDepartmentData;
+        window.loadResponsibleDepartmentData = loadResponsibleDepartmentData;
+        window.applyCustomDateRange = applyCustomDateRange;
+    </script>
+</body>
+</html>

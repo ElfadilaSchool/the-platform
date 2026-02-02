@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="requests.create_request">Submit Exception - HR Operations Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <link href="../assets/css/rtl.css" rel="stylesheet">
+    
+    <style>
+        .form-section {
+            transition: all 0.2s ease;
+        }
+        .dynamic-fields {
+            display: none;
+        }
+        .dynamic-fields.show {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- The reusable navbar will be automatically inserted here -->
+    
+    <!-- Main Content -->
+    <div class="main-content flex-1 flex flex-col overflow-hidden">
+    <div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900" data-translate="requests.title">Requests</h1>
+                    <p class="text-gray-600" data-translate="requests.my_requests">Submit exceptions, view your request history, and manage pending extra hours</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <!-- Language Selector -->
+                    <select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="en">English</option>
+                        <option value="fr">Français</option>
+                        <option value="ar">العربية</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="mb-4 border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button type="button" data-tab="submit" class="tab-btn border-blue-500 text-blue-600 whitespace-nowrap pb-2 px-1 border-b-2 font-medium text-sm">
+                    <i class="fas fa-paper-plane mr-2"></i> <span data-translate="requests.create_request">Submit Exception</span>
+                </button>
+                <button type="button" data-tab="history" class="tab-btn text-gray-500 hover:text-gray-700 whitespace-nowrap pb-2 px-1 border-b-2 border-transparent font-medium text-sm">
+                    <i class="fas fa-clock-rotate-left mr-2"></i> <span data-translate="requests.my_requests">My History</span>
+                </button>
+                <button type="button" data-tab="extra" class="tab-btn text-gray-500 hover:text-gray-700 whitespace-nowrap pb-2 px-1 border-b-2 border-transparent font-medium text-sm">
+                    <i class="fas fa-user-plus mr-2"></i> <span data-translate="requests.overtime">Pending Extra Hours</span>
+                </button>
+                <button type="button" data-tab="invitations" class="tab-btn text-gray-500 hover:text-gray-700 whitespace-nowrap pb-2 px-1 border-b-2 border-transparent font-medium text-sm hidden">
+                    <i class="fas fa-envelope mr-2"></i> Sent Invitations
+                </button>
+            </nav>
+        </div>
+
+        <!-- Tab: Submit Exception (existing form) -->
+        <div id="tab-submit" class="bg-white rounded-lg shadow">
+            <form id="exceptionForm" class="p-6 space-y-6">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4" data-translate="employee.employee_information">Employee Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="employeeSelect" class="block text-sm font-medium text-gray-700 mb-2" data-translate="table.employee">
+                                Employee *
+                            </label>
+                            <select id="employeeSelect" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="" data-translate="employee.select_employee">Select Employee</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="exceptionType" class="block text-sm font-medium text-gray-700 mb-2" data-translate="requests.request_type">
+                                Exception Type *
+                            </label>
+                            <select id="exceptionType" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="" data-translate="requests.select_type">Select Type</option>
+                                <option value="MissingPunchFix" data-translate="requests.missing_punch_fix">Missing Punch Fix</option>
+                                <option value="LeaveRequest" data-translate="requests.leave_request">Leave Request</option>
+                                <option value="HolidayAssignment" data-translate="requests.holiday_assignment">Holiday Assignment</option>
+                                <option value="ExtraHours" data-translate="requests.extra_hours">Extra Hours (Overtime)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date Information -->
+                <div class="form-section">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4" data-translate="common.date_information">Date Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="exceptionDate" class="block text-sm font-medium text-gray-700 mb-2" data-translate="requests.request_date">
+                                Date *
+                            </label>
+                            <input type="date" id="exceptionDate" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div id="endDateContainer" style="display: none;">
+                            <label for="endDate" class="block text-sm font-medium text-gray-700 mb-2" data-translate="requests.end_date">
+                                End Date (Optional)
+                            </label>
+                            <input type="date" id="endDate"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Fields for Missing Punch Fix -->
+                <div id="missingPunchFields" class="form-section dynamic-fields">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4" data-translate="requests.missing_punch_details">Missing Punch Details</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="punchType" class="block text-sm font-medium text-gray-700 mb-2" data-translate="requests.punch_type">
+                                Punch Type *
+                            </label>
+                            <select id="punchType" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="" data-translate="requests.select_type">Select Type</option>
+                                <option value="check_in" data-translate="requests.check_in">Check In</option>
+                                <option value="check_out" data-translate="requests.check_out">Check Out</option>
+                                <option value="break_start" data-translate="requests.break_start">Break Start</option>
+                                <option value="break_end" data-translate="requests.break_end">Break End</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="punchTime" class="block text-sm font-medium text-gray-700 mb-2" data-translate="requests.time">
+                                Time *
+                            </label>
+                            <input type="time" id="punchTime" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label for="punchReason" class="block text-sm font-medium text-gray-700 mb-2" data-translate="requests.reason">
+                            Reason *
+                        </label>
+                        <textarea id="punchReason" rows="3" required
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  data-translate-placeholder="requests.explain_missing_punch"
+                                  placeholder="Explain why this punch is missing..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Dynamic Fields for Leave Request -->
+                <div id="leaveRequestFields" class="form-section dynamic-fields">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4" data-translate="requests.leave_request_details">Leave Request Details</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="leaveType" class="block text-sm font-medium text-gray-700 mb-2" data-translate="requests.leave_type">
+                                Leave Type *
+                            </label>
+                            <select id="leaveType" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="" data-translate="requests.select_type">Select Type</option>
+                                <option value="annual" data-translate="requests.annual_leave">Annual Leave</option>
+                                <option value="sick" data-translate="requests.sick_leave">Sick Leave</option>
+                                <option value="personal" data-translate="requests.personal_leave">Personal Leave</option>
+                                <option value="maternity" data-translate="requests.maternity_leave">Maternity Leave</option>
+                                <option value="emergency" data-translate="requests.emergency_leave">Emergency Leave</option>
+                                <option value="other" data-translate="requests.other">Other</option>
+                            </select>
+                        </div>
+                        <div id="otherLeaveTypeContainer" style="display: none;">
+                            <label for="otherLeaveType" class="block text-sm font-medium text-gray-700 mb-2" data-translate="requests.specify_leave_type">
+                                Specify Leave Type *
+                            </label>
+                            <input type="text" id="otherLeaveType"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   data-translate-placeholder="requests.specify_leave_type"
+                                   placeholder="Specify the leave type">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label for="leaveReason" class="block text-sm font-medium text-gray-700 mb-2" data-translate="requests.reason">
+                            Reason *
+                        </label>
+                        <textarea id="leaveReason" rows="3" required
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  data-translate-placeholder="requests.explain_leave_reason"
+                                  placeholder="Explain the reason for leave..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Dynamic Fields for Holiday Assignment -->
+                <div id="holidayAssignmentFields" class="form-section dynamic-fields">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4" data-translate="requests.holiday_assignment_details">Holiday Assignment Details</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="holidayName" class="block text-sm font-medium text-gray-700 mb-2" data-translate="requests.holiday_name">
+                                Holiday Name *
+                            </label>
+                            <input type="text" id="holidayName" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   data-translate-placeholder="requests.holiday_name"
+                                   placeholder="e.g., Christmas Day, New Year">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label for="holidayReason" class="block text-sm font-medium text-gray-700 mb-2" data-translate="requests.reason">
+                            Reason *
+                        </label>
+                        <textarea id="holidayReason" rows="3" required
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  data-translate-placeholder="requests.explain_holiday_reason"
+                                  placeholder="Explain why this should be treated as a holiday..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Dynamic Fields for Extra Hours (Overtime) -->
+                <div id="extraHoursFields" class="form-section dynamic-fields">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4" data-translate="requests.extra_hours_details">Extra Hours Details</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="overtimeHours" class="block text-sm font-medium text-gray-700 mb-2" data-translate="requests.hours_worked">
+                                Hours Worked *
+                            </label>
+                            <input type="number" id="overtimeHours" min="0.5" max="12" step="0.25" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="e.g., 2.5">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label for="overtimeDescription" class="block text-sm font-medium text-gray-700 mb-2" data-translate="requests.description">
+                            Description *
+                        </label>
+                        <textarea id="overtimeDescription" rows="3" required
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  data-translate-placeholder="requests.describe_extra_hours"
+                                  placeholder="Describe the extra hours (tasks, reason, times)"></textarea>
+                    </div>
+                </div>
+
+                <!-- Attachment (visible only for certain types) -->
+                <div id="attachmentSection" class="form-section">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4" data-translate="requests.justification_attachment">Justification Attachment</h3>
+                    <div>
+                        <label for="justificationFile" class="block text-sm font-medium text-gray-700 mb-2" data-translate="requests.upload_file">Upload file (image, PDF, Word) - optional, max 10MB</label>
+                        <input type="file" id="justificationFile" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <!-- General Reason -->
+                <div class="form-section">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4" data-translate="requests.additional_information">Additional Information</h3>
+                    <div>
+                        <label for="generalReason" class="block text-sm font-medium text-gray-700 mb-2" data-translate="requests.general_reason">
+                            General Reason/Comments
+                        </label>
+                        <textarea id="generalReason" rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  data-translate-placeholder="requests.additional_comments"
+                                  placeholder="Any additional comments or information..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    <div class="flex">
+                        <i class="fas fa-exclamation-circle mr-2 mt-0.5"></i>
+                        <span id="errorText"></span>
+                    </div>
+                </div>
+
+                <div id="successMessage" class="hidden bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+                    <div class="flex">
+                        <i class="fas fa-check-circle mr-2 mt-0.5"></i>
+                        <span id="successText" data-translate="requests.submitted_successfully">Exception request submitted successfully!</span>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div id="loadingSpinner" class="hidden text-center">
+                    <i class="fas fa-spinner fa-spin text-blue-600 text-xl"></i>
+                    <span class="ml-2 text-gray-600" data-translate="requests.submitting_exception">Submitting exception request...</span>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end space-x-4">
+                    <a href="exceptions.html" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        <span data-translate="common.back">Back</span>
+                    </a>
+                    <button type="submit" id="submitButton"
+                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        <span data-translate="requests.create_request">Submit Request</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tab: My History -->
+        <div id="tab-history" class="bg-white rounded-lg shadow hidden">
+            <div class="p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900" data-translate="requests.my_submitted_exceptions">My Submitted Exceptions</h3>
+                    <div class="space-x-2">
+                        <button type="button" class="hist-filter px-3 py-1 text-sm rounded border" data-status="all" data-translate="requests.all">All</button>
+                        <button type="button" class="hist-filter px-3 py-1 text-sm rounded border" data-status="Pending" data-translate="requests.pending">Pending</button>
+                        <button type="button" class="hist-filter px-3 py-1 text-sm rounded border" data-status="Approved" data-translate="requests.approved">Approved</button>
+                        <button type="button" class="hist-filter px-3 py-1 text-sm rounded border" data-status="Rejected" data-translate="requests.rejected">Rejected</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="requests.date">Date</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="requests.type">Type</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="requests.status">Status</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="requests.reason">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTbody" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+                <div id="historyEmpty" class="hidden text-gray-500 text-sm" data-translate="requests.no_items_display">No items to display.</div>
+            </div>
+        </div>
+
+        <!-- Tab: Pending Extra Hours (overtime requests + substitution invitations) -->
+        <div id="tab-extra" class="bg-white rounded-lg shadow hidden">
+            <div class="p-6 space-y-6">
+                <!-- Section 1: My Overtime Requests -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-medium text-gray-900" data-translate="requests.my_extra_hours_requests">My Extra Hours Requests</h3>
+                        <div class="space-x-2">
+                            <button type="button" class="overtime-filter px-3 py-1 text-sm rounded border" data-status="all" data-translate="requests.all">All</button>
+                            <button type="button" class="overtime-filter px-3 py-1 text-sm rounded border" data-status="Pending" data-translate="requests.pending">Pending</button>
+                            <button type="button" class="overtime-filter px-3 py-1 text-sm rounded border" data-status="Approved" data-translate="requests.approved">Approved</button>
+                            <button type="button" class="overtime-filter px-3 py-1 text-sm rounded border" data-status="Declined" data-translate="requests.declined">Declined</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="requests.date">Date</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="requests.hours">Hours</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="requests.description">Description</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="requests.status">Status</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="requests.action">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="overtimeTbody" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                    <div id="overtimeEmpty" class="hidden text-gray-500 text-sm" data-translate="requests.no_overtime_found">No overtime requests found.</div>
+                </div>
+
+                <!-- Divider -->
+                <hr class="border-gray-300">
+
+                <!-- Section 2: Substitution Invitations (Extra Hours Opportunities) -->
+                <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-medium text-gray-900">
+                            <i class="fas fa-user-clock mr-2"></i>
+                            <span data-translate="requests.substitution_invitations">Substitution Invitations (Extra Hours Opportunities)</span>
+                        </h3>
+                    <div class="space-x-2">
+                        <button type="button" class="inv-filter px-3 py-1 text-sm rounded border" data-status="pending" data-translate="requests.pending">Pending</button>
+                        <button type="button" class="inv-filter px-3 py-1 text-sm rounded border" data-status="accepted" data-translate="requests.accepted">Accepted</button>
+                        <button type="button" class="inv-filter px-3 py-1 text-sm rounded border" data-status="dropped" data-translate="requests.dropped">Dropped</button>
+                        <button type="button" class="inv-filter px-3 py-1 text-sm rounded border" data-status="taught" data-translate="requests.taught">Taught</button>
+                        <button type="button" id="refreshInvitationsBtn" class="px-3 py-1 text-sm rounded border bg-blue-100 text-blue-700 hover:bg-blue-200" data-translate="requests.refresh" data-translate-title="requests.refresh" title="Refresh">
+                            <i class="fas fa-sync-alt mr-1"></i><span data-translate="requests.refresh">Refresh</span>
+                        </button>
+                        </div>
+                    </div>
+                    <div id="invitationsList" class="space-y-3"></div>
+                    <div id="invitationsEmpty" class="hidden text-gray-500 text-sm" data-translate="requests.no_invitations_available">No invitations available.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Sent Invitations Management -->
+        <div id="tab-invitations" class="bg-white rounded-lg shadow hidden" style="display: none;">
+            <div class="p-6 space-y-6">
+                <!-- Header with filters -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900" data-translate="requests.sent_invitations_management">Sent Invitations Management</h3>
+                        <p class="text-sm text-gray-600" data-translate="requests.manage_invitations">Manage all substitution invitations sent to teachers</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <!-- Status Filter -->
+                        <select id="invitationStatusFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="" data-translate="common.all_status">All Status</option>
+                            <option value="pending" data-translate="requests.pending">Pending</option>
+                            <option value="accepted" data-translate="requests.accepted">Accepted</option>
+                            <option value="taught" data-translate="requests.taught">Taught</option>
+                            <option value="denied" data-translate="requests.rejected">Denied</option>
+                            <option value="dropped" data-translate="requests.dropped">Dropped</option>
+                        </select>
+                        <!-- Date Filter -->
+                        <input type="date" id="invitationDateFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" data-translate-placeholder="common.filter_by_date" placeholder="Filter by date">
+                        <!-- Teacher Filter -->
+                        <select id="invitationTeacherFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="" data-translate="common.all_teachers">All Teachers</option>
+                        </select>
+                        <!-- Refresh Button -->
+                        <button id="refreshInvitations" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <i class="fas fa-sync-alt mr-1"></i> <span data-translate="requests.refresh">Refresh</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-clock text-blue-600 text-xl"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-blue-600" data-translate="requests.pending">Pending</p>
+                                <p class="text-2xl font-bold text-blue-900" id="pendingCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-check text-green-600 text-xl"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-green-600" data-translate="requests.accepted">Accepted</p>
+                                <p class="text-2xl font-bold text-green-900" id="acceptedCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-graduation-cap text-gray-600 text-xl"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-600" data-translate="requests.taught">Taught</p>
+                                <p class="text-2xl font-bold text-gray-900" id="taughtCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-times text-red-600 text-xl"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-red-600" data-translate="requests.rejected">Denied</p>
+                                <p class="text-2xl font-bold text-red-900" id="deniedCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invitations Table -->
+                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Absent Teacher</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level & Grade</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invited Teachers</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invitationsTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Table rows will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="invitationsTableEmpty" class="hidden text-center py-8 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-2"></i>
+                        <p>No invitations found</p>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div id="invitationsPagination" class="flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        Showing <span id="invitationsStart">0</span> to <span id="invitationsEnd">0</span> of <span id="invitationsTotal">0</span> invitations
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="prevPage" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-left mr-1"></i> Previous
+                        </button>
+                        <button id="nextPage" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Next <i class="fas fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="../assets/js/translations.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../components/api.js"></script>
+    <script>
+        // Wait for translations to be fully loaded
+        function waitForTranslations(callback, maxAttempts = 20) {
+            let attempts = 0;
+            const checkTranslations = setInterval(function() {
+                attempts++;
+                if (typeof window.translations !== 'undefined' && 
+                    typeof window.updatePageTranslations === 'function' &&
+                    typeof window.setLanguage === 'function') {
+                    clearInterval(checkTranslations);
+                    console.log('[submit-exception] Translations loaded after', attempts, 'attempts');
+                    callback();
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(checkTranslations);
+                    console.warn('[submit-exception] Translations not loaded after', maxAttempts, 'attempts, proceeding anyway');
+                    callback();
+                }
+            }, 50);
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!requireAuth()) return;
+            
+            // Ensure user role is in localStorage for sidebar initialization
+            const user = authManager.getUser();
+            if (user && user.role) {
+                localStorage.setItem('userRole', user.role);
+            }
+            
+            // Re-initialize sidebar if it wasn't created (main.js might have loaded before auth was ready)
+            setTimeout(() => {
+                if (!document.getElementById('collapsibleSidebar')) {
+                    // Try to call initializeCollapsibleSidebar if available
+                    if (typeof window.initializeCollapsibleSidebar === 'function') {
+                        window.initializeCollapsibleSidebar();
+                    } else if (typeof initializeCollapsibleSidebar === 'function') {
+                        initializeCollapsibleSidebar();
+                    }
+                    
+                    // Set up navigation handlers
+                    if (document.getElementById('collapsibleSidebar')) {
+                        if (typeof window.handleSidebarNavigation === 'function') {
+                            window.handleSidebarNavigation();
+                        } else if (typeof handleSidebarNavigation === 'function') {
+                            handleSidebarNavigation();
+                        }
+                    }
+                }
+            }, 100);
+            
+            // Wait for translations to be available before initializing
+            waitForTranslations(function() {
+                // Language selector - MUST be initialized before any translation calls
+                const languageSelector = document.getElementById('languageSelector');
+                let savedLanguage = localStorage.getItem('language') || localStorage.getItem('lang') || 'en';
+                
+                console.log('[submit-exception] Initializing with savedLanguage:', savedLanguage);
+                console.log('[submit-exception] Translations available:', {
+                    translations: typeof window.translations !== 'undefined',
+                    setLanguage: typeof window.setLanguage === 'function',
+                    updatePageTranslations: typeof window.updatePageTranslations === 'function',
+                    currentLanguage: window.currentLanguage
+                });
+                
+                if (languageSelector) {
+                    languageSelector.value = savedLanguage;
+                    
+                    // CRITICAL: Set language immediately and synchronously
+                    if (typeof window.setLanguage === 'function') {
+                        window.setLanguage(savedLanguage);
+                    }
+                    
+                    languageSelector.addEventListener('change', function() {
+                        const newLang = this.value;
+                        console.log('[submit-exception] Language changed to:', newLang);
+                        if (typeof window.setLanguage === 'function') {
+                            window.setLanguage(newLang);
+                        }
+                        // Force update translations immediately
+                        setTimeout(function() {
+                            if (typeof window.updatePageTranslations === 'function') {
+                                window.updatePageTranslations();
+                            }
+                        }, 50);
+                    });
+                }
+                
+                // Initialize translations with multiple attempts to ensure they load
+                function applyTranslationsNow() {
+                    // Get current language from multiple sources
+                    let currentLang = window.currentLanguage || 
+                                     localStorage.getItem('language') || 
+                                     localStorage.getItem('lang') || 
+                                     savedLanguage || 'en';
+                    
+                    console.log('[submit-exception] Applying translations, currentLanguage:', currentLang, {
+                        windowCurrentLanguage: window.currentLanguage,
+                        localStorageLanguage: localStorage.getItem('language'),
+                        localStorageLang: localStorage.getItem('lang'),
+                        savedLanguage: savedLanguage
+                    });
+                    
+                    // CRITICAL: Force set language before applying translations
+                    if (typeof window.setLanguage === 'function') {
+                        window.setLanguage(currentLang);
+                        // Wait a tiny bit for setLanguage to complete
+                        setTimeout(function() {
+                            // Apply translations
+                            if (typeof window.updatePageTranslations === 'function') {
+                                console.log('[submit-exception] Calling window.updatePageTranslations after setLanguage');
+                                window.updatePageTranslations();
+                                
+                                // Double-check specific elements
+                                const testElements = document.querySelectorAll('[data-translate="requests.justification_attachment"], [data-translate="requests.upload_file"], [data-translate="requests.additional_information"]');
+                                console.log('[submit-exception] Found', testElements.length, 'test elements');
+                                testElements.forEach(el => {
+                                    const key = el.getAttribute('data-translate');
+                                    const translated = typeof window.translate === 'function' ? window.translate(key) : key;
+                                    console.log('[submit-exception] Element', key, 'should be:', translated, 'current text:', el.textContent);
+                                });
+                            } else {
+                                console.error('[submit-exception] updatePageTranslations is not available!');
+                            }
+                        }, 10);
+                    } else {
+                        console.error('[submit-exception] setLanguage is not available!');
+                    }
+                }
+                
+                // Try immediately
+                applyTranslationsNow();
+                
+                // Try again after short delay
+                setTimeout(applyTranslationsNow, 100);
+                
+                // Try again after longer delay (for async loading)
+                setTimeout(applyTranslationsNow, 500);
+                
+                // Listen for language changes
+                document.addEventListener('languageChanged', function(e) {
+                    console.log('[submit-exception] languageChanged event received:', e.detail);
+                    setTimeout(applyTranslationsNow, 50);
+                    // Re-render dynamic content
+                    const currentTab = document.querySelector('.tab-btn.border-blue-500');
+                    if (currentTab) {
+                        const tabName = currentTab.getAttribute('data-tab');
+                        if (tabName === 'history') {
+                            const currentFilter = document.querySelector('.hist-filter.active');
+                            if (currentFilter) {
+                                loadHistory(currentFilter.getAttribute('data-status'));
+                            } else {
+                                loadHistory('all');
+                            }
+                        } else if (tabName === 'extra') {
+                            const currentOvertimeFilter = document.querySelector('.overtime-filter.active');
+                            if (currentOvertimeFilter) {
+                                loadOvertimeRequests(currentOvertimeFilter.getAttribute('data-status'));
+                            } else {
+                                loadOvertimeRequests('all');
+                            }
+                            const currentInvFilter = document.querySelector('.inv-filter.active');
+                            if (currentInvFilter) {
+                                loadInvitations(currentInvFilter.getAttribute('data-status'));
+                            } else {
+                                loadInvitations('pending');
+                            }
+                        }
+                    }
+                });
+                
+                initializePage();
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+            });
+        });
+
+        async function initializePage() {
+            setupTabs();
+            setupEventListeners();
+            fillCurrentUser();
+            // Default loads
+            await loadHistory('all');
+            await loadOvertimeRequests('all');
+            await loadInvitations('pending');
+            
+            // Auto-refresh invitations every 30 seconds to catch updates from other teachers
+            // Only refresh if user is on the extra hours tab and viewing invitations
+            setInterval(async () => {
+                const extraTab = document.getElementById('tab-extra');
+                const isExtraTabVisible = extraTab && !extraTab.classList.contains('hidden');
+                
+                if (isExtraTabVisible) {
+                    const current = document.querySelector('.inv-filter.active');
+                    if (current) {
+                        console.log('🔄 Auto-refreshing invitations...');
+                        await loadInvitations(current.getAttribute('data-status'));
+                    }
+                }
+            }, 30000); // 30 seconds
+        }
+
+        function fillCurrentUser() {
+            const user = authManager.getUser();
+            if (user && user.id && user.firstName && user.lastName) {
+                const select = document.getElementById('employeeSelect');
+                select.innerHTML = '';
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.firstName} ${user.lastName} (${user.id})`;
+                option.selected = true;
+                select.appendChild(option);
+                select.disabled = true;
+            } else {
+                showError('Failed to get current user information');
+            }
+        }
+
+        function setupEventListeners() {
+            // Exception type change
+            document.getElementById('exceptionType').addEventListener('change', handleExceptionTypeChange);
+
+            // Leave type change
+            document.getElementById('leaveType').addEventListener('change', handleLeaveTypeChange);
+
+            // Form submission
+            document.getElementById('exceptionForm').addEventListener('submit', handleFormSubmit);
+            // History filters
+            document.querySelectorAll('.hist-filter').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    await loadHistory(btn.getAttribute('data-status'));
+                });
+            });
+            // Overtime filters
+            document.querySelectorAll('.overtime-filter').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    await loadOvertimeRequests(btn.getAttribute('data-status'));
+                });
+            });
+            // Overtime actions (event delegation)
+            document.getElementById('overtimeTbody').addEventListener('click', async (e) => {
+                const action = e.target && e.target.getAttribute('data-action');
+                const id = e.target && e.target.getAttribute('data-id');
+                if (!action || !id) return;
+                
+                if (action === 'delete') {
+                    // Translate confirm message
+                    const t = (key, fallback) => {
+                        if (typeof translate === 'function') {
+                            const result = translate(key);
+                            return (result && result !== key) ? result : fallback;
+                        }
+                        return fallback;
+                    };
+                    const confirmMsg = t('message.confirm_delete_overtime', 'Are you sure you want to delete this overtime request?');
+                    if (!confirm(confirmMsg)) return;
+                    try {
+                        await API.deleteOvertimeRequest(id);
+                        // Refresh the current filter view
+                        const current = document.querySelector('.overtime-filter.active');
+                        await loadOvertimeRequests(current ? current.getAttribute('data-status') : 'all');
+                    } catch (err) {
+                        showError(err.message || 'Failed to delete overtime request');
+                    }
+                }
+            });
+            // Invitation filters
+            document.querySelectorAll('.inv-filter').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    await loadInvitations(btn.getAttribute('data-status'));
+                });
+            });
+            
+            // Manual refresh button
+            document.getElementById('refreshInvitationsBtn').addEventListener('click', async () => {
+                const current = document.querySelector('.inv-filter.active');
+                const status = current ? current.getAttribute('data-status') : 'pending';
+                await loadInvitations(status, true); // Show loading indicator
+            });
+            // Invitation actions (event delegation)
+            document.getElementById('invitationsList').addEventListener('click', async (e) => {
+                const action = e.target && e.target.getAttribute('data-action');
+                const id = e.target && e.target.getAttribute('data-id');
+                if (!action || !id) return;
+                try {
+                    await respondInvitation(id, action);
+                    
+                    // For drop action, refresh both pending and accepted to show reactivated invitations
+                    if (action === 'drop') {
+                        await loadInvitations('pending');
+                        await loadInvitations('accepted');
+                    } else {
+                        // For other actions, just refresh current filter
+                        const current = document.querySelector('.inv-filter.active');
+                        await loadInvitations(current ? current.getAttribute('data-status') : 'pending');
+                    }
+                } catch (err) {
+                    showError(err.message || 'Failed to update invitation');
+                }
+            });
+        }
+
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const panes = {
+                submit: document.getElementById('tab-submit'),
+                history: document.getElementById('tab-history'),
+                extra: document.getElementById('tab-extra'),
+                invitations: document.getElementById('tab-invitations')
+            };
+            function activate(name) {
+                tabs.forEach(t => {
+                    const isActive = t.getAttribute('data-tab') === name;
+                    t.classList.toggle('border-blue-500', isActive);
+                    t.classList.toggle('text-blue-600', isActive);
+                    t.classList.toggle('text-gray-500', !isActive);
+                    t.classList.toggle('border-transparent', !isActive);
+                    if (isActive && name === 'history') loadHistory('all');
+                    if (isActive && name === 'extra') {
+                        loadOvertimeRequests('all');
+                        loadInvitations('pending');
+                    }
+                    if (isActive && name === 'invitations') {
+                        loadAllInvitations();
+                    }
+                });
+                Object.keys(panes).forEach(k => panes[k].classList.toggle('hidden', k !== name));
+            }
+            tabs.forEach(t => t.addEventListener('click', () => activate(t.getAttribute('data-tab'))));
+            activate('submit');
+        }
+
+        async function loadHistory(status) {
+            try {
+                const items = await API.getMyExceptions(status || 'all');
+                renderHistory(Array.isArray(items) ? items : (items.data || []));
+            } catch (e) {
+                console.error('History load error', e);
+                renderHistory([]);
+            }
+        }
+
+        function renderHistory(rows) {
+            // Helper function to translate with fallback
+            const t = (key, fallback) => {
+                if (typeof translate === 'function') {
+                    const result = translate(key);
+                    return (result && result !== key) ? result : fallback;
+                }
+                return fallback;
+            };
+
+            const tbody = document.getElementById('historyTbody');
+            const empty = document.getElementById('historyEmpty');
+            tbody.innerHTML = '';
+            if (!rows || rows.length === 0) {
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            rows.forEach(r => {
+                const tr = document.createElement('tr');
+                // Translate status
+                const statusKey = `requests.${r.status.toLowerCase()}`;
+                const statusText = t(statusKey, r.status);
+                const statusBadge = `<span class="px-2 py-0.5 rounded text-xs ${badgeClass(r.status)}">${statusText}</span>`;
+                
+                // Translate type
+                const typeMap = {
+                    'MissingPunchFix': 'requests.missing_punch_fix',
+                    'LeaveRequest': 'requests.leave_request',
+                    'HolidayAssignment': 'requests.holiday_assignment',
+                    'ExtraHours': 'requests.extra_hours'
+                };
+                const typeKey = typeMap[r.type] || r.type;
+                const typeText = t(typeKey, r.type);
+                
+                tr.innerHTML = `
+                    <td class="px-4 py-2 text-sm text-gray-700">${escapeHtml(r.date)}${r.end_date ? ' → ' + escapeHtml(r.end_date) : ''}</td>
+                    <td class="px-4 py-2 text-sm text-gray-700">${typeText}</td>
+                    <td class="px-4 py-2 text-sm">${statusBadge}</td>
+                    <td class="px-4 py-2 text-sm text-gray-700 truncate max-w-xs">${escapeHtml(r.reason || (r.payload && (r.payload.reason || r.payload.description)) || '')}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function loadOvertimeRequests(status) {
+            try {
+                document.querySelectorAll('.overtime-filter').forEach(b => {
+                    b.classList.toggle('active', b.getAttribute('data-status') === status);
+                    b.classList.toggle('bg-blue-600', b.getAttribute('data-status') === status);
+                    b.classList.toggle('text-white', b.getAttribute('data-status') === status);
+                });
+                const result = await API.getMyOvertimeRequests(50);
+                const requests = result.requests || result.data || result || [];
+                
+                // Filter by status if not 'all'
+                let filtered = requests;
+                if (status && status !== 'all') {
+                    filtered = requests.filter(r => r.status === status);
+                }
+                
+                renderOvertimeRequests(filtered);
+            } catch (e) {
+                console.error('Overtime requests load error', e);
+                renderOvertimeRequests([]);
+            }
+        }
+
+        function renderOvertimeRequests(requests) {
+            // Helper function to translate with fallback
+            const t = (key, fallback) => {
+                if (typeof translate === 'function') {
+                    const result = translate(key);
+                    return (result && result !== key) ? result : fallback;
+                }
+                return fallback;
+            };
+
+            const tbody = document.getElementById('overtimeTbody');
+            const empty = document.getElementById('overtimeEmpty');
+            tbody.innerHTML = '';
+            
+            if (!requests || requests.length === 0) {
+                empty.classList.remove('hidden');
+                tbody.parentElement.style.display = 'none';
+                return;
+            }
+            
+            empty.classList.add('hidden');
+            tbody.parentElement.style.display = '';
+            
+            requests.forEach(req => {
+                const tr = document.createElement('tr');
+                // Translate status
+                const statusKey = `requests.${req.status.toLowerCase()}`;
+                const statusText = t(statusKey, req.status);
+                const statusBadge = `<span class="px-2 py-0.5 rounded text-xs ${badgeClass(req.status)}">${statusText}</span>`;
+                const deleteBtn = (req.status === 'Pending') 
+                    ? `<button class="text-red-600 hover:text-red-800 text-sm" data-action="delete" data-id="${req.id}"><i class="fas fa-trash"></i></button>`
+                    : '';
+                
+                tr.innerHTML = `
+                    <td class="px-4 py-2 text-sm text-gray-700">${escapeHtml(req.date || '')}</td>
+                    <td class="px-4 py-2 text-sm text-gray-700">${escapeHtml(String(req.requested_hours || 0))}</td>
+                    <td class="px-4 py-2 text-sm text-gray-700 truncate max-w-xs">${escapeHtml(req.description || '')}</td>
+                    <td class="px-4 py-2 text-sm">${statusBadge}</td>
+                    <td class="px-4 py-2 text-sm">${deleteBtn}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function loadInvitations(status, showLoading = false) {
+            try {
+                document.querySelectorAll('.inv-filter').forEach(b => {
+                    b.classList.toggle('active', b.getAttribute('data-status') === status);
+                    b.classList.toggle('bg-blue-600', b.getAttribute('data-status') === status);
+                    b.classList.toggle('text-white', b.getAttribute('data-status') === status);
+                });
+                
+                // Helper function to translate with fallback
+                const t = (key, fallback) => {
+                    if (typeof translate === 'function') {
+                        const result = translate(key);
+                        return (result && result !== key) ? result : fallback;
+                    }
+                    return fallback;
+                };
+
+                // Show loading indicator if requested
+                if (showLoading) {
+                    const refreshBtn = document.getElementById('refreshInvitationsBtn');
+                    if (refreshBtn) {
+                        const refreshingText = t('common.refreshing', 'Refreshing...');
+                        refreshBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>${refreshingText}`;
+                        refreshBtn.disabled = true;
+                    }
+                }
+                
+                const items = await API.getMyInvitations(status || 'pending');
+                const invitationList = Array.isArray(items) ? items : (items.data || []);
+                
+                // Check for new invitations (only for pending status)
+                if (status === 'pending' && lastInvitationCount > 0 && invitationList.length > lastInvitationCount) {
+                    const newCount = invitationList.length - lastInvitationCount;
+                    showNotification(`🎉 ${newCount} new invitation(s) available!`, 'success');
+                }
+                
+                // Update count for next comparison
+                if (status === 'pending') {
+                    lastInvitationCount = invitationList.length;
+                }
+                
+                renderInvitations(invitationList, status);
+                
+                // Reset refresh button
+                if (showLoading) {
+                    const refreshBtn = document.getElementById('refreshInvitationsBtn');
+                    if (refreshBtn) {
+                        const refreshText = t('requests.refresh', 'Refresh');
+                        refreshBtn.innerHTML = `<i class="fas fa-sync-alt mr-1"></i>${refreshText}`;
+                        refreshBtn.disabled = false;
+                    }
+                }
+            } catch (e) {
+                console.error('Invitations load error', e);
+                renderInvitations([], status);
+                
+                // Reset refresh button on error
+                const refreshBtn = document.getElementById('refreshInvitationsBtn');
+                if (refreshBtn) {
+                    const refreshText = t('requests.refresh', 'Refresh');
+                    refreshBtn.innerHTML = `<i class="fas fa-sync-alt mr-1"></i>${refreshText}`;
+                    refreshBtn.disabled = false;
+                }
+            }
+        }
+
+        function renderInvitations(list, status) {
+            // Helper function to translate with fallback
+            const t = (key, fallback) => {
+                if (typeof translate === 'function') {
+                    const result = translate(key);
+                    return (result && result !== key) ? result : fallback;
+                }
+                return fallback;
+            };
+
+            const container = document.getElementById('invitationsList');
+            const empty = document.getElementById('invitationsEmpty');
+            container.innerHTML = '';
+            if (!list || list.length === 0) {
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            
+            list.forEach(inv => {
+                const row = document.createElement('div');
+                const invStatus = (inv.status || 'pending').toLowerCase();
+                
+                // Style based on status
+                let bgClass = 'bg-blue-50';
+                let borderClass = 'border-blue-200';
+                let opacityClass = '';
+                if (invStatus === 'accepted') {
+                    bgClass = 'bg-green-50';
+                    borderClass = 'border-green-300';
+                } else if (invStatus === 'taught') {
+                    bgClass = 'bg-gray-100';
+                    borderClass = 'border-gray-300';
+                } else if (invStatus === 'denied') {
+                    bgClass = 'bg-red-50';
+                    borderClass = 'border-red-200';
+                } else if (invStatus === 'disabled') {
+                    bgClass = 'bg-gray-100';
+                    borderClass = 'border-gray-300';
+                    opacityClass = 'opacity-60';
+                }
+                
+                row.className = `flex items-center justify-between p-4 border-2 ${borderClass} ${bgClass} ${opacityClass} rounded-lg transition-colors`;
+                
+                const time = `${escapeHtml(inv.date)} ${escapeHtml((inv.start_time || '').toString().slice(0,5))} - ${escapeHtml((inv.end_time || '').toString().slice(0,5))}`;
+                const minutes = parseInt(inv.minutes || 0, 10);
+                const hours = (minutes / 60).toFixed(2);
+                
+                const left = document.createElement('div');
+                const durationText = t('common.duration', 'Duration');
+                const hoursText = t('time.hours', 'hours');
+                const minutesText = t('time.minutes', 'minutes');
+                const gradeText = t('common.grade', 'Grade');
+                const noLevelText = t('common.no_level_info', 'No level info');
+                left.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-calendar-plus text-blue-600 text-lg"></i>
+                        <div>
+                            <div class="text-sm font-semibold text-gray-900">${time}</div>
+                            <div class="text-xs text-gray-600">
+                                <i class="fas fa-clock mr-1"></i>${durationText}: ${hours} ${hoursText} (${minutes} ${minutesText})
+                                ${inv.grade_level ? `<span class="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">${gradeText} ${inv.grade_level}</span>` : ''}
+                                ${inv.education_level ? `<span class="ml-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">${inv.education_level}</span>` : ''}
+                                ${!inv.grade_level && !inv.education_level ? `<span class="ml-2 px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">${noLevelText}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                const right = document.createElement('div');
+                right.className = 'flex items-center space-x-2';
+                
+                // Show actions based on status and filter
+                if (invStatus === 'pending') {
+                    const acceptText = t('common.accept', 'Accept');
+                    const denyText = t('common.deny', 'Deny');
+                    right.innerHTML = `
+                        <button class="px-4 py-2 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors shadow-sm" data-action="accept" data-id="${inv.id}">
+                            <i class="fas fa-check mr-1"></i>${acceptText}
+                        </button>
+                        <button class="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm" data-action="deny" data-id="${inv.id}">
+                            <i class="fas fa-times mr-1"></i>${denyText}
+                        </button>
+                    `;
+                } else if (invStatus === 'accepted') {
+                    const youAcceptedText = t('requests.you_accepted', 'You Accepted');
+                    const dropText = t('requests.drop', 'Drop');
+                    const markTaughtText = t('requests.mark_taught', 'Mark Taught');
+                    right.innerHTML = `
+                        <span class="px-3 py-1.5 text-xs rounded-full bg-green-200 text-green-800 font-semibold border border-green-400">
+                            <i class="fas fa-check-circle mr-1"></i>${youAcceptedText}
+                        </span>
+                        <button class="px-4 py-2 text-sm font-medium rounded-lg bg-yellow-600 text-white hover:bg-yellow-700 transition-colors shadow-sm" data-action="drop" data-id="${inv.id}">
+                            <i class="fas fa-ban mr-1"></i>${dropText}
+                        </button>
+                        <button class="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm" data-action="taught" data-id="${inv.id}">
+                            <i class="fas fa-check-double mr-1"></i>${markTaughtText}
+                        </button>
+                    `;
+                } else if (invStatus === 'taught') {
+                    const taughtText = t('requests.taught', 'Taught');
+                    const addedText = t('requests.added_to_overtime', 'added to overtime');
+                    right.innerHTML = `
+                        <span class="px-3 py-1.5 text-xs rounded-full bg-blue-200 text-blue-800 font-semibold border border-blue-400">
+                            <i class="fas fa-graduation-cap mr-1"></i>${taughtText} (${hours}h ${addedText})
+                        </span>
+                    `;
+                } else if (invStatus === 'denied') {
+                    const deniedText = t('requests.rejected', 'Denied');
+                    right.innerHTML = `<span class="px-3 py-1 text-xs rounded-full bg-red-200 text-red-700 font-medium">${deniedText}</span>`;
+                } else if (invStatus === 'dropped') {
+                    const droppedText = t('requests.dropped', 'Dropped');
+                    right.innerHTML = `
+                        <span class="px-3 py-1 text-xs rounded-full bg-orange-200 text-orange-700 font-medium">
+                            <i class="fas fa-ban mr-1"></i>${droppedText}
+                        </span>
+                    `;
+                } else if (invStatus === 'disabled') {
+                    const slotTakenText = t('requests.slot_taken', 'Slot Taken');
+                    right.innerHTML = `
+                        <span class="px-3 py-1 text-xs rounded-full bg-gray-200 text-gray-700 font-medium">
+                            <i class="fas fa-lock mr-1"></i>${slotTakenText}
+                        </span>
+                    `;
+                } else {
+                    right.innerHTML = `<span class="px-3 py-1 text-xs rounded-full bg-gray-200 text-gray-700 font-medium">${escapeHtml(inv.status)}</span>`;
+                }
+                
+                row.appendChild(left);
+                row.appendChild(right);
+                container.appendChild(row);
+            });
+        }
+
+        async function respondInvitation(id, action) {
+            return await API.respondToInvitation(id, action);
+        }
+
+        function badgeClass(status) {
+            const s = (status || '').toLowerCase();
+            if (s === 'approved') return 'bg-green-100 text-green-700';
+            if (s === 'pending') return 'bg-yellow-100 text-yellow-700';
+            if (s === 'rejected' || s === 'declined') return 'bg-red-100 text-red-700';
+            return 'bg-gray-100 text-gray-700';
+        }
+
+        function escapeHtml(str) {
+            const t = document.createElement('textarea');
+            t.textContent = str == null ? '' : String(str);
+            return t.innerHTML;
+        }
+
+        function handleExceptionTypeChange() {
+            const exceptionType = this.value;
+            const endDateContainer = document.getElementById('endDateContainer');
+            const attachmentSection = document.getElementById('attachmentSection');
+
+            // Hide all dynamic fields and remove required attributes
+            document.querySelectorAll('.dynamic-fields').forEach(field => {
+                field.classList.remove('show');
+                // Remove required from all inputs in hidden fields
+                field.querySelectorAll('input[required], select[required], textarea[required]').forEach(element => {
+                    element.required = false;
+                });
+            });
+
+            // Show end date for multi-day exceptions
+            if (exceptionType === 'LeaveRequest' || exceptionType === 'HolidayAssignment') {
+                endDateContainer.style.display = 'block';
+            } else {
+                endDateContainer.style.display = 'none';
+            }
+
+            // Show attachment only for LeaveRequest and HolidayAssignment
+            if (exceptionType === 'LeaveRequest' || exceptionType === 'HolidayAssignment') {
+                attachmentSection.style.display = '';
+            } else {
+                attachmentSection.style.display = 'none';
+                const fileInput = document.getElementById('justificationFile');
+                if (fileInput) fileInput.value = '';
+            }
+
+            // Show relevant dynamic fields and add required attributes
+            if (exceptionType === 'MissingPunchFix') {
+                const field = document.getElementById('missingPunchFields');
+                field.classList.add('show');
+                // Add required to visible fields
+                field.querySelectorAll('input, select, textarea').forEach(element => {
+                    if (element.id !== 'otherLeaveType') { // Don't make optional fields required
+                        element.required = true;
+                    }
+                });
+            } else if (exceptionType === 'LeaveRequest') {
+                const field = document.getElementById('leaveRequestFields');
+                field.classList.add('show');
+                // Add required to visible fields
+                field.querySelectorAll('input, select, textarea').forEach(element => {
+                    if (element.id !== 'otherLeaveType') { // Don't make optional fields required
+                        element.required = true;
+                    }
+                });
+            } else if (exceptionType === 'HolidayAssignment') {
+                const field = document.getElementById('holidayAssignmentFields');
+                field.classList.add('show');
+                // Add required to visible fields
+                field.querySelectorAll('input, select, textarea').forEach(element => {
+                    element.required = true;
+                });
+            } else if (exceptionType === 'ExtraHours') {
+                const field = document.getElementById('extraHoursFields');
+                field.classList.add('show');
+                field.querySelectorAll('input, select, textarea').forEach(element => {
+                    element.required = true;
+                });
+            }
+        }
+
+        function handleLeaveTypeChange() {
+            const leaveType = this.value;
+            const otherContainer = document.getElementById('otherLeaveTypeContainer');
+
+            if (leaveType === 'other') {
+                otherContainer.style.display = 'block';
+                document.getElementById('otherLeaveType').required = true;
+            } else {
+                otherContainer.style.display = 'none';
+                document.getElementById('otherLeaveType').required = false;
+            }
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const submitButton = document.getElementById('submitButton');
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            const loadingDiv = document.getElementById('loadingSpinner');
+
+            submitButton.disabled = true;
+            errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+            loadingDiv.classList.remove('hidden');
+
+            try {
+                const exceptionType = document.getElementById('exceptionType').value;
+                const date = document.getElementById('exceptionDate').value;
+
+                let result;
+                if (exceptionType === 'ExtraHours') {
+                    // Submit as overtime request instead of an exception
+                    const hours = parseFloat(document.getElementById('overtimeHours').value);
+                    const description = document.getElementById('overtimeDescription').value;
+
+                    if (!date || isNaN(hours) || hours <= 0) {
+                        throw new Error('Please provide a valid date and hours for Extra Hours');
+                    }
+
+                    result = await API.createOvertimeRequest({
+                        date: date,
+                        requested_hours: hours,
+                        description: description
+                    });
+                } else {
+                    const formData = getFormData();
+                    const fileInput = document.getElementById('justificationFile');
+                    const file = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+
+                    result = file
+                        ? await API.createExceptionRequestWithFile(formData, file)
+                        : await API.createExceptionRequest(formData);
+                }
+
+                if (result && (result.success || result.id || result.request)) {
+                    successDiv.classList.remove('hidden');
+                    const successKey = exceptionType === 'ExtraHours' 
+                        ? 'requests.overtime_submitted_successfully' 
+                        : 'requests.submitted_successfully';
+                    const successText = typeof translate === 'function' ? translate(successKey) : (exceptionType === 'ExtraHours' ? 'Overtime request submitted successfully!' : 'Exception request submitted successfully!');
+                    document.getElementById('successText').textContent = successText;
+                    // Reset form after successful submission
+                    setTimeout(() => {
+                        document.getElementById('exceptionForm').reset();
+                        document.querySelectorAll('.dynamic-fields').forEach(field => {
+                            field.classList.remove('show');
+                        });
+                        document.getElementById('endDateContainer').style.display = 'none';
+                        const other = document.getElementById('otherLeaveTypeContainer');
+                        if (other) other.style.display = 'none';
+                    }, 2000);
+                } else {
+                    throw new Error((result && (result.error || result.message)) || 'Failed to submit request');
+                }
+            } catch (error) {
+                console.error('Submit exception error:', error);
+                showError(error.message);
+            } finally {
+                submitButton.disabled = false;
+                loadingDiv.classList.add('hidden');
+            }
+        }
+
+        function getFormData() {
+            const exceptionType = document.getElementById('exceptionType').value;
+            const baseData = {
+                type: exceptionType,
+                date: document.getElementById('exceptionDate').value,
+                end_date: document.getElementById('endDate').value || null,
+                reason: document.getElementById('generalReason').value
+            };
+
+            let payload = {};
+
+            switch (exceptionType) {
+                case 'MissingPunchFix':
+                    payload = {
+                        punch_type: document.getElementById('punchType').value,
+                        time: document.getElementById('punchTime').value,
+                        reason: document.getElementById('punchReason').value
+                    };
+                    break;
+
+                case 'LeaveRequest':
+                    payload = {
+                        leave_type: document.getElementById('leaveType').value,
+                        reason: document.getElementById('leaveReason').value
+                    };
+                    if (document.getElementById('leaveType').value === 'other') {
+                        payload.other_leave_type = document.getElementById('otherLeaveType').value;
+                    }
+                    break;
+
+                case 'HolidayAssignment':
+                    payload = {
+                        holiday_name: document.getElementById('holidayName').value,
+                        reason: document.getElementById('holidayReason').value
+                    };
+                    break;
+                case 'ExtraHours':
+                    // For ExtraHours we submit through a separate endpoint; keep minimal payload for completeness
+                    payload = {
+                        requested_hours: parseFloat(document.getElementById('overtimeHours').value),
+                        description: document.getElementById('overtimeDescription').value
+                    };
+                    break;
+            }
+
+            return {
+                ...baseData,
+                payload: payload
+            };
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').classList.add('hidden');
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white max-w-sm ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 
+                'bg-blue-500'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <span class="mr-2">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+
+        // ============================================================================
+        // INVITATIONS MANAGEMENT FUNCTIONS
+        // ============================================================================
+
+        let allInvitations = [];
+        let filteredInvitations = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let lastInvitationCount = 0;
+
+        async function loadAllInvitations() {
+            try {
+                console.log('Loading all invitations...');
+                const data = await API.getAllInvitations();
+                allInvitations = Array.isArray(data) ? data : (data.data || []);
+                
+                // Load teachers for filter
+                await loadTeachersForFilter();
+                
+                // Apply current filters
+                applyInvitationFilters();
+                
+                // Update statistics
+                updateInvitationStatistics();
+                
+            } catch (error) {
+                console.error('Error loading invitations:', error);
+                showError('Failed to load invitations: ' + error.message);
+                allInvitations = [];
+                renderInvitationsTable([]);
+            }
+        }
+
+        async function loadTeachersForFilter() {
+            try {
+                const response = await fetch('/api/employees', {
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const employees = Array.isArray(data) ? data : (data.data || []);
+                    
+                    const teacherFilter = document.getElementById('invitationTeacherFilter');
+                    teacherFilter.innerHTML = '<option value="">All Teachers</option>';
+                    
+                    employees.forEach(emp => {
+                        if (emp.position_name && emp.position_name.toLowerCase().includes('teacher')) {
+                            const option = document.createElement('option');
+                            option.value = emp.id;
+                            option.textContent = `${emp.first_name} ${emp.last_name}`;
+                            teacherFilter.appendChild(option);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading teachers:', error);
+            }
+        }
+
+        function applyInvitationFilters() {
+            const statusFilter = document.getElementById('invitationStatusFilter').value;
+            const dateFilter = document.getElementById('invitationDateFilter').value;
+            const teacherFilter = document.getElementById('invitationTeacherFilter').value;
+
+            filteredInvitations = allInvitations.filter(invitation => {
+                const statusMatch = !statusFilter || invitation.status === statusFilter;
+                const dateMatch = !dateFilter || invitation.date === dateFilter;
+                const teacherMatch = !teacherFilter || invitation.candidate_employee_id === teacherFilter;
+                
+                return statusMatch && dateMatch && teacherMatch;
+            });
+
+            currentPage = 1;
+            renderInvitationsTable(filteredInvitations);
+            updatePagination();
+        }
+
+        function updateInvitationStatistics() {
+            const stats = {
+                pending: 0,
+                accepted: 0,
+                taught: 0,
+                denied: 0
+            };
+
+            allInvitations.forEach(invitation => {
+                const status = invitation.status || 'pending';
+                if (stats.hasOwnProperty(status)) {
+                    stats[status]++;
+                }
+            });
+
+            document.getElementById('pendingCount').textContent = stats.pending;
+            document.getElementById('acceptedCount').textContent = stats.accepted;
+            document.getElementById('taughtCount').textContent = stats.taught;
+            document.getElementById('deniedCount').textContent = stats.denied;
+        }
+
+        function renderInvitationsTable(invitations) {
+            const tbody = document.getElementById('invitationsTableBody');
+            const empty = document.getElementById('invitationsTableEmpty');
+            
+            tbody.innerHTML = '';
+            
+            if (!invitations || invitations.length === 0) {
+                empty.classList.remove('hidden');
+                return;
+            }
+            
+            empty.classList.add('hidden');
+            
+            
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageInvitations = invitations.slice(startIndex, endIndex);
+            
+            pageInvitations.forEach(invitation => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                
+                const statusBadge = getStatusBadge(invitation.status);
+                const responseDate = invitation.responded_at ? 
+                    new Date(invitation.responded_at).toLocaleDateString() : '-';
+                
+                const duration = `${(invitation.minutes / 60).toFixed(1)}h (${invitation.minutes}m)`;
+                const timeRange = `${invitation.start_time} - ${invitation.end_time}`;
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div>${invitation.date}</div>
+                        <div class="text-gray-500 text-xs">${timeRange}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${invitation.absent_teacher_name || 'Unknown'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div class="flex flex-wrap gap-1">
+                            ${invitation.grade_level ? `<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Grade ${invitation.grade_level}</span>` : ''}
+                            ${invitation.education_level ? `<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">${invitation.education_level}</span>` : ''}
+                            ${!invitation.grade_level && !invitation.education_level ? '<span class="text-gray-400 text-xs">No level info</span>' : ''}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${invitation.candidate_teacher_name || 'Unknown'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${duration}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${statusBadge}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${responseDate}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="deleteInvitation('${invitation.id}')" 
+                                class="text-red-600 hover:text-red-900 mr-2"
+                                title="Delete invitation">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                pending: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>',
+                accepted: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Accepted</span>',
+                taught: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Taught</span>',
+                denied: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Denied</span>',
+                dropped: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Dropped</span>'
+            };
+            return badges[status] || badges.pending;
+        }
+
+        function updatePagination() {
+            const total = filteredInvitations.length;
+            const start = total === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+            const end = Math.min(currentPage * itemsPerPage, total);
+            
+            document.getElementById('invitationsStart').textContent = start;
+            document.getElementById('invitationsEnd').textContent = end;
+            document.getElementById('invitationsTotal').textContent = total;
+            
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+            
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = end >= total;
+        }
+
+        async function deleteInvitation(invitationId) {
+            if (!confirm('Are you sure you want to delete this invitation? This will remove it from the teacher\'s view.')) {
+                return;
+            }
+            
+            try {
+                await API.deleteInvitation(invitationId);
+                
+                // Remove from local data
+                allInvitations = allInvitations.filter(inv => inv.id !== invitationId);
+                filteredInvitations = filteredInvitations.filter(inv => inv.id !== invitationId);
+                
+                // Re-render
+                renderInvitationsTable(filteredInvitations);
+                updatePagination();
+                updateInvitationStatistics();
+                
+                showSuccess('Invitation deleted successfully');
+                
+            } catch (error) {
+                console.error('Error deleting invitation:', error);
+                showError('Failed to delete invitation: ' + error.message);
+            }
+        }
+
+        function showSuccess(message) {
+            // Create or update success message
+            let successDiv = document.getElementById('successMessage');
+            if (!successDiv) {
+                successDiv = document.createElement('div');
+                successDiv.id = 'successMessage';
+                successDiv.className = 'hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4';
+                document.querySelector('.max-w-4xl').insertBefore(successDiv, document.querySelector('.max-w-4xl').firstChild);
+            }
+            
+            successDiv.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span id="successText">${message}</span>
+                </div>
+            `;
+            successDiv.classList.remove('hidden');
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                successDiv.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Event listeners for invitations management
+        document.addEventListener('DOMContentLoaded', function() {
+            // Filter event listeners
+            document.getElementById('invitationStatusFilter').addEventListener('change', applyInvitationFilters);
+            document.getElementById('invitationDateFilter').addEventListener('change', applyInvitationFilters);
+            document.getElementById('invitationTeacherFilter').addEventListener('change', applyInvitationFilters);
+            
+            // Refresh button
+            document.getElementById('refreshInvitations').addEventListener('click', loadAllInvitations);
+            
+            // Pagination
+            document.getElementById('prevPage').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderInvitationsTable(filteredInvitations);
+                    updatePagination();
+                }
+            });
+            
+            document.getElementById('nextPage').addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredInvitations.length / itemsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderInvitationsTable(filteredInvitations);
+                    updatePagination();
+                }
+            });
+        });
+    </script>
+    <script src="../assets/js/navbar.js"></script>
+</body>
+</html>

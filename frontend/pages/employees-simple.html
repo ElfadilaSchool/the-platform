@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="nav.employees">Employee Management - HR Operations Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <style>
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        .stat-card-2 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .stat-card-3 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .stat-card-4 {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        .employee-card {
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+        .employee-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+        }
+        .table-row {
+            transition: all 0.2s ease;
+        }
+        .table-row:hover {
+            background-color: #f9fafb;
+            transform: scale(1.01);
+        }
+        .action-btn {
+            transition: all 0.2s ease;
+        }
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+        .view-toggle-btn {
+            transition: all 0.2s ease;
+        }
+        .view-toggle-btn.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .search-input-wrapper {
+            position: relative;
+        }
+        .search-input-wrapper i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+        .search-input-wrapper input {
+            padding-left: 40px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- The reusable navbar will be automatically inserted here -->
+    
+    <!-- Main Content -->
+    <div class="main-content flex-1 overflow-hidden">
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6">
+            <!-- Page Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg p-6 mb-6 text-white">
+                <div class="flex items-start">
+                    <div class="p-3 bg-white/20 rounded-lg mr-4 flex-shrink-0">
+                        <i class="fas fa-users text-2xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h1 class="text-3xl font-bold mb-2" data-translate="employee.employee_management">Employee Management</h1>
+                        <p class="text-blue-100 text-base leading-relaxed" data-translate="employee.employee_list_description">Manage and view all employees in your organization. Search, filter, and perform actions on employee records.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div class="stat-card rounded-xl shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm font-medium" data-translate="dashboard.total_employees">Total Employees</p>
+                            <p class="text-3xl font-bold text-white mt-2" id="totalEmployeesStat">0</p>
+                        </div>
+                        <div class="p-4 bg-white/20 rounded-full">
+                            <i class="fas fa-users text-white text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card-2 rounded-xl shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm font-medium" data-translate="employee.active">Active</p>
+                            <p class="text-3xl font-bold text-white mt-2" id="activeEmployeesStat">0</p>
+                        </div>
+                        <div class="p-4 bg-white/20 rounded-full">
+                            <i class="fas fa-user-check text-white text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card-3 rounded-xl shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm font-medium" data-translate="employee.inactive">Inactive</p>
+                            <p class="text-3xl font-bold text-white mt-2" id="inactiveEmployeesStat">0</p>
+                        </div>
+                        <div class="p-4 bg-white/20 rounded-full">
+                            <i class="fas fa-user-times text-white text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card-4 rounded-xl shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm font-medium" data-translate="employee.position">Positions</p>
+                            <p class="text-3xl font-bold text-white mt-2" id="totalPositionsStat">0</p>
+                        </div>
+                        <div class="p-4 bg-white/20 rounded-full">
+                            <i class="fas fa-briefcase text-white text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Card -->
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                <!-- Header Section -->
+                <div class="p-6 border-b border-gray-200 bg-white">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900 mb-1" data-translate="employee.employee_list">Employee List</h2>
+                            <p class="text-sm text-gray-600" id="employeeCountText" data-translate="employee.showing">Showing</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <!-- Language Selector -->
+                            <select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm hover:border-gray-400 transition-colors">
+                                <option value="en">English</option>
+                                <option value="fr">Français</option>
+                                <option value="ar">العربية</option>
+                            </select>
+                            <!-- View Toggle -->
+                            <div class="flex bg-gray-100 rounded-lg p-1">
+                                <button id="tableViewBtn" class="view-toggle-btn active px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors" title="Table View">
+                                    <i class="fas fa-table"></i>
+                                </button>
+                                <button id="gridViewBtn" class="view-toggle-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors" title="Grid View">
+                                    <i class="fas fa-th-large"></i>
+                                </button>
+                            </div>
+                            <!-- Export Button -->
+                            <button id="exportEmployees" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all shadow-sm hover:shadow-md flex items-center gap-2" data-translate="common.export">
+                                <i class="fas fa-download"></i>
+                                <span data-translate="common.export">Export</span>
+                            </button>
+                            <!-- Add Employee Button -->
+                            <a href="add-employee.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all shadow-sm hover:shadow-md flex items-center gap-2" data-translate="employee.add_employee_button">
+                                <i class="fas fa-plus"></i>
+                                    <span data-translate="employee.add_employee">Add Employee</span>
+                                </a>
+                            </div>
+                        </div>
+                        
+                    <!-- Search and Filter Section -->
+                        <div class="flex flex-col sm:flex-row gap-4">
+                        <div class="flex-1 search-input-wrapper">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="employeeSearch" data-translate-placeholder="common.search_employees" placeholder="Search employees..." 
+                                   class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            </div>
+                        <div class="sm:w-56">
+                            <div class="relative">
+                                <i class="fas fa-sort absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                <select id="employeeSort" class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white appearance-none">
+                                    <option value="first_name" data-translate="employee.sort_by_first_name">Sort by First Name</option>
+                                    <option value="last_name" data-translate="employee.sort_by_last_name">Sort by Last Name</option>
+                                    <option value="email" data-translate="employee.sort_by_email">Sort by Email</option>
+                                    <option value="join_date" data-translate="employee.sort_by_join_date">Sort by Join Date</option>
+                                </select>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                <!-- Table View -->
+                <div id="tableView" class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200">
+                                <th class="text-left py-4 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider" data-translate="employee.employee">Employee</th>
+                                <th class="text-left py-4 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider" data-translate="employee.email">Email</th>
+                                <th class="text-left py-4 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider" data-translate="employee.position">Position</th>
+                                <th class="text-left py-4 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider" data-translate="employee.role">Role</th>
+                                <th class="text-left py-4 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider" data-translate="common.status">Status</th>
+                                <th class="text-left py-4 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider" data-translate="common.actions">Actions</th>
+                                </tr>
+                            </thead>
+                        <tbody id="employeeTableBody" class="divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="6" class="text-center py-12">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+                                        <p class="text-gray-500" data-translate="employee.loading_employees">Loading employees...</p>
+                                    </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                <!-- Grid View -->
+                <div id="gridView" class="hidden p-6">
+                    <div id="employeeGridBody" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <!-- Grid cards will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="p-6 border-t border-gray-200 bg-gray-50" id="pagination">
+                    <!-- Pagination will be inserted here -->
+                    </div>
+                </div>
+            </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/translations.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/simple-nav.js"></script>
+    <script src="../assets/js/employees.js"></script>
+    <script>
+        // Check authentication
+        if (!requireAuth()) {
+            // Redirect handled by requireAuth
+        }
+
+        // Update user display name and setup language selector
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = authManager.getUser();
+            const el = document.getElementById('userDisplayName');
+            if (el && user && user.firstName && user.lastName) {
+                el.textContent = `${user.firstName} ${user.lastName}`;
+            }
+            
+            // Language selector
+            const languageSelector = document.getElementById('languageSelector');
+            if (languageSelector) {
+                languageSelector.value = currentLanguage || 'en';
+                languageSelector.addEventListener('change', (e) => {
+                    if (typeof setLanguage === 'function') {
+                        setLanguage(e.target.value);
+                        // Reload employee views to update dynamic content
+                        if (typeof employeeManager !== 'undefined') {
+                            const currentView = document.getElementById('tableView').classList.contains('hidden') ? 'grid' : 'table';
+                            if (currentView === 'table') {
+                                employeeManager.renderEmployeeTable();
+                            } else {
+                                employeeManager.renderEmployeeGrid();
+                            }
+                            employeeManager.updatePagination();
+                            employeeManager.updateStatistics();
+                            employeeManager.updateEmployeeCount();
+                        }
+                    }
+                });
+            }
+            
+            // Listen for language change events
+            document.addEventListener('languageChanged', function() {
+                // Reload employee views to update dynamic content
+                if (typeof employeeManager !== 'undefined') {
+                    const currentView = document.getElementById('tableView').classList.contains('hidden') ? 'grid' : 'table';
+                    if (currentView === 'table') {
+                        employeeManager.renderEmployeeTable();
+                    } else {
+                        employeeManager.renderEmployeeGrid();
+                    }
+                    employeeManager.updatePagination();
+                    employeeManager.updateStatistics();
+                    employeeManager.updateEmployeeCount();
+                }
+            });
+            
+            // Initialize translations
+            if (typeof updatePageTranslations === 'function') {
+                updatePageTranslations();
+            }
+
+            // View toggle functionality
+            const tableViewBtn = document.getElementById('tableViewBtn');
+            const gridViewBtn = document.getElementById('gridViewBtn');
+            
+            if (tableViewBtn) {
+                tableViewBtn.addEventListener('click', () => {
+                    if (typeof employeeManager !== 'undefined') {
+                        employeeManager.toggleView('table');
+                    }
+                });
+            }
+            
+            if (gridViewBtn) {
+                gridViewBtn.addEventListener('click', () => {
+                    if (typeof employeeManager !== 'undefined') {
+                        employeeManager.toggleView('grid');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+

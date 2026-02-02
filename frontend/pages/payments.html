@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="payment.payment_management">Payment Management - HR Operations Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="bg-white w-64 shadow-lg" id="localSidebar">
+            <div class="p-6 border-b">
+                <div class="flex items-center">
+                    <div class="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-school text-white"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h1 class="text-lg font-semibold text-gray-900">HR Platform</h1>
+                        <p class="text-sm text-gray-500" data-translate="nav.hr_manager">HR Manager</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="mt-6">
+                <a href="hr-dashboard.html" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-tachometer-alt mr-3"></i>
+                    <span data-translate="nav.dashboard">Dashboard</span>
+                </a>
+                <a href="employees-simple.html" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-users mr-3"></i>
+                    <span data-translate="nav.employees">Employees</span>
+                </a>
+                <a href="departments.html" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-building mr-3"></i>
+                    <span data-translate="nav.departments">Departments</span>
+                </a>
+                <a href="payments.html" class="sidebar-item active flex items-center px-6 py-3 text-blue-600">
+                    <i class="fas fa-money-bill-wave mr-3"></i>
+                    <span data-translate="nav.payments">Payments</span>
+                </a>
+                <a href="timetable-library.html" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-calendar-alt mr-3"></i>
+                    <span data-translate="nav.timetables">Timetables</span>
+                </a>
+                <a href="employee-assignments.html" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-user-clock mr-3"></i>
+                    <span data-translate="nav.assign_timetables">Assign Timetables</span>
+                </a>
+                <a href="attendance-logs.html" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-clock mr-3"></i>
+                    <span data-translate="nav.attendance">Attendance</span>
+                </a>
+                <a href="settings.html" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-cog mr-3"></i>
+                    <span data-translate="nav.settings">Settings</span>
+                </a>
+                <a href="salary-management.html" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-money-check-alt mr-3"></i>
+                    <span data-translate="nav.salary_overview">Salary Overview</span>
+                </a>
+                <a href="meetings.html" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-calendar-alt mr-3"></i>
+                    <span data-translate="nav.meetings">Meetings</span>
+                </a>
+                <a href="profile.html" class="sidebar-item flex items-center px-6 py-3 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-user mr-3"></i>
+                    <span data-translate="nav.profile">Profile</span>
+                </a>
+            </nav>
+            
+            <div class="absolute bottom-0 w-64 p-6 border-t">
+                <button onclick="handleLogout()" class="flex items-center text-gray-700 hover:text-red-600 transition-colors">
+                    <i class="fas fa-sign-out-alt mr-3"></i>
+                    <span data-translate="nav.logout">Logout</span>
+                </button>
+            </div>
+        </div>
+    
+    <!-- Main Content -->
+        <div class="flex-1 overflow-y-auto" id="mainContent">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900" data-translate="dashboard.welcome">Welcome</h2>
+                        <p class="text-gray-600" id="welcomeMessage" data-translate="dashboard.loading">Loading...</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <!-- Language Selector -->
+                        <select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="en">English</option>
+                            <option value="fr">Français</option>
+                            <option value="ar">العربية</option>
+                        </select>
+                        
+                        <!-- Notifications -->
+                        <div class="relative">
+                            <button id="notificationButton" class="p-2 text-gray-600 hover:text-blue-600 relative">
+                                <i class="fas fa-bell text-xl"></i>
+                                <span id="notificationBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                            </button>
+                        </div>
+                        
+                        <!-- User Profile -->
+                        <div class="flex items-center">
+                            <img id="headerProfileImage" 
+     class="h-8 w-8 rounded-full object-cover" 
+     src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2QjcyODAiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSI+CjxjaXJjbGUgY3g9IjgiIGN5PSI2IiByPSIzIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMyAxMkM1IDkgOCA5IDE2IDlDMTYgOSAxOSA5IDIxIDEyIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+Cjwvc3ZnPgo=" 
+     alt="Profile Picture"
+     style="display: block;">
+                            <span class="ml-2 text-sm font-medium text-gray-700" id="userDisplayName">HR Manager</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Positions Management -->
+                    <div class="lg:col-span-1 lg:order-2">
+                        <div class="bg-white rounded-lg shadow-sm">
+                            <div class="p-6 border-b">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-900" data-translate="position.title">Positions</h3>
+                                    <button onclick="showAddPositionModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                        <i class="fas fa-plus mr-2"></i>
+                                        <span data-translate="position.add">Add Position</span>
+                                    </button>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <input type="text" id="positionSearch" data-translate-placeholder="position.search_placeholder" placeholder="Search positions..." 
+                                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="border-b bg-gray-50">
+                                            <th class="text-left py-3 px-4 font-semibold text-gray-700" data-translate="position.name">Position</th>
+                                            <th class="text-left py-3 px-4 font-semibold text-gray-700" data-translate="position.actions">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="positionsTable">
+                                        <tr>
+                                            <td colspan="2" class="text-center py-8 text-gray-500">
+                                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                                <p data-translate="position.loading">Loading positions...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Position Salaries -->
+                    <div class="lg:col-span-2 lg:order-1">
+                        <div class="bg-white rounded-lg shadow-sm">
+                            <div class="p-6 border-b">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-900" data-translate="position_salary.title">Position Salaries</h3>
+                                    <button onclick="showAddSalaryModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                        <i class="fas fa-plus mr-2"></i>
+                                        <span data-translate="position_salary.set_salary">Set Salary</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="border-b bg-gray-50">
+                                            <th class="text-left py-3 px-4 font-semibold text-gray-700" data-translate="position_salary.position">Position</th>
+                                            <th class="text-left py-3 px-4 font-semibold text-gray-700" data-translate="position_salary.type">Type</th>
+                                            <th class="text-left py-3 px-4 font-semibold text-gray-700" data-translate="position_salary.amount">Amount</th>
+                                            <th class="text-left py-3 px-4 font-semibold text-gray-700" data-translate="position.actions">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="positionSalariesTable">
+                                        <tr>
+                                            <td colspan="4" class="text-center py-8 text-gray-500">
+                                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                                <p data-translate="position_salary.loading">Loading position salaries...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add/Edit Position Modal -->
+    <div id="positionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-md w-full">
+                <div class="p-6 border-b">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900" id="positionModalTitle" data-translate="position.add_title">Add Position</h3>
+                        <button onclick="hidePositionModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <form id="positionForm" class="p-6 space-y-4">
+                    <input type="hidden" id="positionEditId" name="id">
+
+                    <div>
+                        <label for="positionName" class="block text-sm font-medium text-gray-700 mb-2" data-translate="position.name_label">Position Name *</label>
+                        <input type="text" id="positionName" name="name" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+
+                    <div id="positionError" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                        <div class="flex">
+                            <i class="fas fa-exclamation-circle mr-2 mt-0.5"></i>
+                            <span id="positionErrorText"></span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-4 pt-4">
+                        <button type="button" onclick="hidePositionModal()" 
+                                class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors" data-translate="common.cancel">Cancel</button>
+                        <button type="submit" id="positionSubmit" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-save mr-2"></i>
+                            <span data-translate="common.save">Save</span> <span data-translate="position.name">Position</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Salary Modal -->
+    <div id="salaryModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-md w-full">
+                <div class="p-6 border-b">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900" id="salaryModalTitle" data-translate="position_salary.set_salary">Set Position Salary</h3>
+                        <button onclick="hideSalaryModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <form id="salaryForm" class="p-6 space-y-4">
+                    <input type="hidden" id="salaryId" name="salary_id">
+                    
+                    <div>
+                        <label for="positionId" class="block text-sm font-medium text-gray-700 mb-2" data-translate="position_salary.position">Position *</label>
+                        <select id="positionId" name="position_id" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="" data-translate="position_salary.select_position">Select Position</option>
+                        </select>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="baseSalary" class="block text-sm font-medium text-gray-700 mb-2" data-translate="position_salary.base_salary">Base Salary</label>
+                            <input type="number" id="baseSalary" name="base_salary" step="0.01" min="0" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <p class="text-xs text-gray-500 mt-1" data-translate="position_salary.base_salary_hint">Monthly fixed salary</p>
+                        </div>
+                        
+                        <div>
+                            <label for="hourlyRate" class="block text-sm font-medium text-gray-700 mb-2" data-translate="position_salary.hourly_rate">Hourly Rate</label>
+                            <input type="number" id="hourlyRate" name="hourly_rate" step="0.01" min="0" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <p class="text-xs text-gray-500 mt-1" data-translate="position_salary.hourly_rate_hint">Per hour rate</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="overtimeRate" class="block text-sm font-medium text-gray-700 mb-2" data-translate="position_salary.overtime_rate">Overtime Rate</label>
+                            <input type="number" id="overtimeRate" name="overtime_rate" step="0.01" min="0" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <p class="text-xs text-gray-500 mt-1" data-translate="position_salary.overtime_rate_hint">Overtime hourly rate</p>
+                        </div>
+                        
+                        <div>
+                            <label for="bonusRate" class="block text-sm font-medium text-gray-700 mb-2" data-translate="position_salary.bonus_rate">Bonus Rate (%)</label>
+                            <input type="number" id="bonusRate" name="bonus_rate" step="0.01" min="0" max="100" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <p class="text-xs text-gray-500 mt-1" data-translate="position_salary.bonus_rate_hint">Bonus percentage</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="effectiveDate" class="block text-sm font-medium text-gray-700 mb-2" data-translate="position_salary.effective_date">Effective Date</label>
+                        <input type="date" id="effectiveDate" name="effective_date" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div id="salaryError" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                        <div class="flex">
+                            <i class="fas fa-exclamation-circle mr-2 mt-0.5"></i>
+                            <span id="salaryErrorText"></span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-4 pt-4">
+                        <button type="button" onclick="hideSalaryModal()" 
+                                class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors" data-translate="common.cancel">Cancel</button>
+                        <button type="submit" id="salarySubmit" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-save mr-2"></i>
+                            <span data-translate="common.save">Save</span> <span data-translate="position_salary.title">Salary</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/translations.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script>
+        // Language selector
+        document.addEventListener('DOMContentLoaded', function() {
+            const languageSelector = document.getElementById('languageSelector');
+            if (languageSelector) {
+                languageSelector.value = currentLanguage || 'en';
+                languageSelector.addEventListener('change', (e) => {
+                    if (typeof setLanguage === 'function') {
+                        setLanguage(e.target.value);
+                    }
+                });
+            }
+            
+            // Initialize translations
+            if (typeof updatePageTranslations === 'function') {
+                updatePageTranslations();
+            }
+        });
+        
+        // Hide local sidebar/header when embedded via org-structure iframe
+        (function() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('embed') === '1') {
+                    const sidebar = document.getElementById('localSidebar');
+                    if (sidebar) sidebar.style.display = 'none';
+                    const header = document.querySelector('header');
+                    if (header) header.style.display = 'none';
+                    const main = document.getElementById('mainContent');
+                    if (main) main.classList.remove('overflow-y-auto');
+                }
+            } catch (_) {}
+        })();
+        
+        // Check authentication
+        if (!requireAuth()) {
+            // Redirect handled by requireAuth
+        }
+
+        let positions = [];
+        let employees = [];
+        let positionSalaries = [];
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            const user = authManager.getUser();
+            if (user && (user.firstName || user.first_name) && (user.lastName || user.last_name)) {
+                const fullName = `${user.firstName || user.first_name} ${user.lastName || user.last_name}`;
+                const nameEl = document.getElementById('sidebarUserName') || document.getElementById('userDisplayName');
+                if (nameEl) {
+                    nameEl.textContent = fullName;
+                }
+            }
+
+            await loadPositions();
+            await loadPositionSalaries();
+            
+            // Set default dates for calculator (if calculator inputs exist on page)
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            if (startDateInput) {
+                startDateInput.value = firstDay.toISOString().split('T')[0];
+            }
+            if (endDateInput) {
+                endDateInput.value = today.toISOString().split('T')[0];
+            }
+            // Removed effectiveDate default; salary modal no longer exists on this page
+        });
+
+        async function loadPositions() {
+            try {
+                positions = await APIService.request('users', '/positions');
+                renderPositions();
+            } catch (error) {
+                console.error('Error loading positions:', error);
+                renderPositionsError(error);
+            }
+        }
+
+        async function loadPositionSalaries() {
+            try {
+                positionSalaries = await APIService.request('payments', '/payments/position-salaries');
+                renderPositionSalaries();
+            } catch (error) {
+                console.error('Error loading position salaries:', error);
+                
+                let errorMessage = typeof translate === 'function' ? translate('position_salary.error_server') : 'Failed to load position salaries';
+                let errorIcon = 'fas fa-exclamation-triangle';
+                let errorColor = 'text-red-500';
+                
+                // Check error status and provide specific messages
+                if (error.status === 401 || (error.message && error.message.includes('401'))) {
+                    errorMessage = typeof translate === 'function' ? translate('position_salary.error_auth') : 'Authentication required. Please log in again.';
+                    errorIcon = 'fas fa-sign-in-alt';
+                } else if (error.status === 404) {
+                    errorMessage = typeof translate === 'function' ? translate('position_salary.error_not_found') : 'Position salaries endpoint not found. Please check if the payment service is running.';
+                    errorIcon = 'fas fa-unlink';
+                } else if (error.status >= 500) {
+                    errorMessage = typeof translate === 'function' ? translate('position_salary.error_server') : 'Server error. Please try again later.';
+                    errorIcon = 'fas fa-server';
+                }
+                
+                const tryAgainMsg = typeof translate === 'function' ? translate('position_salary.try_again') : 'Try Again';
+                document.getElementById('positionSalariesTable').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-8 ${errorColor}">
+                            <i class="${errorIcon} text-4xl mb-2"></i>
+                            <p>${errorMessage}</p>
+                            <button onclick="loadPositionSalaries()" class="mt-4 text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-refresh mr-2"></i>
+                                ${tryAgainMsg}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Removed employee dropdown population to avoid null element errors
+
+        // Removed salary loading; positions only
+
+        // Removed position dropdowns for salary
+
+        // Removed populateEmployeeDropdown
+
+        function renderPositions() {
+            const tbody = document.getElementById('positionsTable');
+            const editTitle = typeof translate === 'function' ? translate('position.edit') : 'Edit';
+            const deleteTitle = typeof translate === 'function' ? translate('position.delete') : 'Delete';
+
+            if (!positions || positions.length === 0) {
+                const noDataMsg = typeof translate === 'function' ? translate('position.no_data') : 'No positions yet';
+                const addFirstMsg = typeof translate === 'function' ? translate('position.add_first') : 'Add your first position';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="2" class="text-center py-8 text-gray-500">
+                            <i class="fas fa-briefcase text-4xl mb-2"></i>
+                            <p>${noDataMsg}</p>
+                            <button onclick=\"showAddPositionModal()\" class=\"mt-4 text-blue-600 hover:text-blue-800\">
+                                <i class=\"fas fa-plus mr-2\"></i> ${addFirstMsg}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = positions.map(pos => `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="py-3 px-4">
+                        <div class="font-medium text-gray-900">${pos.name}</div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex space-x-2">
+                            <button onclick="editPosition('${pos.id}', '${pos.name.replace(/'/g, "&#39;")}')" class="text-blue-600 hover:text-blue-800" title="${editTitle}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deletePosition('${pos.id}', '${pos.name.replace(/'/g, "&#39;")}')" class="text-red-600 hover:text-red-800" title="${deleteTitle}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPositionSalaries() {
+            const tbody = document.getElementById('positionSalariesTable');
+            const editTitle = typeof translate === 'function' ? translate('position.edit') : 'Edit';
+            const deleteTitle = typeof translate === 'function' ? translate('position.delete') : 'Delete';
+            const typeFixed = typeof translate === 'function' ? translate('position_salary.type_fixed') : 'Fixed';
+            const typeHourly = typeof translate === 'function' ? translate('position_salary.type_hourly') : 'Hourly';
+            const typeNA = typeof translate === 'function' ? translate('position_salary.type_na') : 'N/A';
+            
+            if (!positionSalaries || positionSalaries.length === 0) {
+                const noDataMsg = typeof translate === 'function' ? translate('position_salary.no_data') : 'No position salaries configured';
+                const setFirstMsg = typeof translate === 'function' ? translate('position_salary.set_first') : 'Set your first salary';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-8 text-gray-500">
+                            <i class="fas fa-money-bill-wave text-4xl mb-2"></i>
+                            <p>${noDataMsg}</p>
+                            <button onclick=\"showAddSalaryModal()\" class=\"mt-4 text-blue-600 hover:text-blue-800\">
+                                <i class=\"fas fa-plus mr-2\"></i> ${setFirstMsg}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = positionSalaries.map(row => {
+                const type = row.base_salary ? typeFixed : row.hourly_rate ? typeHourly : typeNA;
+                const amount = row.base_salary ? `${row.base_salary} DA/month` : row.hourly_rate ? `${row.hourly_rate} DA/hour` : '-';
+                return `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="py-3 px-4">
+                            <div class="font-medium text-gray-900">${row.position_name}</div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${
+                                row.base_salary ? 'bg-blue-100 text-blue-800' :
+                                row.hourly_rate ? 'bg-green-100 text-green-800' :
+                                'bg-gray-100 text-gray-800'
+                            }">${type}</span>
+                        </td>
+                        <td class="py-3 px-4 text-gray-600">${amount}</td>
+                        <td class="py-3 px-4">
+                            <div class="flex space-x-2">
+                                <button onclick=\"editPositionSalary('${row.position_id}', '${row.id}')\" class="text-blue-600 hover:text-blue-800" title="${editTitle}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick=\"deletePositionSalary('${row.id}', '${row.position_name.replace(/'/g, "&#39;")}')\" class="text-red-600 hover:text-red-800" title="${deleteTitle}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderPositionsError(error) {
+            const tbody = document.getElementById('positionsTable');
+
+            let errorMessage = typeof translate === 'function' ? translate('position_salary.error_server') : 'Failed to load positions';
+            let errorIcon = 'fas fa-exclamation-triangle';
+            let errorColor = 'text-red-500';
+
+            // Check error status first, then message content
+            if (error.status === 403 || (error.message && error.message.includes('403'))) {
+                errorMessage = typeof translate === 'function' ? translate('position_salary.error_access_denied') : 'Access denied. HR Manager role required to view position salaries.';
+                errorIcon = 'fas fa-lock';
+            } else if (error.status === 401 || (error.message && error.message.includes('401'))) {
+                errorMessage = typeof translate === 'function' ? translate('position_salary.error_auth') : 'Authentication required. Please log in again.';
+                errorIcon = 'fas fa-sign-in-alt';
+            } else if (error.status === 404) {
+                errorMessage = typeof translate === 'function' ? translate('position_salary.error_not_found') : 'Position salaries endpoint not found. Please check if the payment service is running.';
+                errorIcon = 'fas fa-unlink';
+            } else if (error.status >= 500) {
+                errorMessage = typeof translate === 'function' ? translate('position_salary.error_server') : 'Server error. Please try again later.';
+                errorIcon = 'fas fa-server';
+            }
+
+            const tryAgainMsg = typeof translate === 'function' ? translate('position_salary.try_again') : 'Try Again';
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="2" class="text-center py-8 ${errorColor}">
+                        <i class="${errorIcon} text-4xl mb-2"></i>
+                        <p>${errorMessage}</p>
+                        <button onclick="loadPositions()" class="mt-4 text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-refresh mr-2"></i>
+                            ${tryAgainMsg}
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+        function showAddPositionModal() {
+            const title = typeof translate === 'function' ? translate('position.add_title') : 'Add Position';
+            document.getElementById('positionModalTitle').textContent = title;
+            document.getElementById('positionForm').reset();
+            document.getElementById('positionEditId').value = '';
+            document.getElementById('positionModal').classList.remove('hidden');
+        }
+
+        function hidePositionModal() {
+            document.getElementById('positionModal').classList.add('hidden');
+            document.getElementById('positionError').classList.add('hidden');
+        }
+
+        function editPosition(id, name) {
+            const title = typeof translate === 'function' ? translate('position.edit_title') : 'Edit Position';
+            document.getElementById('positionModalTitle').textContent = title;
+            document.getElementById('positionEditId').value = id;
+            document.getElementById('positionName').value = name;
+            document.getElementById('positionModal').classList.remove('hidden');
+        }
+
+        document.getElementById('positionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitButton = document.getElementById('positionSubmit');
+            const errorDiv = document.getElementById('positionError');
+            submitButton.disabled = true;
+            errorDiv.classList.add('hidden');
+            try {
+                const formData = new FormData(this);
+                const id = formData.get('id');
+                const payload = { name: formData.get('name') };
+                if (id) {
+                    await APIService.request('users', `/positions/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    await APIService.request('users', '/positions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                }
+                const successMsg = typeof translate === 'function' ? translate('position.save_success') : 'Position saved successfully';
+                Utils.showNotification(successMsg, 'success');
+                hidePositionModal();
+                await loadPositions();
+            } catch (error) {
+                console.error('Error saving position:', error);
+                const errorMsg = typeof translate === 'function' ? translate('position.save_failed') : 'Failed to save position';
+                document.getElementById('positionErrorText').textContent = error.message || errorMsg;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+
+        function populatePositionDropdowns() {
+            const select = document.getElementById('positionId');
+            const selectText = typeof translate === 'function' ? translate('position_salary.select_position') : 'Select Position';
+            select.innerHTML = `<option value="">${selectText}</option>`;
+            positions.forEach(pos => {
+                const option = document.createElement('option');
+                option.value = pos.id;
+                option.textContent = pos.name;
+                select.appendChild(option);
+            });
+        }
+
+        function showAddSalaryModal() {
+            const title = typeof translate === 'function' ? translate('position_salary.set_salary') : 'Set Position Salary';
+            document.getElementById('salaryModalTitle').textContent = title;
+            document.getElementById('salaryForm').reset();
+            document.getElementById('salaryId').value = '';
+            populatePositionDropdowns();
+            document.getElementById('effectiveDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('salaryModal').classList.remove('hidden');
+        }
+
+        function hideSalaryModal() {
+            document.getElementById('salaryModal').classList.add('hidden');
+            document.getElementById('salaryError').classList.add('hidden');
+        }
+
+        async function editPositionSalary(positionId, salaryId) {
+            populatePositionDropdowns();
+            const title = typeof translate === 'function' ? translate('position_salary.edit_salary') : 'Edit Position Salary';
+            document.getElementById('salaryModalTitle').textContent = title;
+            document.getElementById('salaryId').value = salaryId || '';
+            document.getElementById('positionId').value = positionId;
+
+            const rec = positionSalaries.find(r => r.id === salaryId) || {};
+            document.getElementById('baseSalary').value = rec.base_salary || '';
+            document.getElementById('hourlyRate').value = rec.hourly_rate || '';
+            document.getElementById('overtimeRate').value = rec.overtime_rate || '';
+            document.getElementById('bonusRate').value = rec.bonus_rate || '';
+            document.getElementById('effectiveDate').value = (rec.effective_date || new Date().toISOString().split('T')[0]).split('T')[0];
+            document.getElementById('salaryModal').classList.remove('hidden');
+        }
+
+        document.getElementById('salaryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitButton = document.getElementById('salarySubmit');
+            const errorDiv = document.getElementById('salaryError');
+            submitButton.disabled = true;
+            errorDiv.classList.add('hidden');
+            try {
+                const formData = new FormData(this);
+                const salaryId = formData.get('salary_id');
+                const data = {
+                    position_id: formData.get('position_id'),
+                    base_salary: formData.get('base_salary') || null,
+                    hourly_rate: formData.get('hourly_rate') || null,
+                    overtime_rate: formData.get('overtime_rate') || null,
+                    bonus_rate: formData.get('bonus_rate') || null,
+                    effective_date: formData.get('effective_date') || new Date().toISOString().split('T')[0]
+                };
+
+                if (!data.base_salary && !data.hourly_rate) {
+                    const errorMsg = typeof translate === 'function' ? translate('position_salary.error_required') : 'Either base salary or hourly rate must be provided';
+                    throw new Error(errorMsg);
+                }
+
+                if (salaryId) {
+                    await APIService.request('payments', `/payments/position-salaries/${salaryId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    await APIService.request('payments', '/payments/position-salaries', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                }
+                const successMsg = typeof translate === 'function' ? translate('position_salary.save_success') : 'Position salary saved successfully';
+                Utils.showNotification(successMsg, 'success');
+                hideSalaryModal();
+                await loadPositionSalaries();
+            } catch (error) {
+                console.error('Error saving position salary:', error);
+                const errorMsg = typeof translate === 'function' ? translate('position_salary.save_failed') : 'Failed to save position salary';
+                document.getElementById('salaryErrorText').textContent = error.message || errorMsg;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+
+        async function deletePositionSalary(salaryId, positionName) {
+            const confirmMsg = typeof translate === 'function' ? translate('position_salary.delete_confirm').replace('{name}', positionName) : `Remove salary configuration for position "${positionName}"?`;
+            if (!confirm(confirmMsg)) return;
+            try {
+                await APIService.request('payments', `/payments/position-salaries/${salaryId}`, { method: 'DELETE' });
+                const successMsg = typeof translate === 'function' ? translate('position_salary.delete_success') : 'Position salary removed successfully';
+                Utils.showNotification(successMsg, 'success');
+                await loadPositionSalaries();
+            } catch (error) {
+                console.error('Error deleting position salary:', error);
+                const errorMsg = typeof translate === 'function' ? translate('position_salary.delete_failed') : 'Failed to delete position salary';
+                Utils.showNotification(errorMsg, 'error');
+            }
+        }
+
+        async function deletePosition(id, name) {
+            const confirmMsg = typeof translate === 'function' ? translate('position.delete_confirm').replace('{name}', name) : `Delete position "${name}"?`;
+            if (!confirm(confirmMsg)) return;
+            try {
+                await APIService.request('users', `/positions/${id}`, { method: 'DELETE' });
+                const successMsg = typeof translate === 'function' ? translate('position.delete_success') : 'Position deleted';
+                Utils.showNotification(successMsg, 'success');
+                await loadPositions();
+            } catch (error) {
+                console.error('Error deleting position:', error);
+                const errorMsg = typeof translate === 'function' ? translate('position.delete_failed') : 'Failed to delete position';
+                Utils.showNotification(error?.message || errorMsg, 'error');
+            }
+        }
+
+        const salaryCalculatorForm = document.getElementById('salaryCalculatorForm');
+        if (salaryCalculatorForm) {
+            salaryCalculatorForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const errorDiv = document.getElementById('calculatorError');
+                const resultDiv = document.getElementById('salaryResult');
+                
+                if (errorDiv) errorDiv.classList.add('hidden');
+                if (resultDiv) resultDiv.classList.add('hidden');
+                
+                try {
+                    const formData = new FormData(this);
+                    const employeeId = formData.get('employee_id');
+                    const startDate = formData.get('start_date');
+                    const endDate = formData.get('end_date');
+                    
+                    const calculation = await APIService.request('payments', 
+                        `/payments/calculate-salary/${employeeId}?start_date=${startDate}&end_date=${endDate}`);
+                    
+                    displaySalaryCalculation(calculation);
+                    if (resultDiv) resultDiv.classList.remove('hidden');
+                } catch (error) {
+                    console.error('Error calculating salary:', error);
+                    const errorText = document.getElementById('calculatorErrorText');
+                    if (errorText) errorText.textContent = error.message;
+                    if (errorDiv) errorDiv.classList.remove('hidden');
+                }
+            });
+        }
+
+        function displaySalaryCalculation(calculation) {
+            const detailsDiv = document.getElementById('salaryDetails');
+            const { employee, period, attendance_summary, salary_calculation } = calculation;
+            
+            let detailsHTML = `
+                <div class="space-y-2">
+                    <div><strong>Employee:</strong> ${employee.name}</div>
+                    <div><strong>Position:</strong> ${employee.position}</div>
+                    <div><strong>Period:</strong> ${Utils.formatDate(period.start_date)} - ${Utils.formatDate(period.end_date)}</div>
+                    <div><strong>Work Days:</strong> ${attendance_summary.work_days}</div>
+                    <div><strong>Total Hours:</strong> ${attendance_summary.total_hours.toFixed(2)}</div>
+                    ${attendance_summary.overtime_hours > 0 ? `<div><strong>Overtime Hours:</strong> ${attendance_summary.overtime_hours.toFixed(2)}</div>` : ''}
+                    <hr class="my-2">
+                    <div class="text-lg font-semibold"><strong>Total Salary: ${salary_calculation.total_amount} DA</strong></div>
+                </div>
+            `;
+            
+            if (salary_calculation.breakdown.type === 'fixed') {
+                detailsHTML += `
+                    <div class="mt-3 text-xs">
+                        <div>Base Salary: ${salary_calculation.breakdown.base_salary} DA/month</div>
+                        <div>Salary per Day: ${salary_calculation.breakdown.salary_per_day.toFixed(2)} DA</div>
+                        <div>Base Amount: ${salary_calculation.breakdown.base_amount.toFixed(2)} DA</div>
+                        ${salary_calculation.breakdown.bonus_amount ? `<div>Bonus (${salary_calculation.breakdown.bonus_rate}%): ${salary_calculation.breakdown.bonus_amount.toFixed(2)} DA</div>` : ''}
+                    </div>
+                `;
+            } else if (salary_calculation.breakdown.type === 'hourly') {
+                detailsHTML += `
+                    <div class="mt-3 text-xs">
+                        <div>Hourly Rate: ${salary_calculation.breakdown.hourly_rate} DA</div>
+                        <div>Overtime Rate: ${salary_calculation.breakdown.overtime_rate} DA</div>
+                        <div>Regular Pay: ${salary_calculation.breakdown.regular_pay.toFixed(2)} DA</div>
+                        <div>Overtime Pay: ${salary_calculation.breakdown.overtime_pay.toFixed(2)} DA</div>
+                        ${salary_calculation.breakdown.bonus_amount ? `<div>Bonus (${salary_calculation.breakdown.bonus_rate}%): ${salary_calculation.breakdown.bonus_amount.toFixed(2)} DA</div>` : ''}
+                    </div>
+                `;
+            }
+            
+            detailsDiv.innerHTML = detailsHTML;
+        }
+
+        async function deletePositionSalary(positionId, positionName) {
+            if (!confirm(`Remove salary configuration for position "${positionName}"?`)) {
+                return;
+            }
+            
+            try {
+                // Find the salary record for this position
+                const salaryRecord = positionSalaries.find(salary => salary.position_id === positionId);
+                if (!salaryRecord) {
+                    Utils.showNotification('No salary configuration found for this position', 'error');
+                    return;
+                }
+                
+                // Call DELETE endpoint with salary ID
+                await APIService.request('payments', `/payments/position-salaries/${salaryRecord.id}`, {
+                    method: 'DELETE'
+                });
+                
+                Utils.showNotification('Position salary removed successfully', 'success');
+                await loadPositions();
+                await loadPositionSalaries();
+            } catch (error) {
+                console.error('Error deleting position salary:', error);
+                Utils.showNotification('Failed to delete position salary', 'error');
+            }
+        }
+
+        // Search functionality
+        document.getElementById('positionSearch').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const filteredPositions = positions.filter(pos => pos.name.toLowerCase().includes(searchTerm));
+            const editTitle = typeof translate === 'function' ? translate('position.edit') : 'Edit';
+            const deleteTitle = typeof translate === 'function' ? translate('position.delete') : 'Delete';
+
+            const tbody = document.getElementById('positionsTable');
+            tbody.innerHTML = filteredPositions.map(pos => `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="py-3 px-4"><div class="font-medium text-gray-900">${pos.name}</div></td>
+                    <td class="py-3 px-4">
+                        <div class="flex space-x-2">
+                            <button onclick="editPosition('${pos.id}', '${pos.name.replace(/'/g, "&#39;")}')" class="text-blue-600 hover:text-blue-800" title="${editTitle}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deletePosition('${pos.id}', '${pos.name.replace(/'/g, "&#39;")}')" class="text-red-600 hover:text-red-800" title="${deleteTitle}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        });
+        
+        // Listen for language changes to re-render dynamic content
+        window.addEventListener('languageChanged', () => {
+            if (positions) renderPositions();
+            if (positionSalaries) renderPositionSalaries();
+        });
+    </script>
+    <script src="../assets/js/simple-nav.js"></script>
+    
+    <!-- Close main content and layout -->
+    </main>
+    </div>
+    </div>
+</body>
+</html>

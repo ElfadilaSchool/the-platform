@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Rapports - HR Operations Platform</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+	<link href="../assets/css/style.css" rel="stylesheet">
+	<style>
+		.embed-container { height: 100vh; }
+		.embed-frame { width: 100%; height: 100%; border: 0; background: #fff; }
+	</style>
+</head>
+<body class="bg-gray-50">
+
+	<main class="min-h-screen">
+		<div class="embed-container">
+			<iframe id="rapportempFrame" class="embed-frame" title="Rapports"></iframe>
+		</div>
+	</main>
+
+	<script src="../assets/js/auth.js"></script>
+	<script src="../assets/js/translations.js"></script>
+	<script src="../assets/js/main.js"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			if (!requireAuth()) return;
+			// Wait for translations to load before initializing sidebar
+			function waitForTranslations(callback, maxAttempts = 20) {
+				let attempts = 0;
+				const checkTranslations = setInterval(function() {
+					attempts++;
+					if (typeof window.translations !== 'undefined' && 
+						typeof window.updatePageTranslations === 'function' &&
+						typeof window.setLanguage === 'function') {
+						clearInterval(checkTranslations);
+						callback();
+					} else if (attempts >= maxAttempts) {
+						clearInterval(checkTranslations);
+						callback(); // Proceed anyway
+					}
+				}, 50);
+			}
+			
+			waitForTranslations(function() {
+				// Set language from localStorage if available
+				const savedLanguage = localStorage.getItem('language') || localStorage.getItem('lang') || 'fr';
+				if (typeof window.setLanguage === 'function') {
+					window.setLanguage(savedLanguage);
+				}
+				
+				initializeCollapsibleSidebar();
+				
+				// Update translations after sidebar is created
+				setTimeout(function() {
+					if (typeof window.updatePageTranslations === 'function') {
+						window.updatePageTranslations();
+					}
+				}, 200);
+				
+				// Load the HR Tasks Reports UI inside an iframe in embed mode (hides its own sidebar)
+				var frame = document.getElementById('rapportempFrame');
+				// Relative from /frontend/pages/ to /hr_tasks/hr_tasks/public/rapportemp.html
+				frame.src = '../../hr_tasks/hr_tasks/public/rapportemp.html?embed=1';
+			});
+		});
+	</script>
+</body>
+</html>
+
+
+

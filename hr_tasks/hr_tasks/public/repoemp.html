@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="report.employee_report">Rapports - Interface Employé</title>
+    <link rel="stylesheet" href="tailwind.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .filter-button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        .filter-button:hover {
+            background-color: #f9fafb;
+        }
+        .filter-button.active {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        .report-card {
+            transition: all 0.3s ease;
+        }
+        .report-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .modal {
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-scroll {
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        .modal-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+        .modal-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .modal-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Style pour le modal des détails */
+#reportDetailsModal {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.recipient-selector {
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #f9fafb;
+}
+.recipient-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.recipient-option:hover {
+    background-color: #e5e7eb;
+}
+.recipient-option.selected {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+}
+.selected-recipients {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+}
+.recipient-tag {
+    background-color: #3b82f6;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.recipient-tag button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.selected-employee-badge {
+    transition: all 0.2s ease;
+}
+
+.selected-employee-badge:hover {
+    background-color: #3b82f6 !important;
+    color: white !important;
+}
+
+.employee-checkbox:checked {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+#employeesCheckboxContainer::-webkit-scrollbar {
+    width: 6px;
+}
+
+#employeesCheckboxContainer::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+#employeesCheckboxContainer::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+#employeesCheckboxContainer::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center text-white">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-semibold text-gray-900" data-translate="report.title">Interface Rapports</h1>
+                        <p class="text-gray-500 text-sm" data-translate="report.description">Gestion des rapports d'activité</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <!-- Language Selector -->
+                    <select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="en">English</option>
+                        <option value="fr">Français</option>
+                        <option value="ar">العربية</option>
+                    </select>
+                    <div class="text-sm text-gray-600">
+                        <span id="currentUser">Employé</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="employeeView" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-user mr-2"></i>Employé
+                        </button>
+                        <button id="responsibleView" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                            
+                        </button>
+                        <button id="directorView" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                            
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto p-6">
+        <!-- Vue Employé -->
+        <div id="employeeInterface" class="space-y-6">
+            <!-- Statistiques personnelles -->
+       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Remplacer les cartes de statistiques -->
+<div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500">
+    <div class="flex items-center">
+        <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <i class="fas fa-file-alt text-blue-600 text-xl"></i>
+        </div>
+        <div class="ml-4">
+            <p class="text-sm text-gray-600">Mes Rapports</p>
+            <p id="totalReports" class="text-2xl font-bold text-gray-900">0</p>
+        </div>
+    </div>
+</div>
+<div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
+    <div class="flex items-center">
+        <div class="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+        </div>
+        <div class="ml-4">
+            <p class="text-sm text-gray-600">Accusés</p>
+            <p id="acknowledgedReports" class="text-2xl font-bold text-gray-900">0</p>
+        </div>
+    </div>
+</div>
+<div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-yellow-500">
+    <div class="flex items-center">
+        <div class="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+            <i class="fas fa-clock text-yellow-600 text-xl"></i>
+        </div>
+        <div class="ml-4">
+            <p class="text-sm text-gray-600">En Attente</p>
+            <p id="pendingReports" class="text-2xl font-bold text-gray-900">0</p>
+        </div>
+    </div>
+</div>
+<div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-purple-500">
+    <div class="flex items-center">
+        <div class="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+            <i class="fas fa-calendar-day text-purple-600 text-xl"></i>
+        </div>
+        <div class="ml-4">
+            <p class="text-sm text-gray-600">Aujourd'hui</p>
+            <p id="todayReports" class="text-2xl font-bold text-gray-900">0</p>
+        </div>
+    </div>
+</div>
+            </div>
+
+
+            <!-- Actions -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Actions</h2>
+                </div>
+                <div class="flex gap-4">
+                    <button id="generateReportBtn" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                        <i class="fas fa-plus"></i>
+                        Générer Nouveau Rapport
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtres -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+  <h3 class="text-lg font-semibold text-gray-900 mb-4">Filtres</h3>
+  
+  <!-- Flex responsive -->
+  <div class="flex flex-col md:flex-row md:justify-between gap-4">
+    
+    <!-- Groupe Status -->
+    <!-- Remplacer cette section -->
+<div class="flex flex-wrap gap-2">
+  <button class="filter-button active" data-status="all">Tous</button>
+  <button class="filter-button" data-status="pending">En Attente</button>
+  <button class="filter-button" data-status="acknowledged">Accusés</button>
+</div>
+    
+    <!-- Groupe Period -->
+    <div class="flex flex-wrap gap-2">
+      <button class="filter-button active" data-period="all">Toutes Périodes</button>
+      <button class="filter-button" data-period="today">Aujourd'hui</button>
+      <button class="filter-button" data-period="week">Cette Semaine</button>
+      <button class="filter-button" data-period="month">Ce Mois</button>
+    </div>
+
+    <!-- Période personnalisée -->
+    <div class="flex flex-wrap items-center gap-2">
+      <input id="customStart" type="date" class="px-2 py-1 text-sm border border-gray-300 rounded" />
+      <span class="text-gray-500">→</span>
+      <input id="customEnd" type="date" class="px-2 py-1 text-sm border border-gray-300 rounded" />
+      <button id="applyCustomDate" type="button" class="filter-button">Appliquer</button>
+    </div>
+    
+  </div>
+</div>
+
+
+            <!-- Liste des rapports -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6 border-b">
+                    <h3 class="text-lg font-semibold text-gray-900">Mes Rapports</h3>
+                </div>
+                <div id="reportsList" class="p-6">
+                    <div class="flex justify-center items-center py-12">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <span class="ml-3 text-gray-600">Chargement des rapports...</span>
+                    </div>
+                </div>
+            </div>
+
+            
+        </div>
+
+        <!-- Vue Responsable (masquée pour le moment) -->
+        <div id="responsibleInterface" class="hidden space-y-6">
+            <div class="text-center py-12">
+                <i class="fas fa-user-tie text-6xl text-gray-300 mb-4"></i>
+                <h2 class="text-2xl font-semibold text-gray-600 mb-2">Vue Responsable</h2>
+                <p class="text-gray-500">Cette vue sera implémentée prochainement</p>
+            </div>
+        </div>
+
+        <!-- Vue Directeur (masquée pour le moment) -->
+        <div id="directorInterface" class="hidden space-y-6">
+            <div class="text-center py-12">
+                <i class="fas fa-crown text-6xl text-gray-300 mb-4"></i>
+                <h2 class="text-2xl font-semibold text-gray-600 mb-2">Vue Directeur</h2>
+                <p class="text-gray-500">Cette vue sera implémentée prochainement</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de génération de rapport -->
+    <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col modal-content">
+            <div class="p-4 border-b flex-shrink-0">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">Générer un Rapport</h3>
+                    <button id="closeModal" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center">
+                        <i class="fas fa-times text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-scroll p-4">
+                <form id="reportForm" class="space-y-4">
+                    <!-- En-tête du rapport -->
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <h4 class="font-semibold text-gray-900 mb-2 text-sm">En-tête du Rapport</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Date</label>
+                                <input type="date" id="reportDate" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Heure</label>
+                                <input type="time" id="reportTime" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Destinataire -->
+                   <div>
+    <label class="block text-xs font-medium text-gray-700 mb-1">Destinataires</label>
+    <p class="text-[11px] text-gray-500 mb-2">Le Directeur reçoit automatiquement tous les rapports. Vous pouvez envoyer au Directeur seul, ou à votre responsable de département.</p>
+    <div class="space-y-2">
+       
+        
+        <!-- Sélection du mode d'envoi -->
+        <div class="space-y-2">
+            <label class="flex items-center gap-2">
+                <input type="radio" name="recipientMode" value="director" class="text-blue-600" checked onchange="onRecipientModeChange()">
+                <span class="text-sm">Directeur uniquement</span>
+            </label>
+            <label class="flex items-center gap-2">
+                <input type="radio" name="recipientMode" value="responsible" class="text-blue-600" onchange="onRecipientModeChange()">
+                <span class="text-sm">Mon responsable: <span id="employeeResponsibleName" class="font-medium text-gray-800">—</span></span>
+            </label>
+            <div id="noResponsibleHint" class="hidden text-xs text-red-600">Aucun responsable trouvé pour votre département</div>
+        </div>
+        
+        <!-- Champ caché pour validation -->
+        <input type="hidden" id="recipientIds" required>
+    </div>
+</div>
+
+                    <!-- Objet du rapport -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Objet du rapport</label>
+                        <input type="text" id="reportSubject" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500" placeholder="Titre du rapport" required>
+                    </div>
+
+                    <!-- Employés concernés (supprimé) -->
+                    <!-- Contenu du rapport -->
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Introduction / Contexte</label>
+                            <textarea id="introduction" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500" rows="3" placeholder="Contexte et introduction..." required></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Développement</label>
+                            <textarea id="development" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500" rows="4" placeholder="Corps du rapport..." required></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Résumé des points essentiels</label>
+                            <textarea id="summary" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500" rows="2" placeholder="Points clés..." required></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Propositions (optionnel)</label>
+                            <textarea id="proposals" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500" rows="2" placeholder="Recommandations..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Formule de politesse et signature</label>
+                            <textarea id="signature" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500" rows="2" placeholder="Signature..." required></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <!-- Boutons d'action -->
+            <div class="flex justify-end gap-3 p-4 border-t flex-shrink-0">
+                <button type="button" id="cancelReport" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 transition-colors">
+                    Annuler
+                </button>
+                <button type="submit" form="reportForm" class="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors flex items-center gap-2">
+                    <i class="fas fa-file-pdf"></i>
+                    Générer PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../../frontend/assets/js/translations.js"></script>
+    <script>
+        const API = (location.origin && /^https?:\/\//i.test(location.origin)) ? location.origin : 'http://localhost:3020';
+        let currentUser = null;
+        let reports = [];
+        let employees = [];
+        let departments = [];
+        let selectedRecipients = [];
+let availableResponsibles = [];
+let allEmployees = [];
+let selectedEmployeeIds = [];
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadInitialData();
+            setupEventListeners();
+            loadReports();
+            
+            // Language selector
+            const languageSelector = document.getElementById('languageSelector');
+            if (languageSelector) {
+                languageSelector.value = (typeof currentLanguage !== 'undefined' ? currentLanguage : (window.currentLanguage || 'en'));
+                languageSelector.addEventListener('change', (e) => {
+                    if (typeof setLanguage === 'function') {
+                        setLanguage(e.target.value);
+                    }
+                    if (typeof updatePageTranslations === 'function') {
+                        updatePageTranslations();
+                    }
+                });
+            }
+            
+            // Initialize translations
+            if (typeof updatePageTranslations === 'function') {
+                updatePageTranslations();
+            }
+        });
+
+        // Charger les données initiales
+        async function loadInitialData() {
+    try {
+        // Récupérer les paramètres depuis l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id');
+        const employeeId = urlParams.get('employee_id');
+        const username = urlParams.get('username');
+        const firstName = urlParams.get('first');
+        const lastName = urlParams.get('last');
+        const role = urlParams.get('role');
+
+        // Créer l'objet utilisateur avec les paramètres de l'URL
+        currentUser = {
+            id: userId || employeeId || '1',
+            employee_id: employeeId,
+            user_id: userId,
+            username: username,
+            first_name: firstName || 'John',
+            last_name: lastName || 'Doe',
+            department: 'Non spécifié', // Valeur par défaut
+            role: role || 'Employee'
+        };
+
+        // Helper: simple UUID check
+        const isUuid = (v) => typeof v === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(v);
+
+        // Si employee_id manquant OU invalide mais user_id présent, tenter de le résoudre côté backend
+        if ((!currentUser.employee_id || !isUuid(currentUser.employee_id)) && currentUser.user_id) {
+            try {
+                const r = await fetch(`${API}/employees/by-user/${currentUser.user_id}`);
+                if (r.ok) {
+                    const data = await r.json();
+                    if (data && data.success && data.employee) {
+                        currentUser.employee_id = data.employee.id;
+                        currentUser.department = data.employee.department_name || currentUser.department;
+                    }
+                }
+            } catch (_) {}
+        }
+
+        // Charger les employés, départements et détails de l'employé connecté
+        const [employeesRes, departmentsRes, employeeDetailsRes] = await Promise.all([
+            fetch(`${API}/employees`).catch(() => null),
+            fetch(`${API}/departments`).catch(() => null),
+            employeeId ? fetch(`${API}/api/rapportemp/employees/${employeeId}/details`).catch(() => null) : null
+        ]);
+
+        employees = employeesRes && employeesRes.ok ? await employeesRes.json() : [];
+        departments = departmentsRes && departmentsRes.ok ? await departmentsRes.json() : [];
+        
+        // Récupérer les détails de l'employé connecté avec son département
+        if (employeeDetailsRes && employeeDetailsRes.ok) {
+            const result = await employeeDetailsRes.json();
+            if (result.success && result.employee) {
+                currentUser.department = result.employee.department_name || 'Non spécifié';
+                // Ajouter d'autres informations si nécessaire
+                currentUser.position = result.employee.position_id;
+                currentUser.email = result.employee.email;
+            }
+        }
+
+        // Mettre à jour l'affichage de l'utilisateur
+        document.getElementById('currentUser').textContent = `${currentUser.first_name} ${currentUser.last_name} (${currentUser.department})`;
+
+        // Remplir la liste des employés dans le formulaire
+        populateEmployeesList();
+
+    } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+        // Valeurs par défaut en cas d'erreur
+        document.getElementById('currentUser').textContent = `${currentUser.first_name} ${currentUser.last_name}`;
+    }
+}
+// Charger les employés et initialiser l'interface
+// plus de chargement d'employés pour ce formulaire
+
+// Remplir les checkboxes d'employés
+function populateEmployeeCheckboxes(employees) {
+    const container = document.getElementById('employeesCheckboxContainer');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="space-y-2">
+            ${employees.map(employee => `
+                <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                    <input 
+                        type="checkbox" 
+                        value="${employee.id}" 
+                        class="employee-checkbox rounded text-blue-600 focus:ring-blue-500"
+                        onchange="toggleEmployeeSelection('${employee.id}', '${employee.first_name} ${employee.last_name}', this.checked)"
+                    >
+                    <span class="ml-2 text-sm">${employee.first_name} ${employee.last_name}</span>
+                </label>
+            `).join('')}
+        </div>
+    `;
+}
+
+// Filtrer les employés selon la recherche
+function filterEmployees() {
+    const searchTerm = document.getElementById('employeeSearch').value.toLowerCase();
+    const filteredEmployees = allEmployees.filter(employee => 
+        `${employee.first_name} ${employee.last_name}`.toLowerCase().includes(searchTerm)
+    );
+    populateEmployeeCheckboxes(filteredEmployees);
+    
+    // Re-check les employés déjà sélectionnés
+    selectedEmployeeIds.forEach(id => {
+        const checkbox = document.querySelector(`.employee-checkbox[value="${id}"]`);
+        if (checkbox) checkbox.checked = true;
+    });
+}
+
+// Gérer la sélection/désélection d'un employé
+function toggleEmployeeSelection(id, name, isChecked) {
+    if (isChecked) {
+        if (!selectedEmployeeIds.includes(id)) {
+            selectedEmployeeIds.push(id);
+            addSelectedEmployeeBadge(id, name);
+        }
+    } else {
+        selectedEmployeeIds = selectedEmployeeIds.filter(empId => empId !== id);
+        removeSelectedEmployeeBadge(id);
+    }
+    
+    // Afficher/masquer le container des sélections
+    const selectedContainer = document.getElementById('selectedEmployees');
+    selectedContainer.style.display = selectedEmployeeIds.length > 0 ? 'flex' : 'none';
+}
+
+// Ajouter un badge pour un employé sélectionné
+function addSelectedEmployeeBadge(id, name) {
+    const container = document.getElementById('selectedEmployees');
+    const badge = document.createElement('div');
+    badge.className = 'selected-employee-badge bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs flex items-center';
+    badge.innerHTML = `
+        ${name}
+        <button type="button" onclick="removeEmployee('${id}')" class="ml-1 text-blue-600 hover:text-blue-800">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    badge.dataset.employeeId = id;
+    container.appendChild(badge);
+}
+
+// Retirer un badge d'employé sélectionné
+function removeSelectedEmployeeBadge(id) {
+    const badge = document.querySelector(`.selected-employee-badge[data-employee-id="${id}"]`);
+    if (badge) badge.remove();
+}
+
+// Retirer un employé de la sélection
+function removeEmployee(id) {
+    // Décocher la checkbox
+    const checkbox = document.querySelector(`.employee-checkbox[value="${id}"]`);
+    if (checkbox) checkbox.checked = false;
+    
+    // Retirer de la liste des sélectionnés
+    selectedEmployeeIds = selectedEmployeeIds.filter(empId => empId !== id);
+    removeSelectedEmployeeBadge(id);
+    
+    // Cacher le container si vide
+    const selectedContainer = document.getElementById('selectedEmployees');
+    selectedContainer.style.display = selectedEmployeeIds.length > 0 ? 'flex' : 'none';
+}
+
+// Récupérer les employés sélectionnés pour le formulaire
+function getSelectedEmployees() {
+    return [];
+}
+
+// Réinitialiser la sélection quand le modal est fermé
+function resetEmployeeSelection() {
+    selectedEmployeeIds = [];
+    const container = document.getElementById('selectedEmployees');
+    if (container) {
+        container.innerHTML = '';
+        container.style.display = 'none';
+    }
+    document.querySelectorAll('.employee-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    const search = document.getElementById('employeeSearch');
+    if (search) {
+        search.value = '';
+    }
+}
+async function loadResponsibles() {
+    try {
+        // Récupérer seulement le responsable du département de l'employé connecté
+        const response = await fetch(`${API}/api/rapportemp/responsibles/by-employee/${currentUser.employee_id}`);
+        if (!response.ok) {
+            throw new Error('Impossible de charger le responsable');
+        }
+        const data = await response.json();
+        if (!data.success || !data.responsibles) {
+            throw new Error('Format de réponse invalide');
+        }
+        availableResponsibles = data.responsibles;
+        setEmployeeResponsibleName();
+        return true;
+    } catch (error) {
+        console.error('Erreur chargement responsable:', error);
+        setEmployeeResponsibleName(true);
+        return false;
+    }
+}
+
+function setEmployeeResponsibleName(isError = false) {
+    const nameEl = document.getElementById('employeeResponsibleName');
+    const noResp = document.getElementById('noResponsibleHint');
+    if (!nameEl || !noResp) return;
+    if (isError || availableResponsibles.length === 0) {
+        nameEl.textContent = '—';
+        noResp.classList.remove('hidden');
+        return;
+    }
+    const resp = availableResponsibles[0];
+    nameEl.textContent = `${resp.first_name} ${resp.last_name}${resp.department_name ? ' (' + resp.department_name + ')' : ''}`;
+    noResp.classList.add('hidden');
+}
+
+function onRecipientModeChange() {
+    // Rien à faire visuellement pour l’instant; la soumission lit la valeur choisie
+}
+
+// Sélectionner le responsable du département
+// Plus de sélection manuelle; radio contrôle la cible
+
+// Basculer l'affichage du sélecteur
+function toggleRecipientSelector() {
+    const selector = document.getElementById('recipientSelector');
+    const isVisible = selector.style.display !== 'none';
+    selector.style.display = isVisible ? 'none' : 'block';
+}
+
+// Sélectionner/désélectionner un destinataire
+function toggleRecipientSelection(id, type, name, department) {
+    const existingIndex = selectedRecipients.findIndex(r => r.id === id);
+    
+    if (existingIndex > -1) {
+        // Désélectionner
+        selectedRecipients.splice(existingIndex, 1);
+    } else {
+        // Sélectionner
+        selectedRecipients.push({
+            id: id,
+            type: type,
+            name: name,
+            department: department
+        });
+    }
+    
+    updateRecipientDisplay();
+    updateRecipientCheckboxes();
+}
+
+// Sélectionner un type de destinataire (directeur)
+function selectRecipientType(type) {
+    if (type === 'director') {
+        const existingDirector = selectedRecipients.find(r => r.type === 'director');
+        if (!existingDirector) {
+            selectedRecipients.push({
+                id: null,
+                type: 'director',
+                name: 'Directeur Général',
+                department: ''
+            });
+            updateRecipientDisplay();
+        }
+    }
+}
+
+// Effacer tous les destinataires
+function clearAllRecipients() {
+    selectedRecipients = [];
+    updateRecipientDisplay();
+    updateRecipientCheckboxes();
+}
+
+// Mettre à jour l'affichage des destinataires sélectionnés
+function updateRecipientDisplay() {
+    const container = document.getElementById('selectedRecipients');
+    const hiddenInput = document.getElementById('recipientIds');
+    
+    if (!container || !hiddenInput) return;
+    
+    // Mettre à jour les tags visuels
+    container.innerHTML = selectedRecipients.map((recipient, index) => `
+        <div class="recipient-tag">
+            <span>${recipient.name}${recipient.department ? ` (${recipient.department})` : ''}</span>
+            <button type="button" onclick="removeRecipient(${index})" title="Supprimer">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+    
+    // Mettre à jour le champ caché pour validation
+    const recipientIds = selectedRecipients
+        .filter(r => r.id) // Exclure le directeur général qui n'a pas d'ID
+        .map(r => r.id);
+    hiddenInput.value = recipientIds.length > 0 || selectedRecipients.some(r => r.type === 'director') ? 'valid' : '';
+}
+
+// Supprimer un destinataire
+function removeRecipient(index) {
+    selectedRecipients.splice(index, 1);
+    updateRecipientDisplay();
+    updateRecipientCheckboxes();
+}
+
+// Mettre à jour les cases à cocher
+function updateRecipientCheckboxes() {
+    document.querySelectorAll('.recipient-option').forEach(option => {
+        const id = option.dataset.id;
+        const checkbox = option.querySelector('.recipient-checkbox');
+        const isSelected = selectedRecipients.some(r => r.id === id);
+        
+        checkbox.checked = isSelected;
+        option.classList.toggle('selected', isSelected);
+    });
+}
+        // Remplir la liste des employés et responsables
+        // Remplir la liste des employés et responsables
+// Remplir la liste des employés et responsables
+async function populateEmployeesList() {
+    const select = document.getElementById('concernedEmployees');
+    if (select) {
+        select.innerHTML = employees.map(emp => 
+            `<option value="${emp.id}">${emp.first_name} ${emp.last_name}</option>`
+        ).join('');
+    }
+
+    // Charger les responsables
+    await loadResponsibles();
+}
+        // Configuration des événements
+        function setupEventListeners() {
+            // Navigation entre les vues
+            document.getElementById('employeeView').addEventListener('click', () => switchView('employee'));
+            document.getElementById('responsibleView').addEventListener('click', () => switchView('responsible'));
+            document.getElementById('directorView').addEventListener('click', () => switchView('director'));
+
+            // Boutons d'action
+            document.getElementById('generateReportBtn').addEventListener('click', openReportModal);
+
+            // Modal
+            document.getElementById('closeModal').addEventListener('click', closeReportModal);
+            document.getElementById('cancelReport').addEventListener('click', closeReportModal);
+            document.getElementById('reportForm').addEventListener('submit', generateReport);
+
+            // Filtres
+            document.querySelectorAll('.filter-button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Retirer la classe active de tous les boutons du même groupe
+                    const group = this.closest('.flex');
+                    group.querySelectorAll('.filter-button').forEach(b => b.classList.remove('active'));
+                    // Ajouter la classe active au bouton cliqué
+                    this.classList.add('active');
+                    // Appliquer le filtre
+                    applyFilters();
+                });
+            });
+
+            // Appliquer la période personnalisée
+            const applyBtn = document.getElementById('applyCustomDate');
+            if (applyBtn) {
+                applyBtn.addEventListener('click', () => {
+                    // Désactiver les boutons période prédéfinie
+                    document.querySelectorAll('.filter-button[data-period]').forEach(b => b.classList.remove('active'));
+                    applyFilters();
+                });
+            }
+
+            // Fermer le modal en cliquant à l'extérieur
+            document.getElementById('reportModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeReportModal();
+                }
+            });
+        }
+
+        // Changer de vue
+        function switchView(view) {
+            // Masquer toutes les interfaces
+            document.getElementById('employeeInterface').classList.add('hidden');
+            document.getElementById('responsibleInterface').classList.add('hidden');
+            document.getElementById('directorInterface').classList.add('hidden');
+
+            // Afficher l'interface sélectionnée
+            document.getElementById(`${view}Interface`).classList.remove('hidden');
+
+            // Mettre à jour les boutons de navigation
+            document.querySelectorAll('[id$="View"]').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            document.getElementById(`${view}View`).classList.remove('bg-gray-200', 'text-gray-700');
+            document.getElementById(`${view}View`).classList.add('bg-blue-600', 'text-white');
+        }
+
+        // Ouvrir le modal de génération de rapport
+        function openReportModal() {
+            // Remplir la date et l'heure actuelles
+            const now = new Date();
+            document.getElementById('reportDate').value = now.toISOString().split('T')[0];
+            document.getElementById('reportTime').value = now.toTimeString().slice(0, 5);
+            
+            document.getElementById('reportModal').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeReportModal() {
+    document.getElementById('reportModal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+    document.getElementById('reportForm').reset();
+     resetEmployeeSelection();
+    
+    // Réinitialiser les destinataires sélectionnés
+    selectedRecipients = [];
+    updateRecipientDisplay();
+    updateRecipientCheckboxes();
+    
+    // Masquer le sélecteur
+    const selector = document.getElementById('recipientSelector');
+    if (selector) {
+        selector.style.display = 'none';
+    }
+}
+
+        // Charger les rapports
+        async function loadReports() {
+            try {
+                if (!currentUser || !currentUser.employee_id) {
+                    console.error('Utilisateur non identifié');
+                    return;
+                }
+
+                // Récupérer les rapports depuis l'API
+                const response = await fetch(`${API}/api/rapportemp/employee/${currentUser.employee_id}/reports`);
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement des rapports');
+                }
+
+                const data = await response.json();
+                reports = data.reports || [];
+
+                updateStatistics();
+                displayReports();
+            } catch (error) {
+                console.error('Erreur lors du chargement des rapports:', error);
+                document.getElementById('reportsList').innerHTML = `
+                    <div class="text-center py-12 text-red-600">
+                        <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                        <p>Erreur lors du chargement des rapports</p>
+                    </div>
+                `;
+            }
+        }
+
+// Mettre à jour les statistiques
+       // Mettre à jour les statistiques
+async function updateStatistics() {
+    try {
+        if (!currentUser || !currentUser.employee_id) return;
+
+        const response = await fetch(`${API}/api/rapportemp/employee/${currentUser.employee_id}/stats`);
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const stats = data.stats;
+
+        document.getElementById('totalReports').textContent = stats.total || 0;
+        document.getElementById('acknowledgedReports').textContent = stats.acknowledged || 0;
+        document.getElementById('pendingReports').textContent = stats.pending || 0;
+
+        // Calcul local pour Aujourd'hui basé sur la liste "reports" déjà chargée
+        const todayCount = Array.isArray(reports)
+            ? reports.filter(r => {
+                const d = new Date(r.created_at);
+                const now = new Date();
+                return d.toDateString() === now.toDateString();
+              }).length
+            : 0;
+        const todayEl = document.getElementById('todayReports');
+        if (todayEl) todayEl.textContent = todayCount;
+    } catch (error) {
+        console.error('Erreur statistiques:', error);
+    }
+}
+
+        // Fonction pour récupérer le nom d'un responsable par son ID
+async function getResponsibleName(responsibleId) {
+    try {
+        const response = await fetch(`${API}/api/rapportemp/responsible/${responsibleId}/name`);
+        if (response.ok) {
+            const data = await response.json();
+            return data.name || 'Responsable inconnu';
+        }
+    } catch (error) {
+        console.error('Erreur récupération nom responsable:', error);
+    }
+    return `Responsable (ID: ${responsibleId})`;
+}
+
+        // Afficher les rapports
+        // Afficher les rapports (adapté à la nouvelle structure)
+// Afficher les rapports avec formatage amélioré
+// Afficher les rapports avec formatage amélioré
+function displayReports() {
+  const filteredReports = getFilteredReports();
+  const reportsList = document.getElementById('reportsList');
+
+  if (filteredReports.length === 0) {
+    reportsList.innerHTML = `
+      <div class="text-center py-12 text-gray-500">
+        <i class="fas fa-file-alt text-4xl mb-4"></i>
+        <p>Aucun rapport trouvé</p>
+      </div>
+    `;
+    return;
+  }
+
+  reportsList.innerHTML = filteredReports.map(report => {
+    const recipientDisplay = report.remarks 
+      ? report.remarks.split('|')[0].trim()
+      : 'Non spécifié';
+
+    return `
+    <div class="report-card bg-white border border-gray-200 rounded-lg p-4 mb-3 cursor-pointer hover:shadow-md transition"
+         onclick="viewReportDetails('${report.id}')">
+      <div class="flex items-start justify-between">
+        <div class="flex-1">
+          <h4 class="text-base font-semibold text-gray-900">${report.title || 'Rapport'}</h4>
+          <span class="px-2 py-1 text-xs rounded-full ${getStatusClass(report.status)}">
+            ${getStatusText(report.status)}
+          </span>
+          <div class="text-sm text-gray-600 space-y-1 mt-2">
+            <p><i class="fas fa-calendar mr-2"></i>Date: ${formatDateTime(report.created_at)}</p>
+            <p><i class="fas fa-user mr-2"></i>${recipientDisplay}</p>
+            ${report.subject ? `<p><i class="fas fa-tag mr-2"></i>Sujet: ${report.subject}</p>` : ''}
+          </div>
+        </div>
+        ${report.pdf_url ? `
+          <a href="${report.pdf_url}" target="_blank"
+             class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+             onclick="event.stopPropagation()">
+            <i class="fas fa-download mr-1"></i>Télécharger
+          </a>
+        ` : ''}
+      </div>
+    </div>
+    `;
+  }).join('');
+}
+
+// Formater la date et l'heure
+function formatDateTime(dateString) {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+// Nouvelle fonction pour formater l'affichage du destinataire
+// Nouvelle fonction pour formater l'affichage du destinataire
+function formatRecipientDisplay(remarks) {
+    if (!remarks) return 'Non spécifié';
+    
+    // Si les remarques contiennent le format "Destinataire: Nom (ID: ...)"
+    if (remarks.includes('Destinataire:') && remarks.includes('(')) {
+        // Extraire le nom du responsable depuis les remarques
+        const match = remarks.match(/Destinataire: ([^(]+)/);
+        if (match && match[1]) {
+            return match[1].trim();
+        }
+    }
+    
+    // Fallback pour les anciens formats
+    if (remarks.startsWith('Destinataire:')) {
+        return remarks.replace('Destinataire:', '').split('(')[0].trim();
+    }
+    
+    return remarks;
+}
+// Voir les détails d'un rapport
+async function viewReportDetails(reportId) {
+  try {
+    const res = await fetch(`${API}/rapportemp/${reportId}/acknowledgements`);
+    const data = await res.json();
+
+    // Construire le HTML
+    const list = data.map(emp => `
+      <li class="flex justify-between py-1">
+        <span>${emp.first_name} ${emp.last_name}</span>
+        ${emp.acknowledged 
+          ? `<span class="text-green-600">✔ Reçu le ${emp.acknowledged_at ? new Date(emp.acknowledged_at).toLocaleString() : ''}</span>` 
+          : `<span class="text-red-600">✘ Pas encore</span>`}
+      </li>
+    `).join('');
+
+    // Afficher dans une modal
+    document.getElementById('detailsModalContent').innerHTML = `
+      <h3 class="text-lg font-semibold mb-2">Accusés de réception</h3>
+      <ul>${list}</ul>
+    `;
+    document.getElementById('detailsModal').classList.remove('hidden');
+  } catch (err) {
+    console.error(err);
+    showToast("Impossible de charger les détails", 'error');
+  }
+}
+
+// Voir les détails d'un rapport avec les accusés de réception
+async function viewReportDetails(reportId) {
+    try {
+        // Récupérer les détails du rapport
+        const response = await fetch(`${API}/api/rapportemp/${reportId}`);
+        if (!response.ok) {
+            throw new Error('Rapport non trouvé');
+        }
+
+        const result = await response.json();
+        const report = result.report;
+
+        // Récupérer les accusés de réception
+        const acknowledgementsResponse = await fetch(`${API}/api/rapportemp/${reportId}/acknowledgements`);
+        let acknowledgementsData = { acknowledgements: [] };
+        
+        if (acknowledgementsResponse.ok) {
+            acknowledgementsData = await acknowledgementsResponse.json();
+        }
+
+        const acknowledgements = acknowledgementsData.acknowledgements || [];
+        const acknowledgedCount = acknowledgements.filter(a => a.acknowledged).length;
+        const totalRecipients = acknowledgements.length;
+
+        // Créer le contenu du modal
+        const modalContent = document.getElementById('acknowledgementsContent');
+        modalContent.innerHTML = `
+            <div class="mb-4">
+                <h4 class="font-semibold mb-2">Détails du rapport</h4>
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div><strong>Titre:</strong> ${report.title || 'Non spécifié'}</div>
+                    <div><strong>Date:</strong> ${formatDate(report.created_at)}</div>
+                    <div><strong>Statut:</strong> <span class="${getStatusClass(report.status)} px-2 py-1 rounded">${getStatusText(report.status)}</span></div>
+                    <div><strong>De:</strong> ${report.first_name} ${report.last_name}</div>
+                </div>
+            </div>
+            
+            <div class="border-t pt-4">
+                <h4 class="font-semibold mb-3">Accusés de réception</h4>
+                <div class="bg-gray-50 p-4 rounded">
+                    ${acknowledgements.length > 0 ? `
+                        <p class="text-sm mb-3"><strong>Statistique:</strong> ${acknowledgedCount} sur ${totalRecipients} destinataires ont accusé réception</p>
+                        <div class="space-y-2">
+                            ${acknowledgements.map(ack => `
+                                <div class="flex items-center justify-between p-2 bg-white rounded border">
+                                    <div>
+                                        <div class="font-medium">${ack.first_name} ${ack.last_name}</div>
+                                        <div class="text-xs text-gray-500">${ack.department_name || 'Département non spécifié'}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="${ack.acknowledged ? 'text-green-600' : 'text-yellow-600'} font-medium text-sm">
+                                            ${ack.acknowledged ? '✔ Reçu' : '⏳ En attente'}
+                                        </span>
+                                        ${ack.acknowledged_at ? `
+                                            <div class="text-xs text-gray-500 mt-1">
+                                                ✔️ Accusé le ${formatDateTime(ack.acknowledged_at)}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : `
+                        <div class="text-center py-4 text-sm text-gray-700">
+                            ${report.include_director ? 'Envoyé au Directeur uniquement' : 'Aucun destinataire spécifié pour ce rapport'}
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+
+        // Afficher le modal
+        document.getElementById('acknowledgementsModal').classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+
+    } catch (error) {
+        console.error('Erreur lors du chargement des détails:', error);
+        showToast('Impossible de charger les détails du rapport: ' + error.message, 'error');
+    }
+}
+
+// Fermer le modal des accusés
+function closeAcknowledgementsModal() {
+    document.getElementById('acknowledgementsModal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+}
+
+// Ajouter aux fonctions globales
+window.viewReportDetails = viewReportDetails;
+window.closeAcknowledgementsModal = closeAcknowledgementsModal;
+// Formater la date complète
+function formatDateTime(dateString) {
+    return new Date(dateString).toLocaleString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Obtenir la classe CSS du statut
+function getStatusClass(status) {
+    const classes = {
+        'acknowledged': 'bg-green-100 text-green-800',
+        'pending': 'bg-yellow-100 text-yellow-800',
+        'approved': 'bg-blue-100 text-blue-800',
+        'rejected': 'bg-red-100 text-red-800'
+    };
+    return classes[status] || 'bg-gray-100 text-gray-800';
+}
+
+// Obtenir le texte du statut
+function getStatusText(status) {
+    const texts = {
+        'acknowledged': 'Accusé de réception',
+        'pending': 'En attente',
+        'approved': 'Approuvé',
+        'rejected': 'Rejeté'
+    };
+    return texts[status] || 'Inconnu';
+}
+
+// Fermer le modal des détails
+function closeReportDetails() {
+    const modal = document.getElementById('reportDetailsModal');
+    if (modal) {
+        modal.remove();
+        document.body.classList.remove('overflow-hidden');
+    }
+}
+
+// Ajoutez cette fonction aux fonctions globales
+window.viewReportDetails = viewReportDetails;
+window.closeReportDetails = closeReportDetails;
+
+        // Obtenir les rapports filtrés
+       // Obtenir les rapports filtrés (corrigé pour la nouvelle structure)
+function getFilteredReports() {
+    let filtered = [...reports];
+
+    // Filtre par statut
+    const statusFilter = document.querySelector('.filter-button[data-status].active')?.dataset.status;
+    if (statusFilter && statusFilter !== 'all') {
+        filtered = filtered.filter(r => r.status === statusFilter);
+    }
+
+    // Filtre par période
+    const periodFilter = document.querySelector('.filter-button[data-period].active')?.dataset.period;
+    if (periodFilter && periodFilter !== 'all') {
+        const now = new Date();
+        filtered = filtered.filter(r => {
+            const reportDate = new Date(r.created_at);   // CORRIGÉ: utiliser created_at au lieu de date
+            switch (periodFilter) {
+                case 'today':
+                    return reportDate.toDateString() === now.toDateString();
+                case 'week':
+                    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    return reportDate >= weekAgo;
+                case 'month':
+                    return reportDate.getMonth() === now.getMonth() && reportDate.getFullYear() === now.getFullYear();
+                default:
+                    return true;
+            }
+        });
+    }
+
+    // Filtre par période personnalisée (client-side)
+    const startVal = document.getElementById('customStart')?.value;
+    const endVal = document.getElementById('customEnd')?.value;
+    if (startVal || endVal) {
+        const start = startVal ? new Date(startVal) : null;
+        const end = endVal ? new Date(endVal) : null;
+        if (end) {
+            end.setHours(23, 59, 59, 999);
+        }
+        filtered = filtered.filter(r => {
+            const d = new Date(r.created_at);
+            if (start && d < start) return false;
+            if (end && d > end) return false;
+            return true;
+        });
+    }
+
+    return filtered;
+}
+
+        // Appliquer les filtres
+        function applyFilters() {
+            displayReports();
+        }
+
+        // Obtenir la classe CSS du statut
+       // Obtenir la classe CSS du statut
+function getStatusClass(status) {
+    const classes = {
+        'acknowledged': 'bg-green-100 text-green-800',
+        'pending': 'bg-yellow-100 text-yellow-800'
+    };
+    return classes[status] || 'bg-gray-100 text-gray-800';
+}
+
+// Obtenir le texte du statut
+function getStatusText(status) {
+    const texts = {
+        'acknowledged': 'Accusé de réception',
+        'pending': 'En attente'
+    };
+    return texts[status] || 'Inconnu';
+}
+        // Formater la date
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('fr-FR');
+        }
+debugSelectedRecipients();
+
+
+        // Générer un rapport
+async function generateReport(e) {
+  e.preventDefault();
+  
+  if (!currentUser || !currentUser.employee_id) {
+    showToast('Utilisateur non identifié', 'error');
+    return;
+  }
+
+  // Construire les destinataires selon le mode choisi
+  const mode = (document.querySelector('input[name="recipientMode"]:checked')?.value) || 'director';
+  let responsibleIds = [];
+  if (mode === 'responsible') {
+    if (!availableResponsibles || availableResponsibles.length === 0) {
+      showToast('Aucun responsable trouvé pour votre département', 'warning');
+      return;
+    }
+    responsibleIds = [availableResponsibles[0].id];
+  }
+  const hasDirector = true; // Directeur auto-inclus (et côté serveur)
+
+  const reportData = {
+    employee_id: currentUser.employee_id,
+    title: document.getElementById('reportSubject').value,
+    subject: document.getElementById('reportSubject').value,
+    recipients: responsibleIds, // Tableau d'IDs (vide si directeur uniquement)
+    include_director: hasDirector,
+    concerned_employees: [],
+    introduction: document.getElementById('introduction').value,
+    development: document.getElementById('development').value,
+    summary: document.getElementById('summary').value,
+    proposals: document.getElementById('proposals').value,
+    signature: document.getElementById('signature').value
+  };
+
+  // Le reste du code reste inchangé...
+  try {
+    const response = await fetch(`${API}/api/rapportemp/create`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(reportData)
+    });
+
+    let result;
+    try {
+      result = await response.json();
+    } catch (_) {
+      result = {};
+    }
+
+    if (!response.ok) {
+      const serverMsg = result.details || result.error;
+      throw new Error(serverMsg || `Erreur HTTP ${response.status}`);
+    }
+
+    if (result.success) {
+      showToast('Rapport généré avec succès !', 'success');
+      closeReportModal();
+      loadReports();
+      selectedRecipients = [];
+      updateRecipientDisplay();
+    } else {
+      showToast('Erreur: ' + (result.error || 'Impossible de générer le rapport'), 'error');
+    }
+    
+  } catch (error) {
+    console.error('Erreur lors de la génération du rapport:', error);
+    const message = (error && error.message) || 'Inconnue';
+    showToast('Erreur lors de la génération du rapport: ' + message, 'error');
+  }
+}
+// FONCTION DE DEBUG - À ajouter temporairement pour vérifier les données
+function debugSelectedRecipients() {
+    console.log('🔍 DEBUG - Destinataires actuellement sélectionnés:');
+    console.log('selectedRecipients:', selectedRecipients);
+    console.log('Responsables IDs:', selectedRecipients.filter(r => r.type === 'responsible').map(r => r.id));
+    console.log('Include director:', selectedRecipients.some(r => r.type === 'director'));
+}
+
+// Aide UI: toasts simples
+function showToast(msg, type = 'info') {
+  const colors = { info: 'bg-blue-500', success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500' };
+  const div = document.createElement('div');
+  div.className = `fixed top-4 right-4 ${colors[type] || colors.info} text-white px-4 py-2 rounded shadow z-50`;
+  div.textContent = msg;
+  document.body.appendChild(div);
+  setTimeout(() => { div.remove(); }, 3500);
+}
+
+// Appeler cette fonction de debug juste avant generateReport pour vérifier
+// debugSelectedRecipients();
+
+        // Voir un rapport
+        function viewReport(reportId) {
+            const report = reports.find(r => r.id === reportId);
+            if (report) {
+                showToast(`Ouverture du rapport: ${report.subject}`, 'info');
+                // Ici, vous pourriez ouvrir un modal avec les détails du rapport
+                viewReportDetails(reportId);
+            }
+             
+        }
+
+        // Fonctions globales pour les boutons inline
+        window.viewReport = viewReport;
+        window.toggleRecipientSelector = toggleRecipientSelector;
+window.toggleRecipientSelection = toggleRecipientSelection;
+window.selectRecipientType = selectRecipientType;
+window.clearAllRecipients = clearAllRecipients;
+window.removeRecipient = removeRecipient;
+window.selectDepartmentResponsible = selectDepartmentResponsible;
+    </script>
+    <!-- Modal pour les détails des accusés de réception -->
+<div id="acknowledgementsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+        <div class="p-4 border-b flex justify-between items-center">
+            <h3 class="text-lg font-semibold">Accusés de réception</h3>
+            <button onclick="closeAcknowledgementsModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="acknowledgementsContent" class="p-6 overflow-y-auto max-h-[60vh]">
+            <!-- Contenu chargé dynamiquement -->
+        </div>
+        <div class="p-4 border-t flex justify-end">
+            <button onclick="closeAcknowledgementsModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                Fermer
+            </button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

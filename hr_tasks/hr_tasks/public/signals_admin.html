@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة أنواع الإشارات - مسؤول الصيانة</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #ffffff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 25px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      color: #1e293b;
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-title {
+      font-size: 20px;
+      color: #1e293b;
+      margin-bottom: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border-radius: 2px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    select,
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    select:focus,
+    input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+
+    .btn-danger:hover {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+    }
+
+    .list {
+      list-style: none;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      background: #f8fafc;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      transition: all 0.2s;
+    }
+
+    .list-item:hover {
+      background: #f1f5f9;
+      transform: translateX(-4px);
+    }
+
+    .list-item-name {
+      color: #1e293b;
+      font-weight: 500;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+
+    .alert {
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      animation: slideDown 0.3s ease;
+    }
+
+    .alert-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border-right: 4px solid #dc2626;
+    }
+
+    .alert-success {
+      background: #d1fae5;
+      color: #065f46;
+      border-right: 4px solid #10b981;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #94a3b8;
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+  <script src="auth.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔧 إدارة أنواع الإشارات</h1>
+      <p>إدارة مسؤولي أنواع الإشارات - قسم الصيانة</p>
+    </div>
+
+    <div id="alert"></div>
+
+    <div class="grid">
+      <div class="card">
+        <h2 class="card-title">إضافة مسؤول</h2>
+        <div class="form-group">
+          <label class="form-label">نوع الإشارة</label>
+          <select id="typeId"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">الموظف (قسم الصيانة)</label>
+          <select id="employeeId"></select>
+        </div>
+        <button class="btn btn-primary" id="assignBtn" style="width:100%">
+          <span id="assignText">إضافة المسؤول</span>
+          <span id="assignLoading" style="display:none" class="loading"></span>
+        </button>
+      </div>
+
+      <div class="card" style="grid-column: span 2;">
+        <h2 class="card-title">المسؤولون عن النوع المحدد</h2>
+        <ul id="responsiblesList" class="list"></ul>
+      </div>
+
+      <div class="card" style="grid-column: span 3;">
+        <h2 class="card-title">إدارة المواقع (Localisations)</h2>
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">المبنى (اختيار موجود)</label>
+            <select id="locBatimentSelect"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">أو مبنى جديد</label>
+            <input id="locBatimentNew" type="text" placeholder="مثال: A / B / C">
+          </div>
+          <div class="form-group">
+            <label class="form-label">الطابق (اختيار موجود)</label>
+            <select id="locEtageSelect"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">أو طابق جديد</label>
+            <input id="locEtageNew" type="text" placeholder="مثال: 0 / 1 / 2 / R+1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">رمز القاعة / المكان (code)</label>
+            <input id="locCode" type="text" placeholder="EX: B-2-205" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">الوصف (عربي)</label>
+            <input id="locDescAr" type="text" placeholder="وصف قصير للمكان" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">النوع</label>
+            <select id="locType">
+              <option value="">غير محدد</option>
+              <option value="salle">قاعة</option>
+              <option value="bureau">مكتب</option>
+              <option value="sanitaire">مرفق صحي</option>
+              <option value="laboratoire">مخبر</option>
+              <option value="salle_informatique">قاعة إعلام آلي</option>
+              <option value="atelier">ورشة</option>
+              <option value="restaurant">مطعم</option>
+              <option value="stockage">مخزن</option>
+              <option value="autre">أخرى (اكتب نوعًا جديدًا)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">نوع جديد (اختياري)</label>
+            <input id="locTypeCustom" type="text" placeholder="مثال: قاعة محاضرات، قاعة اجتماعات" />
+          </div>
+          <div class="form-group" style="display:flex;align-items:flex-end">
+            <button class="btn btn-primary" id="addLocalisationBtn" style="width:100%">
+              إضافة موقع
+            </button>
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <button class="btn" id="reloadLocsBtn" style="background:#e2e8f0">تحديث القوائم</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const API = 'http://localhost:3020/api/signals';
+    let responsibleId = '';
+
+    function getUrlParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name) || params.get(name.toLowerCase()) || params.get(name.replace('_', ''));
+    }
+    function getAnyParam(...keys) {
+      for (const k of keys) {
+        const v = getUrlParam(k);
+        if (v) return v;
+      }
+      return null;
+    }
+
+    function showAlert(msg, isError = false) {
+      const alert = $('alert');
+      alert.className = `alert ${isError ? 'alert-error' : 'alert-success'}`;
+      alert.textContent = msg;
+      alert.style.display = 'block';
+      setTimeout(() => alert.style.display = 'none', 4000);
+    }
+
+    function setLoading(btnId, textId, loadingId, isLoading) {
+      $(textId).style.display = isLoading ? 'none' : 'inline';
+      $(loadingId).style.display = isLoading ? 'inline-block' : 'none';
+      $(btnId).disabled = isLoading;
+    }
+
+    async function fetchAPI(url, options = {}) {
+      const res = await fetch(url, options);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'خطأ في الخادم');
+      return data;
+    }
+
+    async function loadTypes() {
+      try {
+        const types = await fetchAPI(`${API}/maintenance/${responsibleId}/types-with-responsibles`);
+        const select = $('typeId');
+        select.innerHTML = types.map(t =>
+          `<option value="${t.id}">${t.name} (${t.responsibles_count} مسؤول)</option>`
+        ).join('');
+        if (types.length > 0) loadResponsibles();
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    async function loadEmployees() {
+      try {
+        const employees = await fetchAPI(`${API}/maintenance/${responsibleId}/employees`);
+        const select = $('employeeId');
+        if (employees.length === 0) {
+          select.innerHTML = '<option>لا يوجد موظفين في قسم الصيانة</option>';
+          return;
+        }
+        select.innerHTML = employees.map(e =>
+          `<option value="${e.id}">${e.first_name} ${e.last_name}</option>`
+        ).join('');
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    async function loadResponsibles() {
+      const typeId = $('typeId').value;
+      if (!typeId) return;
+
+      try {
+        const responsibles = await fetchAPI(`${API}/maintenance/${responsibleId}/types/${typeId}/responsibles`);
+        const list = $('responsiblesList');
+
+        if (responsibles.length === 0) {
+          list.innerHTML = `
+            <div class="empty-state">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+              <p>لم يتم تعيين أي مسؤول لهذا النوع بعد</p>
+            </div>
+          `;
+          return;
+        }
+
+        list.innerHTML = responsibles.map(r => `
+          <li class="list-item">
+            <span class="list-item-name">
+              <span class="badge">👤</span>
+              ${r.first_name} ${r.last_name}
+            </span>
+            <button class="btn btn-danger" onclick="removeResponsible('${r.id}')">إزالة</button>
+          </li>
+        `).join('');
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    async function assignResponsible() {
+      const typeId = $('typeId').value;
+      const employeeId = $('employeeId').value;
+      if (!typeId || !employeeId) return;
+
+      setLoading('assignBtn', 'assignText', 'assignLoading', true);
+      try {
+        await fetchAPI(`${API}/maintenance/${responsibleId}/types/${typeId}/responsibles`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ employeeId })
+        });
+        showAlert('✅ تم إضافة المسؤول بنجاح');
+        await loadTypes();
+        await loadResponsibles();
+      } catch (e) {
+        showAlert(e.message, true);
+      } finally {
+        setLoading('assignBtn', 'assignText', 'assignLoading', false);
+      }
+    }
+
+    async function removeResponsible(employeeId) {
+      const typeId = $('typeId').value;
+      if (!confirm('هل أنت متأكد من إزالة هذا المسؤول؟')) return;
+
+      try {
+        await fetchAPI(`${API}/maintenance/${responsibleId}/types/${typeId}/responsibles/${employeeId}`, {
+          method: 'DELETE'
+        });
+        showAlert('✅ تم إزالة المسؤول بنجاح');
+        await loadTypes();
+        await loadResponsibles();
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    // ===== Localisations management =====
+    async function loadLocalisationDistincts() {
+      try {
+        const d = await fetchAPI(`${API}/localisations/distincts`);
+        const batSel = $('locBatimentSelect');
+        const etgSel = $('locEtageSelect');
+        batSel.innerHTML = ['<option value="">— اختر مبنى —</option>']
+          .concat((d.batiments || []).map(b => `<option value="${b}">${b}</option>`)).join('');
+        etgSel.innerHTML = ['<option value="">— اختر طابق —</option>']
+          .concat((d.etages || []).map(e => `<option value="${e}">${e}</option>`)).join('');
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    async function addLocalisation() {
+      const batiment = $('locBatimentNew').value.trim() || $('locBatimentSelect').value.trim();
+      const etage = $('locEtageNew').value.trim() || $('locEtageSelect').value.trim();
+      const code_emplacement = $('locCode').value.trim();
+      const description_ar = $('locDescAr').value.trim();
+      const type_local = $('locType').value || null;
+      const type_local_custom = $('locTypeCustom').value.trim();
+
+      if (!code_emplacement || !batiment || !etage) {
+        showAlert('⚠️ أدخل الرمز والمبنى والطابق', true);
+        return;
+      }
+
+      try {
+        const body = { code_emplacement, batiment, etage, description_ar, type_local };
+        if (type_local_custom) body.type_local_custom = type_local_custom;
+        const r = await fetchAPI(`${API}/maintenance/${responsibleId}/localisations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        showAlert('✅ تم إضافة الموقع');
+        // reset minimal fields
+        $('locCode').value = '';
+        $('locDescAr').value = '';
+        $('locTypeCustom').value = '';
+        $('locBatimentNew').value = '';
+        $('locEtageNew').value = '';
+        await loadLocalisationDistincts();
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    $('typeId').addEventListener('change', loadResponsibles);
+    $('assignBtn').addEventListener('click', assignResponsible);
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'addLocalisationBtn') addLocalisation();
+      if (e.target && e.target.id === 'reloadLocsBtn') loadLocalisationDistincts();
+    });
+
+    (async function init() {
+      // Get user from AuthManager (primary) or URL params (fallback)
+      const user = authManager?.getUser();
+      responsibleId = user?.employee_id || user?.id || getAnyParam('responsibleId', 'responsible_id', 'employee_id', 'employeeId', 'id') || localStorage.getItem('signals.responsibleId');
+
+      if (!responsibleId) {
+        showAlert('⚠️ معرف المسؤول مفقود في الرابط', true);
+        return;
+      }
+
+      localStorage.setItem('signals.responsibleId', responsibleId);
+      await loadTypes();
+      await loadEmployees();
+      await loadLocalisationDistincts();
+    })();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Reports — Attendance & Salary</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="bg-white w-64 shadow-lg">
+            <div class="p-6 border-b">
+                <div class="flex items-center">
+                    <div class="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-school text-white"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h1 class="text-lg font-semibold text-gray-900">HR Platform</h1>
+                        <p class="text-sm text-gray-500" data-translate="nav.hr_manager">HR Manager</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="mt-6" id="sidebarNav">
+                <!-- Navigation will be populated by main.js -->
+            </nav>
+            
+            <div class="absolute bottom-0 w-64 p-6 border-t">
+                <button onclick="handleLogout()" class="flex items-center text-gray-700 hover:text-red-600 transition-colors">
+                    <i class="fas fa-sign-out-alt mr-3"></i>
+                    <span data-translate="nav.logout">Logout</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div class="flex items-center">
+                        <h2 class="text-xl font-semibold text-gray-900" data-translate="nav.reports">Reports</h2>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="en">English</option>
+                            <option value="fr">Français</option>
+                            <option value="ar">العربية</option>
+                        </select>
+                        <div class="flex items-center space-x-2">
+                            <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span class="text-sm text-gray-700" id="userDisplayName">HR Manager</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <div class="max-w-7xl mx-auto">
+                    <!-- Page Header -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h1 class="text-2xl font-bold text-gray-900" data-translate="reports.title">Attendance & Salary Report</h1>
+                                <p class="text-gray-600" data-translate="reports.description">Consolidated analytics across attendance and payroll</p>
+                            </div>
+                            <div class="flex space-x-3">
+                                <button id="exportPdfBtn" class="bg-rose-600 text-white px-4 py-2 rounded-lg hover:bg-rose-700 transition-colors text-sm">
+                                    <i class="fas fa-file-pdf mr-2"></i> Export PDF
+                                </button>
+                                <button id="refreshBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm">
+                                    <i class="fas fa-sync-alt mr-2"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+    <div id="reportRoot">
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow-sm mb-6">
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-8 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Month Range</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="month" id="startDate" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                            <input type="month" id="endDate" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                        <select id="departmentFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                        <select id="positionFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Worker</label>
+                        <input type="text" id="workerSearch" placeholder="Name or ID" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div class="flex items-end">
+                        <button id="applyFiltersBtn" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 text-sm">
+                            <i class="fas fa-filter mr-2"></i> Apply
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8" id="kpiCards">
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-indigo-100"><i class="fas fa-users text-indigo-700"></i></div>
+                    <div class="ml-4"><div class="text-sm text-gray-500">Total Workers</div><div id="kpiWorkers" class="text-2xl font-semibold">-</div></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-emerald-100"><i class="fas fa-user-check text-emerald-700"></i></div>
+                    <div class="ml-4"><div class="text-sm text-gray-500">Avg Attendance %</div><div id="kpiAttendance" class="text-2xl font-semibold">-</div></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-amber-100"><i class="fas fa-clock text-amber-700"></i></div>
+                    <div class="ml-4"><div class="text-sm text-gray-500">Punctuality %</div><div id="kpiPunctuality" class="text-2xl font-semibold">-</div></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-rose-100"><i class="fas fa-wallet text-rose-700"></i></div>
+                    <div class="ml-4"><div class="text-sm text-gray-500">Total Net Salaries</div><div id="kpiSalaries" class="text-2xl font-semibold">-</div></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-sky-100"><i class="fas fa-building text-sky-700"></i></div>
+                    <div class="ml-4"><div class="text-sm text-gray-500">Departments Covered</div><div id="kpiDepartments" class="text-2xl font-semibold">-</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-semibold text-gray-800">Distribution</h3>
+                    <select id="pieMetric" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                        <option value="attendance">Attendance</option>
+                        <option value="salary">Salary</option>
+                    </select>
+                </div>
+                <div class="relative" style="height: 280px;">
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-semibold text-gray-800">Comparison</h3>
+                    <select id="barMetric" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                        <option value="department">By Department</option>
+                        <option value="worker">By Worker</option>
+                    </select>
+                </div>
+                <div class="relative" style="height: 170px;">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-semibold text-gray-800">Trend</h3>
+                    <select id="lineMetric" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                        <option value="attendance">Attendance Rate</option>
+                        <option value="salary">Salary</option>
+                    </select>
+                </div>
+                <div class="relative" style="height: 190px;">
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-semibold text-gray-800">Payroll by Department (Top)</h3>
+                    <span class="text-xs text-gray-500">Doughnut</span>
+                </div>
+                <div class="relative" style="height: 170px;">
+                    <canvas id="fourthChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Worker Table -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Worker</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Scheduled</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Present</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Absent</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attendance %</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Late (Count/Time)</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Early Leave (Count/Time)</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Salary</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                <div class="text-sm text-gray-700" id="paginationInfo"></div>
+                <div class="flex space-x-2">
+                    <button id="prevPageBtn" class="px-3 py-1 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50">Previous</button>
+                    <span class="px-3 py-1 text-sm text-gray-700" id="pageIndicator"></span>
+                    <button id="nextPageBtn" class="px-3 py-1 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+                    <!-- Toast -->
+                    <div id="toast" class="fixed top-4 right-4 z-50 hidden">
+                        <div class="bg-white rounded-lg shadow-lg border-l-4 p-4 max-w-sm">
+                            <div class="flex">
+                                <div class="flex-shrink-0"><i id="toastIcon" class="text-xl"></i></div>
+                                <div class="ml-3"><p id="toastMessage" class="text-sm font-medium text-gray-900"></p></div>
+                                <div class="ml-auto pl-3"><button id="toastClose" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../frontend/assets/js/auth.js"></script>
+    <script src="../frontend/components/api.js"></script>
+    <script src="../attendance-service/attendance-api.js"></script>
+    <script src="report.js"></script>
+    
+    <!-- Scripts -->
+    <script src="../frontend/assets/js/translations.js"></script>
+    <script src="../frontend/assets/js/main.js"></script>
+</body>
+</html>
+

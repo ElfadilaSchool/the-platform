@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إحصائيات الشكاوي</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #f8f9fb;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      color: #1f2937;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .btn-secondary:hover {
+      background: #d1d5db;
+    }
+
+    .filters {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      margin-bottom: 2rem;
+    }
+
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .filter-group label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+
+    .filter-group input {
+      width: 100%;
+      padding: 0.625rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+
+    .filter-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      transition: transform 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .stat-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1f2937;
+      line-height: 1;
+    }
+
+    .stat-change {
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    .stat-change.positive {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .stat-change.negative {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .chart-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .chart-card.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .chart-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 300px;
+    }
+
+    .chart-container.tall {
+      height: 400px;
+    }
+
+    .table-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      margin-bottom: 2rem;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th,
+    .data-table td {
+      text-align: right;
+      padding: 0.875rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .data-table th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.875rem;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f9fafb;
+    }
+
+    .matrix-highlights {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .matrix-highlight {
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      background: linear-gradient(135deg, #eef2ff, #e0f2fe);
+      border-right: 4px solid #6366f1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .matrix-highlight span {
+      font-size: 0.9rem;
+      color: #4b5563;
+    }
+
+    .matrix-highlight strong {
+      font-size: 1.75rem;
+      color: #111827;
+    }
+
+    .matrix-highlight small {
+      color: #6b7280;
+    }
+
+    .matrix-table-wrapper {
+      overflow-x: auto;
+    }
+
+    .matrix-table {
+      width: 100%;
+      min-width: 420px;
+      border-collapse: collapse;
+    }
+
+    .matrix-table th,
+    .matrix-table td {
+      border: 1px solid #e5e7eb;
+      padding: 0.75rem;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .matrix-table th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .matrix-cell-count {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .matrix-cell-sub {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    .department-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .department-tag {
+      flex: 1;
+      min-width: 200px;
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .department-tag-name {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .department-tag-meta {
+      font-size: 0.85rem;
+      color: #4b5563;
+    }
+
+    .department-tag-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+      color: #1f2937;
+      font-weight: 600;
+    }
+
+    .info-card {
+      margin-top: 1rem;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      background: #fff7ed;
+      border-right: 4px solid #f97316;
+      color: #9a3412;
+      font-size: 0.9rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .badge {
+      padding: 0.375rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .badge-high {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-medium {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-low {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: white;
+      font-size: 1.25rem;
+    }
+
+    .alert {
+      position: fixed;
+      top: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      z-index: 1000;
+      min-width: 300px;
+      border-right: 4px solid;
+    }
+
+    .alert.show {
+      display: flex;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .alert.success {
+      border-color: #10b981;
+    }
+
+    .alert.error {
+      border-color: #ef4444;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header {
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="alert" id="alert">
+    <span id="alertIcon"></span>
+    <span id="alertText"></span>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <h1>
+        <span>📊</span>
+        إحصائيات الشكاوي
+      </h1>
+      <div class="header-actions">
+        <button class="btn btn-secondary" onclick="goBack()">← العودة</button>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label>من تاريخ</label>
+          <input type="date" id="dateFrom">
+        </div>
+        <div class="filter-group">
+          <label>إلى تاريخ</label>
+          <input type="date" id="dateTo">
+        </div>
+        <div class="filter-group" style="display: flex; align-items: flex-end;">
+          <button class="btn btn-primary" onclick="loadStatistics()" style="width: 100%;">
+            🔍 عرض
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="content">
+      <div class="loading">⏳ جاري تحميل الإحصائيات...</div>
+    </div>
+  </div>
+
+  <script>
+    // API de statistiques décisionnelles pour le directeur
+    // À exposer côté backend sur la base des vues SQL fournies (director_dashboard,
+    // department_performance_detail, critical_alerts, trend_analysis, top_contributors).
+    const DIRECTOR_API = 'http://localhost:3020/api/director';
+    let charts = {};
+
+    function showAlert(msg, isError = false) {
+      const alert = document.getElementById('alert');
+      document.getElementById('alertIcon').textContent = isError ? '⚠️' : '✓';
+      document.getElementById('alertText').textContent = msg;
+      alert.className = `alert ${isError ? 'error' : 'success'} show`;
+      setTimeout(() => alert.classList.remove('show'), 3000);
+    }
+
+    function goBack() {
+      window.history.back();
+    }
+
+    function formatNumber(num) {
+      return num?.toLocaleString('ar-DZ') || '0';
+    }
+
+    function formatHours(hours) {
+      const value = Number(hours);
+      if (!Number.isFinite(value) || value <= 0) return '—';
+      if (value < 24) return `${value.toFixed(1)} ساعة`;
+      const days = Math.floor(value / 24);
+      const remainingHours = Math.floor(value % 24);
+      return `${days} يوم ${remainingHours > 0 ? `و ${remainingHours} ساعة` : ''}`;
+    }
+
+    function extractDepartmentHints(name) {
+      if (!name) return { block: 'الموقع غير محدد', floor: '' };
+      const blockMatch = name.match(/(?:bloc|بلوك)\s*([A-Za-z0-9أ-ي]+)/i);
+      const floorMatch = name.match(/(?:etage|طابق|ط\.?)(?:\s*|\s*رقم\s*)([0-9]+)/i);
+      return {
+        block: blockMatch ? `بلوك ${blockMatch[1].trim()}` : 'بلوك غير محدد',
+        floor: floorMatch ? `طابق ${floorMatch[1].trim()}` : ''
+      };
+    }
+
+    function renderDepartmentTags(departments = []) {
+      if (!departments.length) {
+        return '<div class="empty">لا توجد بيانات أقسام حالياً</div>';
+      }
+      const tags = departments.slice(0, 6).map(dept => {
+        const hints = extractDepartmentHints(dept.department_name);
+        const meta = [hints.block, hints.floor].filter(Boolean).join(' • ') || 'الموقع غير محدد';
+        return `
+          <div class="department-tag">
+            <div class="department-tag-name">${dept.department_name}</div>
+            <div class="department-tag-meta">${meta}</div>
+            <div class="department-tag-stats">
+              <span>إجمالي: ${dept.total}</span>
+              <span>قيد المعالجة: ${dept.pending}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+      return `<div class="department-tags">${tags}</div>`;
+    }
+
+    function createChart(target, type, data, options = {}) {
+      if (!target) return;
+      const ctx = typeof target.getContext === 'function' ? target.getContext('2d') : target;
+      if (!ctx) return;
+      const chartId = ctx.canvas?.id || `chart-${type}-${Date.now()}`;
+      if (charts[chartId]) {
+        charts[chartId].destroy();
+      }
+
+      charts[chartId] = new Chart(ctx, {
+        type: type,
+        data: data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              rtl: true,
+              labels: {
+                font: { size: 12 },
+                padding: 15,
+                usePointStyle: true
+              }
+            },
+            ...options.plugins
+          },
+          ...options
+        }
+      });
+    }
+
+    async function loadStatistics() {
+      try {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+
+        const params = new URLSearchParams();
+        if (dateFrom) params.set('from', dateFrom);
+        if (dateTo) params.set('to', dateTo);
+
+        // Ces endpoints doivent s’appuyer sur les vues SQL données dans ta spec.
+        const [dashboardRes, deptRes, trendRes, topRes, alertsRes, complaintsStatsRes, suggestionsStatsRes] = await Promise.all([
+          fetch(`${DIRECTOR_API}/dashboard?${params}`),
+          fetch(`${DIRECTOR_API}/departments?${params}`),
+          fetch(`${DIRECTOR_API}/trends?${params}`),
+          fetch(`${DIRECTOR_API}/top-contributors?${params}`),
+          fetch(`${DIRECTOR_API}/critical-alerts?${params}`),
+          fetch(`${DIRECTOR_API}/complaints-stats?${params}`),
+          fetch(`${DIRECTOR_API}/suggestions-stats?${params}`)
+        ]);
+
+        if (![dashboardRes, deptRes, trendRes, topRes, alertsRes, complaintsStatsRes, suggestionsStatsRes].every(r => r.ok)) {
+          throw new Error('فشل تحميل الإحصائيات');
+        }
+
+        const [dashboard, departments, trends, topContributors, criticalAlerts, complaintsStats, suggestionsStats] = await Promise.all([
+          dashboardRes.json(),
+          deptRes.json(),
+          trendRes.json(),
+          topRes.json(),
+          alertsRes.json(),
+          complaintsStatsRes.json(),
+          suggestionsStatsRes.json()
+        ]);
+
+        renderStatistics({ dashboard, departments, trends, topContributors, criticalAlerts, complaintsStats, suggestionsStats });
+      } catch (error) {
+        console.error('Error loading statistics:', error);
+        showAlert('فشل تحميل الإحصائيات', true);
+      }
+    }
+
+    function splitDepartmentData(list = []) {
+      const known = [];
+      let unknownTotal = 0;
+      list.forEach(entry => {
+        if (!entry.department_name || entry.department_name === 'غير محدد') {
+          unknownTotal += entry.total || 0;
+        } else {
+          known.push(entry);
+        }
+      });
+      return { knownDepartments: known, unknownDepartmentsTotal: unknownTotal };
+    }
+
+    function renderStatistics(data) {
+      const {
+        dashboard,
+        departments = [],
+        trends = [],
+        topContributors = [],
+        criticalAlerts = [],
+        complaintsStats = {},
+        suggestionsStats = {}
+      } = data;
+
+      const content = document.getElementById('content');
+
+      // KPI principaux (vue director_dashboard)
+      const totalSuggestions = dashboard.total_suggestions || 0;
+      const pendingSuggestions = dashboard.pending_suggestions || 0;
+      const totalSignals = dashboard.total_signals || 0;
+      const pendingSignals = dashboard.pending_signals || 0;
+      const suggestionResolutionRate = dashboard.suggestion_resolution_rate || 0;
+      const signalResolutionRate = dashboard.signal_resolution_rate || 0;
+      const medianReviewHours = dashboard.median_review_hours;
+      const medianTreatmentHours = dashboard.median_treatment_hours;
+
+      // Carte décisionnelle : département le plus performant / le plus en retard
+      let decisionCard = '';
+      if (departments.length) {
+        const sortedByPending = [...departments].sort((a, b) => (b.pending_suggestions || 0) - (a.pending_suggestions || 0));
+        const worstDept = sortedByPending[0];
+        if (worstDept && (worstDept.pending_suggestions || 0) > 0) {
+          decisionCard = `
+            <div class="info-card">
+              <span>🎯</span>
+              <span>
+                أعلى ضغط حالي في قسم 
+                <strong>${worstDept.department}</strong>
+                بعدد 
+                <strong>${worstDept.pending_suggestions}</strong>
+                اقتراح/إشارة قيد المعالجة. يُنصح بتعزيز المتابعة أو الموارد في هذا القسم.
+              </span>
+            </div>
+          `;
+        }
+      }
+
+      // Alertes critiques (critical_alerts)
+      const alertsRows = criticalAlerts.map(a => `
+        <tr>
+          <td>${a.alert_type === 'suggestion_stalled' ? 'اقتراح متأخر' : 'إشارة غير معالجة'}</td>
+          <td>${a.id}</td>
+          <td>${a.title}</td>
+          <td>${a.employee}</td>
+          <td>${a.department || a.location || 'غير محدد'}</td>
+          <td>${a.days_pending}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="6">لا توجد تنبيهات حرجة حالياً</td></tr>';
+
+      content.innerHTML = `
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-icon">💡</span>
+            <div class="stat-label">إجمالي الاقتراحات</div>
+            <div class="stat-value">${formatNumber(totalSuggestions)}</div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-icon">⏳</span>
+            <div class="stat-label">اقتراحات قيد الدراسة</div>
+            <div class="stat-value">${formatNumber(pendingSuggestions)}</div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-icon">🚨</span>
+            <div class="stat-label">إجمالي الإشعارات / التبليغات</div>
+            <div class="stat-value">${formatNumber(totalSignals)}</div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-icon">⏱️</span>
+            <div class="stat-label">تبليغات قيد المعالجة</div>
+            <div class="stat-value">${formatNumber(pendingSignals)}</div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-icon">✅</span>
+            <div class="stat-label">نسبة معالجة الاقتراحات</div>
+            <div class="stat-value">${suggestionResolutionRate}%</div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-icon">✅</span>
+            <div class="stat-label">نسبة معالجة التبليغات</div>
+            <div class="stat-value">${signalResolutionRate}%</div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-icon">⏳</span>
+            <div class="stat-label">زمن مراجعة الاقتراح (وسيط)</div>
+            <div class="stat-value" style="font-size:1.1rem;">${formatHours(medianReviewHours)}</div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-icon">⏳</span>
+            <div class="stat-label">زمن معالجة التبليغ (وسيط)</div>
+            <div class="stat-value" style="font-size:1.1rem;">${formatHours(medianTreatmentHours)}</div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <h3 class="chart-title">⚠️ تنبيهات حرجة</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>نوع التنبيه</th>
+                <th>المعرف</th>
+                <th>العنوان</th>
+                <th>الموظف</th>
+                <th>القسم / الموقع</th>
+                <th>أيام الانتظار</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${alertsRows}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3 class="chart-title">🔧 تحليل الشكاوي الميدانية</h3>
+          ${buildComplaintsDeepDive(complaintsStats)}
+        </div>
+
+        <div class="card">
+          <h3 class="chart-title">💡 تحليل الاقتراحات</h3>
+          ${buildSuggestionsDeepDive(suggestionsStats)}
+        </div>
+
+        ${decisionCard}
+      `;
+
+      renderCharts({ trends, departments, complaintsStats, suggestionsStats });
+    }
+
+    function buildComplaintsDeepDive(stats = {}) {
+      const total = (stats.byStatus || []).reduce((sum, item) => sum + Number(item.total || 0), 0);
+      const pending = (stats.byStatus || []).find(item => item.status === 'pending');
+      const treated = (stats.byStatus || []).find(item => item.status === 'treated');
+      const priorityBadges = (stats.byPriority || []).map(item => `
+        <span style="padding:0.35rem 0.75rem;border-radius:999px;font-size:0.8rem;background:#eef2ff;color:#111827;">
+          ${item.priority || 'غير محدد'}: ${formatNumber(item.total || 0)}
+        </span>
+      `).join('') || '<span style="color:#6b7280;">لا توجد بيانات</span>';
+      const typeRows = (stats.byType || []).map((row, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${row.type_name || 'غير محدد'}</td>
+          <td>${formatNumber(row.total || 0)}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="3">لا توجد بيانات متاحة حالياً</td></tr>';
+      const satisfactionList = (stats.satisfaction || []).length
+        ? stats.satisfaction.map(item => `
+            <div style="font-size:0.9rem;color:#92400e;">
+              ⭐ ${item.rating || 'غير محدد'} : ${formatNumber(item.total || 0)}
+            </div>
+          `).join('')
+        : '<div style="color:#6b7280;">لا توجد تقييمات</div>';
+
+      return `
+        <div style="display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;">
+          <div style="flex:1;min-width:180px;background:#f8fafc;border-radius:12px;padding:1rem;">
+            <div style="font-size:0.85rem;color:#6b7280;">إجمالي البلاغات</div>
+            <div style="font-size:1.5rem;font-weight:700;color:#111827;">${formatNumber(total)}</div>
+          </div>
+          <div style="flex:1;min-width:180px;background:#fff7ed;border-radius:12px;padding:1rem;">
+            <div style="font-size:0.85rem;color:#92400e;">بلاغات قيد المتابعة</div>
+            <div style="font-size:1.5rem;font-weight:700;color:#92400e;">${formatNumber(pending?.total || 0)}</div>
+          </div>
+          <div style="flex:1;min-width:180px;background:#ecfccb;border-radius:12px;padding:1rem;">
+            <div style="font-size:0.85rem;color:#166534;">بلاغات تمت معالجتها</div>
+            <div style="font-size:1.5rem;font-weight:700;color:#166534;">${formatNumber(treated?.total || 0)}</div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
+          ${priorityBadges}
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:1.5rem;margin-bottom:1.5rem;">
+          <div class="chart-container" style="flex:1;min-width:260px;">
+            <canvas id="complaintsTypeChart"></canvas>
+          </div>
+          <div class="chart-container" style="flex:1;min-width:260px;">
+            <canvas id="complaintsTimelineChart"></canvas>
+          </div>
+        </div>
+
+        <div class="table-card" style="box-shadow:none;padding:0;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>نوع الشكوى</th>
+                <th>العدد</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${typeRows}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="info-card" style="margin-top:1rem;flex-direction:column;align-items:flex-start;">
+          <div style="font-weight:600;color:#b45309;margin-bottom:0.35rem;">مؤشر رضا الموظفين</div>
+          ${satisfactionList}
+        </div>
+      `;
+    }
+
+    function buildSuggestionsDeepDive(stats = {}) {
+      const statusBadges = (stats.byStatus || []).map(item => `
+        <span style="padding:0.35rem 0.75rem;border-radius:999px;font-size:0.8rem;background:#e0f2fe;color:#0c4a6e;">
+          ${item.status || 'غير محدد'}: ${formatNumber(item.total || 0)}
+        </span>
+      `).join('') || '<span style="color:#6b7280;">لا توجد بيانات</span>';
+
+      const deptRows = (stats.byDepartment || []).map((row, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${row.department_name || 'غير محدد'}</td>
+          <td>${formatNumber(row.total || 0)}</td>
+          <td>${formatNumber(row.pending || 0)}</td>
+          <td>${formatNumber(row.accepted || 0)}</td>
+          <td>${formatNumber(row.rejected || 0)}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="6">لا توجد بيانات متاحة حالياً</td></tr>';
+
+      return `
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
+          ${statusBadges}
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:1.5rem;margin-bottom:1.5rem;">
+          <div class="chart-container" style="flex:1;min-width:260px;">
+            <canvas id="suggestionsDeptChart"></canvas>
+          </div>
+          <div class="chart-container" style="flex:1;min-width:260px;">
+            <canvas id="suggestionsTimelineChart"></canvas>
+          </div>
+        </div>
+
+        <div class="table-card" style="box-shadow:none;padding:0;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>القسم</th>
+                <th>الإجمالي</th>
+                <th>قيد الدراسة</th>
+                <th>مقبول</th>
+                <th>مرفوض</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${deptRows}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderCharts(data) {
+      const { complaintsStats = {}, suggestionsStats = {} } = data;
+
+      const complaintsTypeCtx = document.getElementById('complaintsTypeChart');
+      if (complaintsTypeCtx && (complaintsStats.byType || []).length) {
+        createChart(complaintsTypeCtx, 'doughnut', {
+          labels: complaintsStats.byType.map(item => item.type_name || 'غير محدد'),
+          datasets: [{
+            data: complaintsStats.byType.map(item => item.total || 0),
+            backgroundColor: ['#0ea5e9', '#38bdf8', '#67e8f9', '#22d3ee', '#0369a1']
+          }]
+        });
+      }
+
+      const complaintsTimelineCtx = document.getElementById('complaintsTimelineChart');
+      if (complaintsTimelineCtx && (complaintsStats.timeline || []).length) {
+        createChart(complaintsTimelineCtx, 'line', {
+          labels: complaintsStats.timeline.map(item => new Date(item.day).toLocaleDateString('ar-DZ', { month: 'short', day: 'numeric' })),
+          datasets: [{
+            label: 'البلاغات اليومية',
+            data: complaintsStats.timeline.map(item => item.total || 0),
+            borderColor: '#0ea5e9',
+            backgroundColor: 'rgba(14,165,233,0.2)',
+            tension: 0.35,
+            fill: true
+          }]
+        }, {
+          scales: { y: { beginAtZero: true } }
+        });
+      }
+
+      const suggestionsDeptCtx = document.getElementById('suggestionsDeptChart');
+      if (suggestionsDeptCtx && (suggestionsStats.byDepartment || []).length) {
+        const labels = suggestionsStats.byDepartment.map(item => item.department_name || 'غير محدد');
+        createChart(suggestionsDeptCtx, 'bar', {
+          labels,
+          datasets: [
+            { label: 'قيد الدراسة', data: suggestionsStats.byDepartment.map(item => item.pending || 0), backgroundColor: '#f97316' },
+            { label: 'مقبول', data: suggestionsStats.byDepartment.map(item => item.accepted || 0), backgroundColor: '#22c55e' },
+            { label: 'مرفوض', data: suggestionsStats.byDepartment.map(item => item.rejected || 0), backgroundColor: '#ef4444' }
+          ]
+        }, {
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true }
+          }
+        });
+      }
+
+      const suggestionsTimelineCtx = document.getElementById('suggestionsTimelineChart');
+      if (suggestionsTimelineCtx && (suggestionsStats.timeline || []).length) {
+        createChart(suggestionsTimelineCtx, 'line', {
+          labels: suggestionsStats.timeline.map(item => new Date(item.day).toLocaleDateString('ar-DZ', { month: 'short', day: 'numeric' })),
+          datasets: [{
+            label: 'الاقتراحات اليومية',
+            data: suggestionsStats.timeline.map(item => item.total || 0),
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99,102,241,0.2)',
+            tension: 0.35,
+            fill: true
+          }]
+        }, {
+          scales: { y: { beginAtZero: true } }
+        });
+      }
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      loadStatistics();
+    });
+  </script>
+</body>
+
+</html>

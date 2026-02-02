@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="attendance.punch_management">Punch File Management - HR Operations Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <script src="../assets/js/translations.js"></script>
+    
+    <style>
+        .dropzone {
+            border: 2px dashed #cbd5e0;
+            transition: all 0.3s ease;
+        }
+        .dropzone.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .file-item:hover .file-actions {
+            opacity: 1;
+        }
+        .file-actions {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Header -->
+
+        <!-- Two Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column - Upload and Files List -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- File Upload Section -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900" data-translate="attendance.upload_punch_file">Upload Punch File</h3>
+                        <!-- Language Selector -->
+                        <select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="en">English</option>
+                            <option value="fr">Français</option>
+                            <option value="ar">العربية</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Dropzone -->
+                    <div id="dropzone" class="dropzone rounded-lg p-8 text-center cursor-pointer">
+                        <div class="space-y-2">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
+                            <p class="text-gray-600" data-translate="common.drag_drop_file">Drag & Drop .xls/.xlsx file here</p>
+                            <p class="text-sm text-gray-500" data-translate="common.or_click_to_select">or click to select</p>
+                        </div>
+                    </div>
+                    
+                    <input type="file" id="fileInput" class="hidden" accept=".xls,.xlsx">
+                    
+                    <!-- Upload Button -->
+                    <button id="uploadBtn" class="w-full mt-4 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled data-translate="btn.upload_file">
+                        <i class="fas fa-upload mr-2"></i>
+                        <span data-translate="btn.upload_file">Upload File</span>
+                    </button>
+                    
+                    <!-- Progress Bar -->
+                    <div id="progressContainer" class="mt-4 hidden">
+                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                            <span data-translate="common.uploading">Uploading...</span>
+                            <span id="progressText">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="progressBar" class="progress-bar bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Uploaded Files List -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900" data-translate="common.uploaded_files">Uploaded Files</h3>
+                    </div>
+                    <div id="filesList" class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+                        <!-- Files will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Raw Punches Table -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4" data-translate="attendance.raw_punches">Raw Punches</h3>
+                    <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="employee.employee">Employee</label>
+                            <input type="text" id="punchFilterEmployee" data-translate-placeholder="common.search_name" placeholder="Search name" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="time.year">Year</label>
+                            <select id="punchFilterYear" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="time.month">Month</label>
+                            <select id="punchFilterMonth" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">All</option>
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6">June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button id="punchFilterSearch" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm" data-translate="btn.apply">
+                                <i class="fas fa-search mr-2"></i>
+                                <span data-translate="btn.apply">Apply</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200" id="rawPunchesTable">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="employee.employee">Employee</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="attendance.punch_time">Punch Time</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="attendance.source">Source</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="common.actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rawPunchesBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Raw punches rows will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Preview Modal -->
+            <div id="filePreviewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                <div class="bg-white rounded-lg shadow-lg max-w-4xl w-full mx-4 p-6 overflow-auto max-h-[80vh]">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-900" id="modalFileTitle">File Preview</h3>
+                        <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div id="modalFileDetails" class="mb-4 text-sm text-gray-700">
+                        <!-- File details will be shown here -->
+                    </div>
+                    <div id="modalPreviewTable" class="overflow-x-auto max-h-96 overflow-y-auto border border-gray-200 rounded">
+                        <!-- Preview table will be populated here -->
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button id="modalCancelBtn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button id="modalSaveBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-save mr-2"></i>
+                            Save to Database
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p class="text-gray-600" id="loadingText">Processing...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Toast -->
+    <div id="toast" class="fixed top-4 right-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg border-l-4 p-4 max-w-sm">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i id="toastIcon" class="text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <p id="toastMessage" class="text-sm font-medium text-gray-900"></p>
+                </div>
+                <div class="ml-auto pl-3">
+                    <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script>
+        // Use centralized AuthManager token
+        const getToken = () => authManager.getToken();
+        const ATTENDANCE_BASE = (typeof API_SERVICES !== 'undefined' && API_SERVICES.attendance) 
+            ? API_SERVICES.attendance 
+            : `http://${window.location.hostname}:3008`;
+        let selectedFile = null;
+        let currentUploadId = null;
+        let currentPunchRecords = [];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Language selector
+            const languageSelector = document.getElementById('languageSelector');
+            if (languageSelector) {
+                languageSelector.value = (typeof currentLanguage !== 'undefined' ? currentLanguage : (window.currentLanguage || 'en'));
+                languageSelector.addEventListener('change', (e) => {
+                    if (typeof setLanguage === 'function') {
+                        setLanguage(e.target.value);
+                    }
+                    if (typeof updatePageTranslations === 'function') {
+                        updatePageTranslations();
+                    }
+                });
+            }
+            
+            // Initialize translations
+            if (typeof updatePageTranslations === 'function') {
+                updatePageTranslations();
+            }
+            
+            // Listen for language changes to update dynamic content
+            document.addEventListener('languageChanged', () => {
+                loadRawPunches();
+            });
+            
+            if (!requireAuth()) return;
+            loadUploadedFiles();
+            initPunchFilterYears();
+            loadRawPunches();
+            setupEventListeners();
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+        });
+
+        function setupEventListeners() {
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+            const uploadBtn = document.getElementById('uploadBtn');
+
+            // Dropzone events
+            dropzone.addEventListener('click', () => fileInput.click());
+            dropzone.addEventListener('dragover', handleDragOver);
+            dropzone.addEventListener('dragleave', handleDragLeave);
+            dropzone.addEventListener('drop', handleDrop);
+
+            // File input change
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Upload button
+            uploadBtn.addEventListener('click', uploadFile);
+
+            // Modal events
+            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+            document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+            document.getElementById('modalSaveBtn').addEventListener('click', savePunchesFromModal);
+
+            // Click outside modal to close
+            document.getElementById('filePreviewModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+
+            // Filters
+            document.getElementById('punchFilterSearch').addEventListener('click', () => loadRawPunches());
+            document.getElementById('punchFilterEmployee').addEventListener('keydown', (e) => { if (e.key === 'Enter') loadRawPunches(); });
+            document.getElementById('punchFilterYear').addEventListener('change', () => loadRawPunches());
+            document.getElementById('punchFilterMonth').addEventListener('change', () => loadRawPunches());
+        }
+
+        function initPunchFilterYears() {
+            const yearSelect = document.getElementById('punchFilterYear');
+            const currentYear = new Date().getFullYear();
+            const years = [];
+            for (let y = currentYear; y >= currentYear - 6; y--) years.push(y);
+            yearSelect.innerHTML = `<option value="">All</option>` + years.map(y => `<option value="${y}">${y}</option>`).join('');
+        }
+
+        // Load raw punches data
+        async function loadRawPunches() {
+            try {
+                const emp = document.getElementById('punchFilterEmployee').value.trim();
+                const year = document.getElementById('punchFilterYear').value;
+                const month = document.getElementById('punchFilterMonth').value;
+                const params = new URLSearchParams();
+                if (emp) params.set('employee', emp);
+                if (year) params.set('year', year);
+                if (month) params.set('month', month);
+                const qs = params.toString();
+                const response = await fetch(`${ATTENDANCE_BASE}/api/punches/raw-punches${qs ? `?${qs}` : ''}`, {
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayRawPunches(result.punches);
+                } else {
+                    throw new Error(result.error || 'Failed to load raw punches');
+                }
+            } catch (error) {
+                console.error('Load raw punches error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        // Display raw punches in table
+        function displayRawPunches(punches) {
+            const tbody = document.getElementById('rawPunchesBody');
+
+            if (punches.length === 0) {
+                const noDataText = typeof translate === 'function' ? translate('table.no_data') : 'No data available';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                            ${noDataText}
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const editText = typeof translate === 'function' ? translate('btn.edit') : 'Edit';
+            const deleteText = typeof translate === 'function' ? translate('btn.delete') : 'Delete';
+            tbody.innerHTML = punches.map(punch => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${punch.employee_name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDateTime(punch.punch_time)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${punch.source}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editRawPunch('${punch.id}')" class="text-indigo-600 hover:text-indigo-900 mr-2">
+                            <i class="fas fa-edit"></i> ${editText}
+                        </button>
+                        <button onclick="deleteRawPunch('${punch.id}')" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i> ${deleteText}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Edit raw punch
+        async function editRawPunch(punchId) {
+            // TODO: Implement edit functionality
+            const msg = typeof translate === 'function' ? translate('message.coming_soon') || 'Edit functionality coming soon' : 'Edit functionality coming soon';
+            showToast('info', msg);
+        }
+
+        // Delete raw punch
+        async function deleteRawPunch(punchId) {
+            const confirmMsg = typeof translate === 'function' ? translate('message.confirm_delete_punch') || 'Are you sure you want to delete this punch record?' : 'Are you sure you want to delete this punch record?';
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${ATTENDANCE_BASE}/api/punches/raw-punches/${punchId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('success', 'Punch record deleted successfully');
+                    loadRawPunches();
+                } else {
+                    throw new Error(result.error || 'Delete failed');
+                }
+            } catch (error) {
+                console.error('Delete raw punch error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        // Open file preview modal
+        function openFilePreviewModal(preview, uploadId) {
+            currentUploadId = uploadId;
+            currentPunchRecords = preview.punchRecords || [];
+
+            // Set modal title
+            const filePreviewText = typeof translate === 'function' ? translate('common.file_preview') || 'File Preview' : 'File Preview';
+            document.getElementById('modalFileTitle').textContent = filePreviewText;
+
+            // Show file details
+            const fileDetails = document.getElementById('modalFileDetails');
+            fileDetails.innerHTML = `
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <span class="text-gray-500">Total Rows:</span>
+                        <span class="font-medium ml-2">${preview.totalRows}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Valid Rows:</span>
+                        <span class="font-medium ml-2 text-green-600">${preview.validRows}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Error Rows:</span>
+                        <span class="font-medium ml-2 text-red-600">${preview.errorRows}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Total Punches:</span>
+                        <span class="font-medium ml-2">${preview.totalPunches}</span>
+                    </div>
+                </div>
+                ${preview.errors.length > 0 ? `
+                    <div class="mt-4">
+                        <h4 class="text-sm font-medium text-red-600 mb-2">Errors:</h4>
+                        <div class="max-h-32 overflow-y-auto">
+                            ${preview.errors.map(error => `
+                                <div class="text-xs text-red-600 mb-1">Row ${error.row}: ${error.error}</div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+
+            // Show preview table
+            const previewTable = document.getElementById('modalPreviewTable');
+            if (currentPunchRecords.length > 0) {
+                previewTable.innerHTML = `
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="employee.employee">Employee</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="attendance.punch_time">Punch Time</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="attendance.source">Source</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${currentPunchRecords.map(punch => `
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${punch.employee_name}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDateTime(punch.punch_time)}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${punch.source}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                const noRecordsText = typeof translate === 'function' ? translate('table.no_data') : 'No data available';
+                previewTable.innerHTML = `<p class="text-gray-500 text-center py-8">${noRecordsText}</p>`;
+            }
+
+            // Show modal
+            document.getElementById('filePreviewModal').classList.remove('hidden');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('filePreviewModal').classList.add('hidden');
+            currentUploadId = null;
+            currentPunchRecords = [];
+        }
+
+        // Save punches from modal
+        async function savePunchesFromModal() {
+            if (!currentUploadId) return;
+
+            try {
+                const savingText = typeof translate === 'function' ? translate('common.saving') || 'Saving...' : 'Saving punches to database...';
+                showLoading(savingText);
+
+                const response = await fetch(`${ATTENDANCE_BASE}/api/punches/save/${currentUploadId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('success', `Successfully saved ${result.savedRecords} punch records`);
+                    closeModal();
+                    loadUploadedFiles();
+                    loadRawPunches();
+                } else {
+                    throw new Error(result.error || 'Save failed');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                showToast('error', error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect({ target: { files } });
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            const validTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+            const isValidType = validTypes.includes(file.type) || file.name.match(/\.(xls|xlsx)$/i);
+
+            if (!isValidType) {
+                showToast('error', 'Please select a valid Excel file (.xls or .xlsx)');
+                return;
+            }
+
+            // Validate file size (10MB limit)
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('error', 'File size must be less than 10MB');
+                return;
+            }
+
+            selectedFile = file;
+            document.getElementById('uploadBtn').disabled = false;
+            
+            // Update dropzone text
+            const dropzone = document.getElementById('dropzone');
+            dropzone.innerHTML = `
+                <div class="space-y-2">
+                    <i class="fas fa-file-excel text-4xl text-green-500"></i>
+                    <p class="text-gray-900 font-medium">${file.name}</p>
+                    <p class="text-sm text-gray-500">${formatFileSize(file.size)}</p>
+                </div>
+            `;
+        }
+
+        async function uploadFile() {
+            if (!selectedFile) return;
+
+            const token = getToken();
+            console.log('Token being sent:', token);
+
+            const formData = new FormData();
+            formData.append('punchFile', selectedFile);
+
+            try {
+                showProgress(0);
+
+                const response = await fetch(`${ATTENDANCE_BASE}/api/punches/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (response.status === 401) {
+                    // Handle authentication errors specifically
+                    showToast('error', 'Authentication failed. Please log in again.');
+                    // Redirect to login page
+                    setTimeout(() => {
+                        window.location.href = '../index.html';
+                    }, 2000);
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showProgress(100);
+                    currentUploadId = result.upload.id;
+                    showToast('success', 'File uploaded successfully');
+
+                    // Parse the file
+                    await parseFile(currentUploadId);
+
+                    // Reload files list
+                    loadUploadedFiles();
+                } else {
+                    throw new Error(result.error || 'Upload failed');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                showToast('error', error.message);
+            } finally {
+                hideProgress();
+            }
+        }
+
+        async function parseFile(uploadId) {
+            try {
+                showLoading('Parsing file...');
+                
+                const response = await fetch(`${ATTENDANCE_BASE}/api/punches/parse/${uploadId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showPreview(result.preview, uploadId);
+                } else {
+                    throw new Error(result.error || 'Parsing failed');
+                }
+            } catch (error) {
+                console.error('Parse error:', error);
+                showToast('error', error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Old showPreview function removed - now using modal
+
+        async function savePunches() {
+            if (!currentUploadId) return;
+
+            try {
+                const savingText = typeof translate === 'function' ? translate('common.saving') || 'Saving...' : 'Saving punches to database...';
+                showLoading(savingText);
+                
+                const response = await fetch(`${ATTENDANCE_BASE}/api/punches/save/${currentUploadId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('success', `Successfully saved ${result.savedRecords} punch records`);
+                    cancelPreview();
+                    loadUploadedFiles();
+                } else {
+                    throw new Error(result.error || 'Save failed');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                showToast('error', error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function cancelPreview() {
+            document.getElementById('emptyState').classList.remove('hidden');
+            document.getElementById('previewContent').classList.add('hidden');
+            currentUploadId = null;
+            
+            // Reset file input
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('uploadBtn').disabled = true;
+            
+            // Reset dropzone
+            const dropzone = document.getElementById('dropzone');
+            dropzone.innerHTML = `
+                <div class="space-y-2">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
+                    <p class="text-gray-600">Drag & Drop .xls/.xlsx file here</p>
+                    <p class="text-sm text-gray-500">or click to select</p>
+                </div>
+            `;
+        }
+
+        async function loadUploadedFiles() {
+            try {
+                const response = await fetch(`${ATTENDANCE_BASE}/api/punches/files`, {
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayFilesList(result.files);
+                } else {
+                    throw new Error(result.error || 'Failed to load files');
+                }
+            } catch (error) {
+                console.error('Load files error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        function displayFilesList(files) {
+            const filesList = document.getElementById('filesList');
+            
+            if (files.length === 0) {
+                filesList.innerHTML = `
+                    <div class="p-6 text-center text-gray-500">
+                        <i class="fas fa-folder-open text-3xl mb-2"></i>
+                        <p>No files uploaded yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filesList.innerHTML = files.map(file => `
+                <div class="file-item p-4 hover:bg-gray-50 cursor-pointer" onclick="viewFileDetails('${file.id}')">
+                    <div class="flex items-center justify-between">
+                        <div class="main-content flex-1">
+                            <h4 class="text-sm font-medium text-gray-900">${file.original_filename}</h4>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Uploaded ${formatDateTime(file.upload_date)} by ${file.uploaded_by_username || 'Unknown'}
+                            </p>
+                            <div class="flex items-center mt-2 space-x-4 text-xs">
+                                <span class="text-gray-500">${formatFileSize(file.file_size)}</span>
+                                <span class="px-2 py-1 rounded-full text-xs ${getStatusColor(file.status)}">${file.status}</span>
+                                <span class="text-gray-500">${file.processed_records || 0} records</span>
+                            </div>
+                        </div>
+                        <div class="file-actions flex space-x-2">
+                            <button onclick="event.stopPropagation(); downloadFile('${file.id}')" 
+                                    class="text-blue-600 hover:text-blue-800" title="Download">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); viewFileDetails('${file.id}')" 
+                                    class="text-green-600 hover:text-green-800" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); deleteFile('${file.id}')" 
+                                    class="text-red-600 hover:text-red-800" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function downloadFile(fileId) {
+            try {
+                const response = await fetch(`${ATTENDANCE_BASE}/api/punches/download/${fileId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    }
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = response.headers.get('Content-Disposition')?.split('filename=')[1] || 'file.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    throw new Error('Download failed');
+                }
+            } catch (error) {
+                console.error('Download error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        async function deleteFile(fileId) {
+            const confirmDeleteFileMsg = typeof translate === 'function' ? translate('message.confirm_delete_file') || 'Are you sure you want to delete this file and all associated punch records?' : 'Are you sure you want to delete this file and all associated punch records?';
+            if (!confirm(confirmDeleteFileMsg)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${ATTENDANCE_BASE}/api/punches/files/${fileId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('success', 'File deleted successfully');
+                    loadUploadedFiles();
+                } else {
+                    throw new Error(result.error || 'Delete failed');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                showToast('error', error.message);
+            }
+        }
+
+        async function viewFileDetails(fileId) {
+            try {
+                showLoading('Loading file details...');
+                const response = await fetch(`${ATTENDANCE_BASE}/api/punches/parse/${fileId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    openFilePreviewModal(result.preview, fileId);
+                } else {
+                    throw new Error(result.error || 'Parsing failed');
+                }
+            } catch (error) {
+                console.error('View details error:', error);
+                showToast('error', error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Utility functions
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function formatDateTime(dateString) {
+            return new Date(dateString).toLocaleString();
+        }
+
+        function getStatusColor(status) {
+            switch (status) {
+                case 'completed': return 'bg-green-100 text-green-800';
+                case 'processing': return 'bg-yellow-100 text-yellow-800';
+                case 'failed': return 'bg-red-100 text-red-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function showProgress(percent) {
+            const container = document.getElementById('progressContainer');
+            const bar = document.getElementById('progressBar');
+            const text = document.getElementById('progressText');
+            
+            container.classList.remove('hidden');
+            bar.style.width = percent + '%';
+            text.textContent = percent + '%';
+        }
+
+        function hideProgress() {
+            document.getElementById('progressContainer').classList.add('hidden');
+        }
+
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingModal').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingModal').classList.add('hidden');
+        }
+
+        function showToast(type, message) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const messageEl = document.getElementById('toastMessage');
+            
+            if (type === 'success') {
+                toast.className = 'fixed top-4 right-4 z-50';
+                toast.firstElementChild.className = 'bg-white rounded-lg shadow-lg border-l-4 border-green-500 p-4 max-w-sm';
+                icon.className = 'fas fa-check-circle text-xl text-green-500';
+            } else {
+                toast.className = 'fixed top-4 right-4 z-50';
+                toast.firstElementChild.className = 'bg-white rounded-lg shadow-lg border-l-4 border-red-500 p-4 max-w-sm';
+                icon.className = 'fas fa-exclamation-circle text-xl text-red-500';
+            }
+            
+            messageEl.textContent = message;
+            toast.classList.remove('hidden');
+            
+            setTimeout(hideToast, 5000);
+        }
+
+        function hideToast() {
+            document.getElementById('toast').classList.add('hidden');
+        }
+    </script>
+    <script src="../assets/js/navbar.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,2048 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Employee Dashboard - HR Operations Platform</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+	<link href="../assets/css/style.css" rel="stylesheet">
+	<style>
+		/* Ensure header is positioned at the top without overlapping */
+		#dashboardHeader {
+			position: relative !important;
+			top: 0 !important;
+			left: 0 !important;
+			right: 0 !important;
+			width: 100% !important;
+			margin: 0 !important;
+			padding: 0 !important;
+			z-index: 10;
+			flex-shrink: 0;
+		}
+		
+		#dashboardHeaderContainer,
+		.main-content > #dashboardHeader {
+			margin: 0 !important;
+			padding: 0 !important;
+			width: 100% !important;
+			flex-shrink: 0 !important;
+		}
+		
+		/* Ensure main-content positions header correctly */
+		.main-content {
+			display: flex !important;
+			flex-direction: column !important;
+		}
+		
+		/* Ensure header container/header is at the very top */
+		.main-content > #dashboardHeaderContainer,
+		.main-content > #dashboardHeader {
+			order: -1;
+		}
+		
+		/* Ensure main content flows below header */
+		.main-content > main {
+			flex: 1 1 auto !important;
+			overflow-y: auto !important;
+			min-height: 0 !important;
+			width: 100% !important;
+		}
+		
+		/* Remove any margin/padding that might cause overlap */
+		body.bg-gray-50 {
+			margin: 0 !important;
+			padding-top: 0 !important;
+			padding-bottom: 0 !important;
+		}
+		
+		/* Ensure body height is correct */
+		html, body {
+			height: 100%;
+			overflow-x: hidden;
+		}
+		
+		/* Main content should fill available space */
+		.main-content {
+			height: 100vh;
+			margin-top: 0 !important;
+		}
+		
+		/* Account for sidebar width - more compatible approach */
+		body #collapsibleSidebar ~ .main-content,
+		body:has(#collapsibleSidebar) .main-content {
+			margin-left: 4rem; /* 64px for collapsed sidebar */
+		}
+		
+		[dir="rtl"] body #collapsibleSidebar ~ .main-content,
+		[dir="rtl"] body:has(#collapsibleSidebar) .main-content {
+			margin-left: 0;
+			margin-right: 4rem;
+		}
+		
+		/* Fix header layout for RTL (Arabic) - prevents rectangle shape */
+		[dir="rtl"] #dashboardHeader {
+			position: relative !important;
+			top: 0 !important;
+			left: 0 !important;
+			right: 0 !important;
+			margin: 0 !important;
+			padding: 0 !important;
+		}
+		
+		[dir="rtl"] #dashboardHeader > .flex.items-center.justify-between {
+			flex-direction: row !important;
+			direction: ltr;
+		}
+		
+		/* Keep header right controls in LTR order */
+		[dir="rtl"] #dashboardHeader > .flex.items-center.justify-between > div:last-child {
+			flex-direction: row !important;
+			direction: ltr;
+		}
+		
+		/* Fix space-x-4 spacing in header controls for RTL */
+		[dir="rtl"] #dashboardHeader .space-x-4 > * + * {
+			margin-left: 1rem !important;
+			margin-right: 0 !important;
+		}
+		
+		/* Fix space-x-2 spacing in header for RTL */
+		[dir="rtl"] #dashboardHeader .space-x-2 > * + * {
+			margin-left: 0.5rem !important;
+			margin-right: 0 !important;
+		}
+		
+		/* Ensure header maintains proper width */
+		[dir="rtl"] #dashboardHeader > .flex.items-center.justify-between {
+			width: 100%;
+			max-width: 100%;
+		}
+		
+		/* Dashboard card styles */
+		.stat-card {
+			transition: all 0.3s ease;
+			border: 2px solid transparent;
+		}
+		
+		.stat-card:hover {
+			transform: translateY(-4px);
+			box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+		}
+		
+		.gradient-bg-blue {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		}
+		
+		.gradient-bg-green {
+			background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+		}
+		
+		.gradient-bg-orange {
+			background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+		}
+		
+		.gradient-bg-purple {
+			background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+		}
+		
+		.gradient-bg-yellow {
+			background: linear-gradient(135deg, #fad961 0%, #f76b1c 100%);
+		}
+		
+		.gradient-bg-indigo {
+			background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+		}
+		
+		.loading-skeleton {
+			background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+			background-size: 200% 100%;
+			animation: loading 1.5s infinite;
+		}
+		
+		@keyframes loading {
+			0% { background-position: 200% 0; }
+			100% { background-position: -200% 0; }
+		}
+		
+		.employee-info-card {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		}
+	</style>
+</head>
+<body class="bg-gray-50">
+    <!-- The reusable navbar will be automatically inserted here -->
+    
+    <!-- Main Content -->
+    <div class="main-content flex-1 flex flex-col overflow-hidden">
+        <!-- Header will be inserted here after sidebar initialization -->
+        <div id="dashboardHeaderContainer" class="flex-shrink-0"></div>
+
+        <!-- Content -->
+	<main class="flex-1 overflow-y-auto p-6 rtl:mr-16 ltr:ml-16">
+		<div class="max-w-7xl mx-auto px-4 py-6">
+			<!-- Page Header with Filter -->
+			<div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+				<div>
+					<h1 class="text-3xl font-bold text-gray-900 mb-2" data-translate="nav.dashboard">Employee Dashboard</h1>
+					<p class="text-gray-600" data-translate="dashboard.welcome">View your statistics and manage your work</p>
+				</div>
+				<div class="flex items-center gap-3">
+					<label class="text-sm font-medium text-gray-700" data-translate="common.filter">Filter:</label>
+					<select id="periodFilter" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+						<option value="current" data-translate="dashboard.current_month">Current Month</option>
+						<option value="last" data-translate="dashboard.last_month">Last Month</option>
+						<option value="week" data-translate="dashboard.last_week">Last Week</option>
+						<option value="year" data-translate="dashboard.this_year">This Year</option>
+					</select>
+				</div>
+			</div>
+
+			<!-- Employee Info Card -->
+			<div id="employeeInfoCard" class="employee-info-card rounded-xl shadow-lg p-6 mb-6 text-white">
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-4">
+						<div class="h-16 w-16 rounded-full bg-white/20 flex items-center justify-center">
+							<i class="fas fa-user text-2xl"></i>
+						</div>
+						<div>
+							<h2 id="employeeName" class="text-2xl font-bold mb-1">Loading...</h2>
+							<div class="flex flex-wrap gap-4 text-sm">
+								<span id="employeePosition" class="flex items-center gap-2">
+									<i class="fas fa-briefcase"></i>
+									<span>Loading...</span>
+								</span>
+								<span id="employeeDepartment" class="flex items-center gap-2">
+									<i class="fas fa-building"></i>
+									<span>Loading...</span>
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Statistics Grid -->
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+				<!-- Tasks Statistics -->
+				<div class="stat-card bg-white rounded-xl shadow-lg p-6 gradient-bg-blue text-white">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="text-lg font-semibold" data-translate="tasks.my_tasks">My Tasks</h3>
+						<i class="fas fa-tasks text-2xl opacity-80"></i>
+					</div>
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="tasks.total">Total</p>
+							<p id="tasksTotal" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="tasks.completed">Completed</p>
+							<p id="tasksCompleted" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="tasks.in_progress">In Progress</p>
+							<p id="tasksInProgress" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="tasks.overdue">Overdue</p>
+							<p id="tasksOverdue" class="text-2xl font-bold">0</p>
+						</div>
+					</div>
+					<a href="tasks.html" class="mt-4 inline-flex items-center text-white/90 hover:text-white text-sm font-medium">
+						<span data-translate="common.view_all">View All</span>
+						<i class="fas fa-arrow-right ml-2"></i>
+					</a>
+				</div>
+
+				<!-- Reports Statistics -->
+				<div class="stat-card bg-white rounded-xl shadow-lg p-6 gradient-bg-purple text-white">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="text-lg font-semibold" data-translate="reports.my_reports">My Reports</h3>
+						<i class="fas fa-file-alt text-2xl opacity-80"></i>
+					</div>
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="reports.total">Total</p>
+							<p id="reportsTotal" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="reports.read">Read</p>
+							<p id="reportsRead" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="reports.pending">Pending</p>
+							<p id="reportsPending" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="reports.today">Today</p>
+							<p id="reportsToday" class="text-2xl font-bold">0</p>
+						</div>
+					</div>
+					<a href="rapportemp.html" class="mt-4 inline-flex items-center text-white/90 hover:text-white text-sm font-medium">
+						<span data-translate="common.view_all">View All</span>
+						<i class="fas fa-arrow-right ml-2"></i>
+					</a>
+				</div>
+
+				<!-- Requests Statistics -->
+				<div class="stat-card bg-white rounded-xl shadow-lg p-6 gradient-bg-indigo text-gray-800">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="text-lg font-semibold" data-translate="requests.title">Requests</h3>
+						<i class="fas fa-paper-plane text-2xl text-indigo-600"></i>
+					</div>
+					<div class="space-y-3">
+						<div>
+							<p class="text-xs text-gray-600 mb-1" data-translate="requests.exceptions">Exceptions</p>
+							<p id="exceptionsCount" class="text-xl font-bold text-gray-900">0</p>
+						</div>
+						<div>
+							<p class="text-xs text-gray-600 mb-1" data-translate="requests.extra_hours">Extra Hours</p>
+							<p id="extraHoursCount" class="text-xl font-bold text-gray-900">0</p>
+						</div>
+					</div>
+					<a href="submit-exception.html" class="mt-4 inline-flex items-center text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+						<span data-translate="common.view_all">View All</span>
+						<i class="fas fa-arrow-right ml-2"></i>
+					</a>
+				</div>
+
+				<!-- Salary Statistics -->
+				<div class="stat-card bg-white rounded-xl shadow-lg p-6 gradient-bg-green text-white">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="text-lg font-semibold" data-translate="salary.my_salary">Last Month Salary</h3>
+						<i class="fas fa-money-check-alt text-2xl opacity-80"></i>
+					</div>
+					<div id="salaryStats">
+						<p class="text-xs opacity-80 mb-1" data-translate="salary.net_salary">Net Salary</p>
+						<p id="lastMonthSalary" class="text-2xl font-bold">0 DA</p>
+						<p id="salaryStatus" class="text-sm mt-2 opacity-80">Loading...</p>
+					</div>
+					<a href="salary-employee.html" class="mt-4 inline-flex items-center text-white/90 hover:text-white text-sm font-medium">
+						<span data-translate="common.view_all">View All</span>
+						<i class="fas fa-arrow-right ml-2"></i>
+					</a>
+				</div>
+			</div>
+
+			<!-- Signals and Complaints Statistics -->
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+				<!-- Signals Statistics -->
+				<div class="stat-card bg-white rounded-xl shadow-lg p-6 gradient-bg-orange text-white">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="text-lg font-semibold" data-translate="signals.my_signals">My Signals</h3>
+						<i class="fas fa-exclamation-triangle text-2xl opacity-80"></i>
+					</div>
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="signals.total">Total</p>
+							<p id="signalsTotal" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="signals.pending">Pending</p>
+							<p id="signalsPending" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="signals.treated">Treated</p>
+							<p id="signalsTreated" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="signals.high_priority">High Priority</p>
+							<p id="signalsHighPriority" class="text-2xl font-bold">0</p>
+						</div>
+					</div>
+					<a href="signals-employee.html" class="mt-4 inline-flex items-center text-white/90 hover:text-white text-sm font-medium">
+						<span data-translate="common.view_all">View All</span>
+						<i class="fas fa-arrow-right ml-2"></i>
+					</a>
+				</div>
+
+				<!-- Complaints Statistics -->
+				<div class="stat-card bg-white rounded-xl shadow-lg p-6 gradient-bg-yellow text-white">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="text-lg font-semibold" data-translate="complaints.my_complaints">My Complaints</h3>
+						<i class="fas fa-comments text-2xl opacity-80"></i>
+					</div>
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="complaints.total">Total</p>
+							<p id="complaintsTotal" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="complaints.pending">Pending</p>
+							<p id="complaintsPending" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="complaints.completed">Completed</p>
+							<p id="complaintsCompleted" class="text-2xl font-bold">0</p>
+						</div>
+						<div>
+							<p class="text-xs opacity-80 mb-1" data-translate="complaints.overdue">Overdue</p>
+							<p id="complaintsOverdue" class="text-2xl font-bold">0</p>
+						</div>
+					</div>
+					<a href="complaints-employee.html" class="mt-4 inline-flex items-center text-white/90 hover:text-white text-sm font-medium">
+						<span data-translate="common.view_all">View All</span>
+						<i class="fas fa-arrow-right ml-2"></i>
+					</a>
+				</div>
+			</div>
+
+			<!-- Attendance Summary -->
+			<div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+				<div class="flex items-center justify-between mb-6">
+					<h3 class="text-xl font-semibold text-gray-900" data-translate="attendance.summary">Attendance Summary</h3>
+					<i class="fas fa-calendar-check text-blue-600 text-2xl"></i>
+				</div>
+				<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+					<div class="text-center p-4 bg-blue-50 rounded-lg">
+						<p class="text-xs text-gray-600 mb-2" data-translate="attendance.worked_days">Work Days</p>
+						<p id="attendanceWorkDays" class="text-2xl font-bold text-blue-600">0</p>
+						<p class="text-xs text-gray-500 mt-1" data-translate="attendance.days">days</p>
+					</div>
+					<div class="text-center p-4 bg-red-50 rounded-lg">
+						<p class="text-xs text-gray-600 mb-2" data-translate="attendance.absent_days">Absent Days</p>
+						<p id="attendanceAbsentDays" class="text-2xl font-bold text-red-600">0</p>
+						<p class="text-xs text-gray-500 mt-1" data-translate="attendance.days">days</p>
+					</div>
+					<div class="text-center p-4 bg-green-50 rounded-lg">
+						<p class="text-xs text-gray-600 mb-2" data-translate="attendance.overtime_hours">Overtime Hours</p>
+						<p id="attendanceOvertime" class="text-2xl font-bold text-green-600">0.0h</p>
+					</div>
+					<div class="text-center p-4 bg-yellow-50 rounded-lg">
+						<p class="text-xs text-gray-600 mb-2" data-translate="attendance.late_minutes">Late</p>
+						<p id="attendanceLate" class="text-2xl font-bold text-yellow-600">0m</p>
+					</div>
+					<div class="text-center p-4 bg-orange-50 rounded-lg">
+						<p class="text-xs text-gray-600 mb-2" data-translate="attendance.early_leave">Early Leave</p>
+						<p id="attendanceEarly" class="text-2xl font-bold text-orange-600">0m</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Work Schedule Timetable -->
+			<div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+				<div class="flex items-center justify-between mb-6">
+					<div>
+						<h3 class="text-xl font-semibold text-gray-900" data-translate="schedule.my_schedule">My Work Schedule</h3>
+						<p class="text-sm text-gray-600 mt-1" data-translate="schedule.view_schedule">View your weekly work schedule and assigned timetables</p>
+					</div>
+					<i class="fas fa-calendar-alt text-blue-600 text-2xl"></i>
+				</div>
+				
+				<div id="scheduleContent">
+					<!-- Loading state -->
+					<div id="scheduleLoading" class="text-center py-8">
+						<div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+						<p class="mt-2 text-gray-600" data-translate="common.loading">Loading schedule...</p>
+					</div>
+					
+					<!-- Schedule display -->
+					<div id="scheduleDisplay" class="hidden">
+						<!-- Schedule summary -->
+						<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+							<div class="bg-blue-50 rounded-lg p-4">
+								<div class="flex items-center">
+									<i class="fas fa-calendar-check text-blue-600 text-xl mr-3"></i>
+									<div>
+										<p class="text-sm text-gray-600" data-translate="schedule.total_days">Total Working Days</p>
+										<p id="scheduleTotalDays" class="text-2xl font-bold text-blue-600">0</p>
+									</div>
+								</div>
+							</div>
+							<div class="bg-green-50 rounded-lg p-4">
+								<div class="flex items-center">
+									<i class="fas fa-clock text-green-600 text-xl mr-3"></i>
+									<div>
+										<p class="text-sm text-gray-600" data-translate="schedule.total_hours">Total Hours/Week</p>
+										<p id="scheduleTotalHours" class="text-2xl font-bold text-green-600">0h</p>
+									</div>
+								</div>
+							</div>
+							<div class="bg-purple-50 rounded-lg p-4">
+								<div class="flex items-center">
+									<i class="fas fa-calendar-week text-purple-600 text-xl mr-3"></i>
+									<div>
+										<p class="text-sm text-gray-600" data-translate="schedule.timetable_type">Timetable Type</p>
+										<p id="scheduleType" class="text-lg font-semibold text-purple-600">-</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+						<!-- Weekly timetable -->
+						<div id="timetableName" class="text-sm text-gray-600 mb-4"></div>
+						<div class="grid grid-cols-1 md:grid-cols-7 gap-3">
+							<!-- Days will be populated by JavaScript -->
+						</div>
+						
+						<!-- No schedule assigned message -->
+						<div id="noScheduleMessage" class="hidden text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+							<i class="fas fa-calendar-times text-gray-400 text-4xl mb-4"></i>
+							<p class="text-gray-600 font-medium" data-translate="schedule.no_schedule">No schedule assigned</p>
+							<p class="text-sm text-gray-500 mt-2" data-translate="schedule.contact_hr">Please contact HR to assign a work schedule</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- No Data Message -->
+			<div id="noDataMessage" class="hidden text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+				<i class="fas fa-info-circle text-gray-400 text-4xl mb-4"></i>
+				<p class="text-gray-600 font-medium" data-translate="message.no_data">No data available for the selected period</p>
+			</div>
+		</div>
+	</main>
+    </div>
+
+	<script src="../assets/js/auth.js"></script>
+	<script src="../assets/js/translations.js"></script>
+	<script src="../assets/js/main.js"></script>
+	<script src="../components/api.js"></script>
+	<script>
+		let currentEmployeeId = null;
+		let currentPeriod = 'current';
+
+		document.addEventListener('DOMContentLoaded', async function() {
+			if (!requireAuth()) return;
+			const role = authManager.getUserRole();
+			if (role !== 'Employee' && role !== 'HR_Manager') {
+				authManager.redirectToDashboard();
+				return;
+			}
+			
+			// Initialize sidebar first
+			initializeCollapsibleSidebar();
+			
+			// Wait a bit for sidebar to initialize, then add header
+			setTimeout(() => {
+				createDashboardHeader();
+				syncLanguageSelector();
+				updateDashboardUserDisplayName();
+				setupDashboardNotificationsUI();
+			}, 100);
+			
+			// Load dashboard data
+			await loadEmployeeProfile();
+			await loadDashboardData();
+			
+			// Setup period filter
+			const periodFilter = document.getElementById('periodFilter');
+			if (periodFilter) {
+				periodFilter.addEventListener('change', async function() {
+					currentPeriod = this.value;
+					await loadDashboardData();
+				});
+			}
+		});
+		
+		// Function to create the dashboard header after sidebar initialization
+		function createDashboardHeader() {
+			const container = document.getElementById('dashboardHeaderContainer');
+			if (!container) return;
+			
+			// Check if header already exists
+			if (document.getElementById('dashboardHeader')) return;
+			
+			const headerHTML = `
+				<header id="dashboardHeader" class="bg-white shadow-sm border-b">
+					<div class="flex items-center justify-between px-6 py-4">
+						<div class="flex items-center">
+						</div>
+						<div class="flex items-center space-x-4">
+							<select id="languageSelector" class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+								<option value="en">English</option>
+								<option value="fr">Français</option>
+								<option value="ar">العربية</option>
+							</select>
+							<!-- Notifications bell -->
+							<div class="relative">
+								<button id="empNotifBell" class="relative w-10 h-10 rounded-full bg-white hover:bg-gray-50 border border-gray-200 flex items-center justify-center transition-all shadow-sm hover:shadow-md">
+									<i class="fas fa-bell text-gray-700 text-base"></i>
+									<span id="empNotifBadge" class="hidden absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white"></span>
+								</button>
+								<div id="empNotifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-50 border border-gray-200 transform transition-all duration-200 ease-out opacity-0 translate-y-2">
+									<div class="flex items-center justify-between p-3 border-b border-gray-100 bg-white">
+										<span class="text-sm font-semibold text-gray-800">Notifications</span>
+										<div class="flex items-center gap-3">
+											<button id="empNotifMarkAll" class="text-xs text-indigo-600 hover:text-indigo-700 font-medium px-3 py-1.5 rounded-md hover:bg-indigo-50 transition-colors border border-indigo-100">
+												Tout lire
+											</button>
+											<button id="empNotifClearAll" class="text-xs text-gray-600 hover:text-gray-800 font-medium px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors border border-gray-200">
+												Effacer
+											</button>
+										</div>
+									</div>
+									<div id="empNotifList" class="max-h-80 overflow-y-auto">
+										<div class="p-4 text-center text-sm text-gray-500">
+											<i class="fas fa-bell text-gray-300 text-lg mb-2 block"></i>
+											<span>Aucune notification</span>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="flex items-center space-x-2">
+								<img class="h-8 w-8 rounded-full object-cover" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='100%25' height='100%25' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23737486' font-size='16' font-family='Arial'%3EJD%3C/text%3E%3C/svg%3E" alt="Profile">
+								<span class="text-sm text-gray-700" id="userDisplayName">User</span>
+							</div>
+						</div>
+					</div>
+				</header>
+			`;
+			
+			// Insert header directly, replacing the container
+			const headerElement = document.createElement('div');
+			headerElement.innerHTML = headerHTML;
+			const header = headerElement.firstElementChild;
+			container.replaceWith(header);
+		}
+		
+		// Load employee profile to get employee ID and info
+		async function loadEmployeeProfile() {
+			try {
+				const usersApiBase = window.API_SERVICES?.users || 'http://localhost:3002';
+				const response = await fetch(`${usersApiBase}/profile`, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				if (response.ok) {
+					const profile = await response.json();
+					currentEmployeeId = profile.id || profile.employee_id;
+					
+					// If we don't have employee_id from profile, try to get it from employees/by-user endpoint
+					if (!currentEmployeeId && profile.user_id) {
+						try {
+							const empResponse = await fetch(`${usersApiBase}/employees/by-user/${profile.user_id}`, {
+								headers: {
+									'Authorization': `Bearer ${authManager.getToken()}`,
+									'Content-Type': 'application/json'
+								}
+							});
+							if (empResponse.ok) {
+								const empData = await empResponse.json();
+								if (empData.success && empData.employee) {
+									currentEmployeeId = empData.employee.id;
+								}
+							}
+						} catch (e) {
+							console.warn('Could not get employee ID from by-user endpoint:', e);
+						}
+					}
+					
+					// Update employee info card
+					const nameEl = document.getElementById('employeeName');
+					const positionEl = document.getElementById('employeePosition');
+					const deptEl = document.getElementById('employeeDepartment');
+					
+					if (nameEl && profile.first_name && profile.last_name) {
+						nameEl.textContent = `${profile.first_name} ${profile.last_name}`;
+					}
+					if (positionEl && profile.position_name) {
+						positionEl.querySelector('span').textContent = profile.position_name;
+					} else if (positionEl) {
+						positionEl.querySelector('span').textContent = 'N/A';
+					}
+					if (deptEl && (profile.department || profile.department_name)) {
+						deptEl.querySelector('span').textContent = profile.department || profile.department_name;
+					} else if (deptEl) {
+						deptEl.querySelector('span').textContent = 'N/A';
+					}
+				}
+			} catch (error) {
+				console.error('Error loading employee profile:', error);
+			}
+		}
+		
+		// Get date range based on period filter
+		function getDateRange(period) {
+			const now = new Date();
+			let startDate, endDate;
+			
+			switch(period) {
+				case 'week':
+					startDate = new Date(now);
+					startDate.setDate(now.getDate() - 7);
+					endDate = now;
+					break;
+				case 'last':
+					const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+					const lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+					startDate = new Date(lastMonthYear, lastMonth, 1);
+					endDate = new Date(lastMonthYear, lastMonth + 1, 0);
+					break;
+			case 'year':
+				// "This year" means the current calendar year
+				startDate = new Date(now.getFullYear(), 0, 1);
+				endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+				break;
+				case 'current':
+				default:
+					startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+					endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+					break;
+			}
+			
+			return {
+				start: startDate,
+				end: endDate,
+				year: endDate.getFullYear(),
+				month: endDate.getMonth() + 1
+			};
+		}
+		
+		// Load all dashboard data
+		async function loadDashboardData() {
+			if (!currentEmployeeId) {
+				await loadEmployeeProfile();
+			}
+			
+			const dateRange = getDateRange(currentPeriod);
+			const hasData = await Promise.all([
+				loadTasksStatistics(dateRange),
+				loadReportsStatistics(dateRange),
+				loadRequestsStatistics(dateRange),
+				loadSalaryStatistics(dateRange),
+				loadAttendanceStatistics(dateRange),
+				loadSchedule(),
+				loadSignalsStatistics(dateRange),
+				loadComplaintsStatistics(dateRange)
+			]);
+			
+			// Show/hide no data message
+			const noDataMsg = document.getElementById('noDataMessage');
+			if (noDataMsg) {
+				const hasAnyData = hasData.some(h => h);
+				if (!hasAnyData && currentPeriod !== 'current') {
+					noDataMsg.classList.remove('hidden');
+				} else {
+					noDataMsg.classList.add('hidden');
+				}
+			}
+		}
+		
+		// EXACT COPY of getCurrentEmployeeId from tasks.html
+		let currentEmployeeIdCache = null;
+		function isUuidLike(v){
+			return typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+		}
+		function getCurrentEmployeeId() {
+			try {
+				// 1. Vérifier le cache en premier
+				if (currentEmployeeIdCache && isUuidLike(currentEmployeeIdCache)) {
+					return currentEmployeeIdCache;
+				}
+
+				// 2. Vérifier l'URL (priorité haute)
+				const urlParams = new URLSearchParams(window.location.search);
+				const fromUrl = urlParams.get('employee_id') || urlParams.get('user_id');
+				if (isUuidLike(fromUrl)) { 
+					currentEmployeeIdCache = fromUrl; 
+					return currentEmployeeIdCache; 
+				}
+
+				// 3. Vérifier currentUser (priorité moyenne)
+				const user = authManager.getUser();
+				if (user) {
+					if (isUuidLike(user.employee_id)) { 
+						currentEmployeeIdCache = user.employee_id; 
+						return currentEmployeeIdCache; 
+					}
+					if (isUuidLike(user.id)) { 
+						currentEmployeeIdCache = user.id; 
+						return currentEmployeeIdCache; 
+					}
+				}
+
+				// 4. Use currentEmployeeId from profile if available
+				if (currentEmployeeId && isUuidLike(currentEmployeeId)) {
+					currentEmployeeIdCache = currentEmployeeId;
+					return currentEmployeeIdCache;
+				}
+
+				// 5. Try to get from profile API
+				return null;
+			} catch (e) {
+				console.error('❌ getCurrentEmployeeId error', e);
+				return null;
+			}
+		}
+
+		// EXACT COPY of updateTaskStatistics from tasks.html
+		function updateTaskStatisticsFromTasks(tasksArray) {
+			// Ensure tasks is an array
+			if (!Array.isArray(tasksArray)) {
+				console.warn('⚠️ updateTaskStatisticsFromTasks: tasksArray is not an array:', typeof tasksArray);
+				tasksArray = [];
+			}
+			
+			const mode = 'tasks'; // Show tasks, not instructions
+			const isInstr = (t) => (t.title||'').startsWith('Instruction:');
+			const baseTasks = tasksArray.filter(t => mode==='instructions' ? isInstr(t) : !isInstr(t));
+			let total = 0;
+			let completed = 0;
+			let inProgress = 0;
+			let overdue = 0;
+			
+			console.log('📊 updateTaskStatisticsFromTasks called with', baseTasks.length, 'tasks');
+			
+			// Get currentUser from authManager
+			const user = authManager.getUser();
+			const currentUserRole = user?.role || authManager.getUserRole();
+			const currentUser = {
+				role: currentUserRole,
+				first_name: user?.first_name || user?.firstName || '',
+				last_name: user?.last_name || user?.lastName || '',
+				id: user?.id,
+				employee_id: user?.employee_id
+			};
+			
+			// Si l'utilisateur est un employé, compter selon son statut personnel
+			if (currentUser?.role === 'Employee') {
+				const currentEmployeeId = getCurrentEmployeeId();
+				console.log('📊 Counting tasks for Employee, employeeId:', currentEmployeeId);
+				
+				baseTasks.forEach(task => {
+					// Trouver l'assignation de l'employé courant dans cette tâche
+					const currentUserAssignee = task.assignees ? task.assignees.find(
+						assignee => {
+							if (!assignee) return false;
+							// Match by ID (string or number comparison)
+							if (assignee.id && (
+								String(assignee.id) === String(currentEmployeeId) ||
+								String(assignee.id) === String(currentUser.id) ||
+								String(assignee.id) === String(currentUser.employee_id)
+							)) {
+								return true;
+							}
+							// Match by name as fallback
+							const assigneeName = `${assignee.first_name || ''} ${assignee.last_name || ''}`.trim().toLowerCase();
+							const userName = `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim().toLowerCase();
+							if (assigneeName && userName && assigneeName === userName) {
+								return true;
+							}
+							return false;
+						}
+					) : null;
+					
+					// Si l'employé est assigné à cette tâche
+					if (currentUserAssignee) {
+						total++;
+						
+						// Compter selon le statut personnel de l'employé
+						const assigneeStatus = (currentUserAssignee.status || '').toLowerCase();
+						if (assigneeStatus === 'completed') {
+							completed++;
+						} else {
+							// Vérifier si la tâche est en retard
+							const dueDate = task.due_date ? new Date(task.due_date) : null;
+							if (dueDate && dueDate < new Date()) {
+								overdue++;
+							} else {
+								inProgress++;
+							}
+						}
+					}
+				});
+				
+				console.log('📊 Employee task counts - Total:', total, 'Completed:', completed, 'InProgress:', inProgress, 'Overdue:', overdue);
+			} else {
+				// Pour HR_Manager et Department_Responsible, compter par tâche (statut global)
+				total = baseTasks.length;
+				completed = baseTasks.filter(t => (t.status || '').toLowerCase() === 'completed').length;
+				
+				// Compter les tâches en cours (statut global pas "Completed")
+				inProgress = baseTasks.filter(t => {
+					const status = (t.status || '').toLowerCase();
+					return status === 'in progress' || 
+						(status === 'pending' && (!t.due_date || new Date(t.due_date) >= new Date()));
+				}).length;
+				
+				// Compter les tâches en retard (statut global pas "Completed" et date dépassée)
+				overdue = baseTasks.filter(t => {
+					const status = (t.status || '').toLowerCase();
+					return status !== 'completed' && 
+						t.due_date && 
+						new Date(t.due_date) < new Date();
+				}).length;
+				
+				console.log('📊 Manager task counts - Total:', total, 'Completed:', completed, 'InProgress:', inProgress, 'Overdue:', overdue);
+			}
+
+			// Mettre à jour l'affichage
+			document.getElementById('tasksTotal').textContent = total;
+			document.getElementById('tasksCompleted').textContent = completed;
+			document.getElementById('tasksInProgress').textContent = inProgress;
+			document.getElementById('tasksOverdue').textContent = overdue;
+			
+			console.log('✅ Updated task statistics display');
+		}
+
+		// Load tasks statistics - using EXACT logic from tasks.html with date filtering
+		async function loadTasksStatistics(dateRange) {
+			try {
+				// Ensure employee ID is loaded FIRST before making API call
+				if (!currentEmployeeId && !currentEmployeeIdCache) {
+					await loadEmployeeProfile();
+					if (currentEmployeeId && isUuidLike(currentEmployeeId)) {
+						currentEmployeeIdCache = currentEmployeeId;
+					}
+				}
+				
+				const employeeId = getCurrentEmployeeId();
+				if (!employeeId) {
+					console.warn('⚠️ No employee ID found, cannot load task statistics');
+					document.getElementById('tasksTotal').textContent = '0';
+					document.getElementById('tasksCompleted').textContent = '0';
+					document.getElementById('tasksInProgress').textContent = '0';
+					document.getElementById('tasksOverdue').textContent = '0';
+					return false;
+				}
+				
+				console.log('👤 Loading tasks for employee ID:', employeeId);
+				
+				// Use hr_tasks service (port 3020) like tasks.html does
+				// Force port 3020 since hr_tasks service runs on 3020, not 3004
+				const tasksApiBase = window.API_SERVICES?.hr_tasks || 'http://localhost:3020';
+				console.log('📡 Tasks API Base:', tasksApiBase);
+				console.log('📡 API_SERVICES object:', window.API_SERVICES);
+				
+				// Get token from localStorage like tasks.html does (not authManager)
+				const token = localStorage.getItem('jwt_token') || localStorage.getItem('token') || authManager.getToken();
+				
+				if (!token) {
+					console.warn('⚠️ No token found for tasks API');
+					document.getElementById('tasksTotal').textContent = '0';
+					document.getElementById('tasksCompleted').textContent = '0';
+					document.getElementById('tasksInProgress').textContent = '0';
+					document.getElementById('tasksOverdue').textContent = '0';
+					return false;
+				}
+				
+				// Get all tasks AND instructions (tasks.html loads both)
+				let tasksResponse, instructionsResponse;
+				try {
+					console.log('📡 Fetching tasks from:', `${tasksApiBase}/tasks`);
+					console.log('📡 Fetching instructions from:', `${tasksApiBase}/api/instructions/employee/${employeeId}`);
+					
+					const responses = await Promise.all([
+						fetch(`${tasksApiBase}/tasks`, {
+							headers: {
+								'Authorization': `Bearer ${token}`,
+								'Content-Type': 'application/json'
+							}
+						}),
+						// Load instructions like tasks.html does - use tasksApiBase (hr_tasks service on port 3020)
+						fetch(`${tasksApiBase}/api/instructions/employee/${employeeId}`, {
+							headers: {
+								'Authorization': `Bearer ${token}`,
+								'Content-Type': 'application/json'
+							}
+						}).catch(err => {
+							console.warn('⚠️ Instructions API error (non-fatal):', err);
+							return { ok: false, status: 404 };
+						})
+					]);
+					tasksResponse = responses[0];
+					instructionsResponse = responses[1];
+					
+					console.log('📡 Tasks response status:', tasksResponse.status);
+					console.log('📡 Instructions response status:', instructionsResponse?.status || 'N/A');
+				} catch (error) {
+					console.error('❌ Error fetching tasks/instructions:', error);
+					console.error('❌ Error details:', error.message, error.stack);
+					document.getElementById('tasksTotal').textContent = '0';
+					document.getElementById('tasksCompleted').textContent = '0';
+					document.getElementById('tasksInProgress').textContent = '0';
+					document.getElementById('tasksOverdue').textContent = '0';
+					return false;
+				}
+				
+				console.log('📡 Tasks API response status:', tasksResponse.status, tasksResponse.ok);
+				
+				if (!tasksResponse.ok) {
+					const errorText = await tasksResponse.text();
+					console.error('❌ Tasks API response not OK:', tasksResponse.status, errorText);
+					console.error('❌ Tasks API URL was:', `${tasksApiBase}/tasks`);
+					document.getElementById('tasksTotal').textContent = '0';
+					document.getElementById('tasksCompleted').textContent = '0';
+					document.getElementById('tasksInProgress').textContent = '0';
+					document.getElementById('tasksOverdue').textContent = '0';
+					return false;
+				}
+				
+				let tasksData;
+				try {
+					tasksData = await tasksResponse.json();
+					console.log('📦 Raw tasks API response:', tasksData);
+					console.log('📦 Response type:', typeof tasksData, 'Is array?', Array.isArray(tasksData));
+				} catch (e) {
+					console.error('❌ Error parsing tasks response:', e);
+					const text = await tasksResponse.text();
+					console.error('❌ Response text:', text);
+					document.getElementById('tasksTotal').textContent = '0';
+					document.getElementById('tasksCompleted').textContent = '0';
+					document.getElementById('tasksInProgress').textContent = '0';
+					document.getElementById('tasksOverdue').textContent = '0';
+					return false;
+				}
+				
+				let allTasks = Array.isArray(tasksData) ? tasksData : [];
+				if (!Array.isArray(tasksData) && tasksData && tasksData.tasks) {
+					allTasks = Array.isArray(tasksData.tasks) ? tasksData.tasks : [];
+				}
+				if (!Array.isArray(tasksData) && tasksData && Array.isArray(tasksData.data)) {
+					allTasks = tasksData.data;
+				}
+				
+				console.log('📋 Loaded tasks from API:', allTasks.length);
+				if (allTasks.length > 0) {
+					console.log('📋 Sample task:', allTasks[0]);
+					console.log('📋 Sample task assignees:', allTasks[0].assignees);
+				}
+					
+					// Load and convert instructions to task format (like tasks.html does)
+					let instructionsList = [];
+					if (instructionsResponse && instructionsResponse.ok) {
+						try {
+							const instructionsData = await instructionsResponse.json();
+							if (instructionsData && instructionsData.success && instructionsData.instructions) {
+								instructionsList = (instructionsData.instructions || [])
+									.sort((a,b) => {
+										const ad = a.due_at || a.created_at || '';
+										const bd = b.due_at || b.created_at || '';
+										return new Date(bd) - new Date(ad);
+									})
+									.map(instruction => ({
+										id: instruction.id,
+										title: `Instruction: ${instruction.body.substring(0, 50)}${instruction.body.length > 50 ? '...' : ''}`,
+										description: instruction.body,
+										type: 'Instruction',
+										priority: instruction.priority ? instruction.priority.charAt(0).toUpperCase() + instruction.priority.slice(1) : 'Normal',
+										status: instruction.status === 'active' ? 'Pending' : instruction.status,
+										due_date: instruction.due_at,
+										created_at: instruction.created_at,
+										updated_at: instruction.updated_at,
+										assigned_by: instruction.created_by_employee_id,
+										assigned_by_first_name: instruction.created_by_first_name || 'Direction',
+										assigned_by_last_name: instruction.created_by_last_name || '',
+										assignees: Array.isArray(instruction.recipients) ? instruction.recipients.map(r => ({
+											id: r.employee_id,
+											first_name: r.first_name,
+											last_name: r.last_name
+										})) : [],
+										isInstruction: true
+									}));
+								console.log('📋 Loaded instructions from API:', instructionsList.length);
+							}
+						} catch (e) {
+							console.warn('⚠️ Error parsing instructions:', e);
+						}
+					}
+					
+					// Combine tasks and instructions (like tasks.html does)
+					allTasks = [...allTasks, ...instructionsList];
+					console.log('📋 Total tasks + instructions:', allTasks.length);
+					
+					// Get currentUser from authManager (same as tasks.html)
+					const user = authManager.getUser();
+					const currentUserRole = user?.role || authManager.getUserRole();
+					const currentUser = {
+						role: currentUserRole,
+						first_name: user?.first_name || user?.firstName || '',
+						last_name: user?.last_name || user?.lastName || '',
+						id: user?.id,
+						employee_id: user?.employee_id || employeeId
+					};
+					
+					console.log('👤 Current user:', currentUser);
+					console.log('👤 Current employee ID:', employeeId);
+					
+					// Filter by employee FIRST (EXACT logic from tasks.html lines 1769-1789)
+					if (currentUser?.role === 'Employee') {
+						// Filter tasks by employee assignment (same logic as tasks.html)
+						const beforeEmployeeFilter = allTasks.length;
+						
+						// Separate tasks and instructions (like tasks.html does)
+						const tasksList = allTasks.filter(t => !t.isInstruction && !(t.title || '').startsWith('Instruction:'));
+						const instructionsList = allTasks.filter(t => t.isInstruction || (t.title || '').startsWith('Instruction:'));
+						
+						console.log('🔍 Before filtering - Tasks:', tasksList.length, 'Instructions:', instructionsList.length);
+						
+						// Filter regular tasks (same logic as tasks.html lines 1773-1780)
+						const filteredTasks = tasksList.filter(task => {
+							if (!task.assignees || !Array.isArray(task.assignees)) {
+								console.log('⚠️ Task has no assignees:', task.id, task.title);
+								return false;
+							}
+							
+							// Check if employee is assigned to this task (EXACT match from tasks.html line 1775-1779)
+							const isAssigned = task.assignees.some(assignee => {
+								if (!assignee) return false;
+								// Match by ID (exact match from tasks.html)
+								if (assignee.id == employeeId || assignee.id == currentUser.id) {
+									return true;
+								}
+								// Match by name as fallback (exact match from tasks.html)
+								const assigneeName = `${assignee.first_name || ''} ${assignee.last_name || ''}`;
+								const userName = `${currentUser.first_name || ''} ${currentUser.last_name || ''}`;
+								if (assigneeName && userName && assigneeName === userName) {
+									return true;
+								}
+								return false;
+							});
+							
+							if (isAssigned) {
+								console.log('✅ Task matched:', task.id, task.title, 'Assignee IDs:', task.assignees.map(a => a.id));
+							}
+							
+							return isAssigned;
+						});
+						
+						// For instructions, accept all (like tasks.html line 1783-1786)
+						const filteredInstructions = instructionsList.filter(instruction => {
+							return true; // Temporairement accepter toutes les instructions
+						});
+						
+						allTasks = [...filteredTasks, ...filteredInstructions];
+						console.log(`🔍 After employee filter: ${beforeEmployeeFilter} -> ${allTasks.length} tasks (${filteredTasks.length} tasks + ${filteredInstructions.length} instructions)`);
+						
+						// Log sample tasks for debugging
+						if (allTasks.length > 0) {
+							console.log('✅ Sample filtered task:', allTasks[0]);
+						} else {
+							console.warn('⚠️ No tasks found after filtering. Employee ID:', employeeId, 'User ID:', currentUser.id);
+							console.warn('⚠️ Total tasks before filtering:', tasksList.length);
+							if (tasksList.length > 0) {
+								console.warn('⚠️ Sample task from API:', tasksList[0]);
+								if (tasksList[0].assignees) {
+									console.warn('⚠️ Assignee IDs in sample task:', tasksList[0].assignees.map(a => ({ id: a.id, name: `${a.first_name} ${a.last_name}` })));
+									console.warn('⚠️ Comparing - Employee ID:', employeeId, 'Type:', typeof employeeId);
+									console.warn('⚠️ Comparing - User ID:', currentUser.id, 'Type:', typeof currentUser.id);
+									tasksList[0].assignees.forEach((a, idx) => {
+										console.warn(`⚠️ Assignee[${idx}] ID:`, a.id, 'Type:', typeof a.id, 'Match employeeId?:', a.id == employeeId, 'Match userId?:', a.id == currentUser.id);
+									});
+								} else {
+									console.warn('⚠️ Task has no assignees array');
+								}
+							} else {
+								console.warn('⚠️ No tasks returned from API at all');
+							}
+						}
+					}
+					
+					// NOTE: Do NOT filter tasks by date range - tasks.html shows ALL tasks assigned to the employee
+					// The period filter should only apply to other statistics (reports, attendance, salary), not tasks
+					
+					console.log('✅ Final tasks count:', allTasks.length);
+					
+					// Use EXACT copy of updateTaskStatistics from tasks.html
+					updateTaskStatisticsFromTasks(allTasks);
+					
+					const total = parseInt(document.getElementById('tasksTotal').textContent) || 0;
+					console.log('📊 Final statistics - Total:', total, 'Completed:', document.getElementById('tasksCompleted').textContent);
+					return total > 0;
+			} catch (error) {
+				console.error('❌ Error loading tasks statistics:', error);
+				console.error('Error stack:', error.stack);
+				// Set zeros on error
+				document.getElementById('tasksTotal').textContent = '0';
+				document.getElementById('tasksCompleted').textContent = '0';
+				document.getElementById('tasksInProgress').textContent = '0';
+				document.getElementById('tasksOverdue').textContent = '0';
+				return false;
+			}
+		}
+		
+		// Load reports statistics - matching reports-employee.html (repoemp.html) logic
+		async function loadReportsStatistics(dateRange) {
+			try {
+				if (!currentEmployeeId) {
+					await loadEmployeeProfile();
+					if (!currentEmployeeId) return false;
+				}
+				
+				// HR Tasks service runs on port 3020 (not 3004)
+				const reportsApiBase = window.API_SERVICES?.hr_tasks || 'http://localhost:3020';
+				
+				// Map dashboard period to reports period filter (matching repoemp.html)
+				// Dashboard: 'current', 'last', 'week', 'year'
+				// Reports: 'all', 'today', 'week', 'month'
+				let periodFilter = 'all';
+				if (currentPeriod === 'week') {
+					periodFilter = 'week';
+				} else if (currentPeriod === 'current') {
+					periodFilter = 'month'; // Current month matches "current" period
+				} else if (currentPeriod === 'last') {
+					// For last month, we'll fetch all and filter client-side
+					periodFilter = 'all';
+				} else {
+					periodFilter = 'all';
+				}
+				
+				// Get reports with period filter (matching repoemp.html getFilteredReports)
+				const reportsResponse = await fetch(`${reportsApiBase}/api/rapportemp/employee/${currentEmployeeId}/reports?period=${periodFilter}`, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				if (reportsResponse.ok) {
+					const reportsData = await reportsResponse.json();
+					let reports = [];
+					
+					// Handle different response formats
+					if (Array.isArray(reportsData)) {
+						reports = reportsData;
+					} else if (reportsData.reports && Array.isArray(reportsData.reports)) {
+						reports = reportsData.reports;
+					} else if (reportsData.data && Array.isArray(reportsData.data)) {
+						reports = reportsData.data;
+					} else if (reportsData.success && reportsData.reports && Array.isArray(reportsData.reports)) {
+						reports = reportsData.reports;
+					} else if (reportsData.success && reportsData.data && Array.isArray(reportsData.data)) {
+						reports = reportsData.data;
+					}
+					
+					// If period is 'last', filter for last month client-side
+					if (currentPeriod === 'last') {
+						const now = new Date();
+						const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+						const lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+						const startDate = new Date(lastMonthYear, lastMonth, 1);
+						const endDate = new Date(lastMonthYear, lastMonth + 1, 0);
+						
+						reports = reports.filter(r => {
+							if (!r.created_at) return false;
+							const reportDate = new Date(r.created_at);
+							return reportDate >= startDate && reportDate <= endDate;
+						});
+					}
+					
+					// Calculate statistics (matching repoemp.html getFilteredReports logic)
+					const stats = {
+						total: reports.length,
+						acknowledged: 0,
+						pending: 0,
+						today: 0
+					};
+					
+					const now = new Date();
+					const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+					
+					reports.forEach(r => {
+						const status = (r.status || '').toLowerCase();
+						if (status === 'acknowledged' || status === 'read') {
+							stats.acknowledged++;
+						} else {
+							stats.pending++;
+						}
+						
+						// Count today's reports
+						if (r.created_at) {
+							const reportDate = new Date(r.created_at);
+							reportDate.setHours(0, 0, 0, 0);
+							if (reportDate.getTime() === today.getTime()) {
+								stats.today++;
+							}
+						}
+					});
+					
+					document.getElementById('reportsTotal').textContent = stats.total;
+					document.getElementById('reportsRead').textContent = stats.acknowledged;
+					document.getElementById('reportsPending').textContent = stats.pending;
+					document.getElementById('reportsToday').textContent = stats.today;
+					
+					return stats.total > 0;
+				} else {
+					console.warn('Reports API response not OK:', reportsResponse.status, reportsResponse.statusText);
+					// Set zeros on error
+					document.getElementById('reportsTotal').textContent = '0';
+					document.getElementById('reportsRead').textContent = '0';
+					document.getElementById('reportsPending').textContent = '0';
+					document.getElementById('reportsToday').textContent = '0';
+					return false;
+				}
+			} catch (error) {
+				console.error('Error loading reports statistics:', error);
+				// Set zeros on error
+				document.getElementById('reportsTotal').textContent = '0';
+				document.getElementById('reportsRead').textContent = '0';
+				document.getElementById('reportsPending').textContent = '0';
+				document.getElementById('reportsToday').textContent = '0';
+				return false;
+			}
+		}
+		
+		// Load requests statistics
+		async function loadRequestsStatistics(dateRange) {
+			try {
+				const isYearFilter = currentPeriod === 'year';
+				
+				// Get exceptions from attendance service
+				const attendanceApiBase = window.API_SERVICES?.attendance || 'http://localhost:3000';
+				const exceptionsResponse = await fetch(`${attendanceApiBase}/api/exceptions/mine?status=all`, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				let exceptions = [];
+				if (exceptionsResponse.ok) {
+					const exceptionsData = await exceptionsResponse.json();
+					exceptions = Array.isArray(exceptionsData) ? exceptionsData : [];
+					console.log('Exceptions fetched:', exceptions.length);
+				} else {
+					console.warn('Exceptions API response not OK:', exceptionsResponse.status, exceptionsResponse.statusText);
+				}
+				
+				// Filter by date range if year filter
+				if (isYearFilter && exceptions.length > 0) {
+					exceptions = exceptions.filter(e => {
+						if (!e.created_at && !e.date) return false;
+						const exceptionDate = new Date(e.created_at || e.date);
+						const exceptionDateOnly = new Date(exceptionDate.getFullYear(), exceptionDate.getMonth(), exceptionDate.getDate());
+						const startDateOnly = new Date(dateRange.start.getFullYear(), dateRange.start.getMonth(), dateRange.start.getDate());
+						const endDateOnly = new Date(dateRange.end.getFullYear(), dateRange.end.getMonth(), dateRange.end.getDate());
+						return exceptionDateOnly >= startDateOnly && exceptionDateOnly <= endDateOnly;
+					});
+				} else if (!isYearFilter && exceptions.length > 0) {
+					// Filter by date range for other periods too
+					exceptions = exceptions.filter(e => {
+						if (!e.created_at && !e.date) return false;
+						const exceptionDate = new Date(e.created_at || e.date);
+						const exceptionDateOnly = new Date(exceptionDate.getFullYear(), exceptionDate.getMonth(), exceptionDate.getDate());
+						const startDateOnly = new Date(dateRange.start.getFullYear(), dateRange.start.getMonth(), dateRange.start.getDate());
+						const endDateOnly = new Date(dateRange.end.getFullYear(), dateRange.end.getMonth(), dateRange.end.getDate());
+						return exceptionDateOnly >= startDateOnly && exceptionDateOnly <= endDateOnly;
+					});
+				}
+				
+				console.log('Exceptions after filtering:', exceptions.length);
+				
+				// Get extra hours/overtime
+				const overtimeResponse = await fetch(`${attendanceApiBase}/api/attendance/overtime/my-requests`, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				let overtime = [];
+				if (overtimeResponse.ok) {
+					const overtimeData = await overtimeResponse.json();
+					if (overtimeData.success && overtimeData.data) {
+						overtime = overtimeData.data;
+					} else if (Array.isArray(overtimeData)) {
+						overtime = overtimeData;
+					}
+					console.log('Overtime fetched:', overtime.length);
+				} else {
+					console.warn('Overtime API response not OK:', overtimeResponse.status, overtimeResponse.statusText);
+				}
+				
+				// Filter overtime by date range
+				if (isYearFilter && overtime.length > 0) {
+					overtime = overtime.filter(o => {
+						if (!o.date && !o.created_at) return false;
+						const overtimeDate = new Date(o.date || o.created_at);
+						const overtimeDateOnly = new Date(overtimeDate.getFullYear(), overtimeDate.getMonth(), overtimeDate.getDate());
+						const startDateOnly = new Date(dateRange.start.getFullYear(), dateRange.start.getMonth(), dateRange.start.getDate());
+						const endDateOnly = new Date(dateRange.end.getFullYear(), dateRange.end.getMonth(), dateRange.end.getDate());
+						return overtimeDateOnly >= startDateOnly && overtimeDateOnly <= endDateOnly;
+					});
+				} else if (!isYearFilter && overtime.length > 0) {
+					overtime = overtime.filter(o => {
+						if (!o.date && !o.created_at) return false;
+						const overtimeDate = new Date(o.date || o.created_at);
+						const overtimeDateOnly = new Date(overtimeDate.getFullYear(), overtimeDate.getMonth(), overtimeDate.getDate());
+						const startDateOnly = new Date(dateRange.start.getFullYear(), dateRange.start.getMonth(), dateRange.start.getDate());
+						const endDateOnly = new Date(dateRange.end.getFullYear(), dateRange.end.getMonth(), dateRange.end.getDate());
+						return overtimeDateOnly >= startDateOnly && overtimeDateOnly <= endDateOnly;
+					});
+				}
+				
+				console.log('Overtime after filtering:', overtime.length);
+				
+				document.getElementById('exceptionsCount').textContent = exceptions.length;
+				document.getElementById('extraHoursCount').textContent = overtime.length;
+				
+				return exceptions.length > 0 || overtime.length > 0;
+			} catch (error) {
+				console.error('Error loading requests statistics:', error);
+			}
+			return false;
+		}
+		
+		// Load salary statistics
+		async function loadSalaryStatistics(dateRange) {
+			try {
+				if (!currentEmployeeId) {
+					await loadEmployeeProfile();
+					if (!currentEmployeeId) return false;
+				}
+				
+				const salaryApiBase = window.API_SERVICES?.salary || 'http://localhost:3010';
+				const isYearFilter = currentPeriod === 'year';
+				
+				if (isYearFilter) {
+					// For year, sum up all months
+					let totalSalary = 0;
+					let paidMonths = 0;
+					let totalMonths = 0;
+					
+					// Determine which months to fetch
+					const now = new Date();
+					const currentYear = now.getFullYear();
+					const currentMonth = now.getMonth() + 1;
+					const selectedYear = dateRange.year;
+					
+					// Only fetch months that exist:
+					// - For current year: only months up to current month
+					// - For past years: all 12 months (but some may not have data - that's OK)
+					// - For future years: don't fetch anything
+					let maxMonth = 12;
+					if (selectedYear > currentYear) {
+						// Future year - don't fetch anything
+						maxMonth = 0;
+					} else if (selectedYear === currentYear) {
+						// Current year - only fetch up to current month
+						maxMonth = currentMonth;
+					}
+					// else: past year - fetch all 12 months
+					
+					console.log(`💰 Salary fetch: year=${selectedYear}, currentYear=${currentYear}, currentMonth=${currentMonth}, maxMonth=${maxMonth}`);
+					
+					if (maxMonth === 0) {
+						// Future year - no data available
+						document.getElementById('lastMonthSalary').textContent = '0 DA';
+						document.getElementById('salaryStatus').textContent = 'No data';
+						return false;
+					}
+					
+					// Load months for the year
+					const monthPromises = [];
+					for (let month = 1; month <= maxMonth; month++) {
+						// Use a named function to silently handle errors
+						const fetchMonth = async (monthNum) => {
+							try {
+								const response = await fetch(`${salaryApiBase}/salaries/${currentEmployeeId}?year=${selectedYear}&month=${monthNum}`, {
+									headers: {
+										'Authorization': `Bearer ${authManager.getToken()}`,
+										'Content-Type': 'application/json'
+									}
+								}).catch(() => null); // Silently catch network errors
+								
+								if (response && response.ok) {
+									try {
+										const data = await response.json();
+										const salary = data.net_salary !== undefined ? data : (data.salary || data);
+										if (salary && salary.net_salary !== undefined) {
+											totalSalary += parseFloat(salary.net_salary) || 0;
+											totalMonths++;
+											const status = salary.payment_status || salary.status || 'Pending';
+											if (status === 'Paid') paidMonths++;
+										}
+									} catch (e) {
+										// Silently ignore parsing errors
+									}
+								}
+								// Silently ignore 500 errors (expected for months without validated attendance)
+								return null;
+							} catch (error) {
+								// Silently ignore all errors - don't log, don't throw
+								return null;
+							}
+						};
+						
+						// Add catch handler to prevent unhandled promise rejection errors
+						monthPromises.push(
+							fetchMonth(month).catch(() => null)
+						);
+					}
+					
+					await Promise.all(monthPromises);
+					
+					// Update UI with sum of all salaries for the year
+					if (totalMonths > 0) {
+						document.getElementById('lastMonthSalary').textContent = formatCurrency(totalSalary) + ' DA';
+						const statusText = paidMonths === totalMonths ? 'All Paid' : `${paidMonths}/${totalMonths} Paid`;
+						document.getElementById('salaryStatus').textContent = statusText;
+						return true;
+					} else {
+						// No data found for any month in this year
+						document.getElementById('lastMonthSalary').textContent = '0 DA';
+						document.getElementById('salaryStatus').textContent = 'No data';
+						return false;
+					}
+				} else {
+					// For month/week, use single month
+					try {
+						const response = await fetch(`${salaryApiBase}/salaries/${currentEmployeeId}?year=${dateRange.year}&month=${dateRange.month}`, {
+							headers: {
+								'Authorization': `Bearer ${authManager.getToken()}`,
+								'Content-Type': 'application/json'
+							}
+						}).catch(() => null); // Silently catch network errors
+						
+						if (response && response.ok) {
+							try {
+								const data = await response.json();
+								const salary = data.net_salary !== undefined ? data : (data.salary || data);
+								
+								if (salary && salary.net_salary !== undefined) {
+									document.getElementById('lastMonthSalary').textContent = formatCurrency(salary.net_salary || 0) + ' DA';
+									const status = salary.payment_status || salary.status || 'Pending';
+									const statusText = status === 'Paid' ? 'Paid' : 'Pending';
+									document.getElementById('salaryStatus').textContent = statusText;
+									return true;
+								}
+							} catch (e) {
+								// Silently ignore parsing errors
+							}
+						}
+						
+						// 500 or other errors usually mean attendance not validated - show "Not Calculated" silently
+						document.getElementById('lastMonthSalary').textContent = '0 DA';
+						document.getElementById('salaryStatus').textContent = 'Not Calculated';
+						return false;
+					} catch (error) {
+						// Silently ignore all errors
+						document.getElementById('lastMonthSalary').textContent = '0 DA';
+						document.getElementById('salaryStatus').textContent = 'Not Calculated';
+						return false;
+					}
+				}
+			} catch (error) {
+				// Silently ignore errors - don't log to console
+				document.getElementById('lastMonthSalary').textContent = '0 DA';
+				document.getElementById('salaryStatus').textContent = 'No data';
+				return false;
+			}
+		}
+		
+		// Load attendance statistics
+		async function loadAttendanceStatistics(dateRange) {
+			try {
+				if (!currentEmployeeId) {
+					await loadEmployeeProfile();
+					if (!currentEmployeeId) return false;
+				}
+				
+				const attendanceApiBase = window.API_SERVICES?.attendance || 'http://localhost:3000';
+				const isYearFilter = currentPeriod === 'year';
+				
+				if (isYearFilter) {
+					// For year, sum up all months
+					let totalWorkDays = 0;
+					let totalAbsentDays = 0;
+					let totalOvertimeHours = 0;
+					let totalLateMinutes = 0;
+					let totalEarlyMinutes = 0;
+					
+					// Load all months for the year
+					const monthPromises = [];
+					for (let month = 1; month <= 12; month++) {
+						monthPromises.push(
+							fetch(`${attendanceApiBase}/api/attendance/monthly?year=${dateRange.year}&month=${month}&page=1&limit=100`, {
+								headers: {
+									'Authorization': `Bearer ${authManager.getToken()}`,
+									'Content-Type': 'application/json'
+								}
+							}).then(response => {
+								if (response.ok) {
+									return response.json().then(data => {
+										let attendance = null;
+										if (Array.isArray(data)) {
+											attendance = data.find(emp => emp.employee_id === currentEmployeeId);
+										} else if (data.data && Array.isArray(data.data)) {
+											attendance = data.data.find(emp => emp.employee_id === currentEmployeeId);
+										} else if (data.employee_id === currentEmployeeId) {
+											attendance = data;
+										}
+										
+										if (attendance) {
+											totalWorkDays += parseInt(attendance.worked_days) || 0;
+											totalAbsentDays += parseInt(attendance.absence_days) || 0;
+											totalOvertimeHours += parseFloat(attendance.overtime_hours) || 0;
+											totalLateMinutes += parseInt(attendance.late_minutes) || 0;
+											totalEarlyMinutes += parseInt(attendance.early_minutes) || 0;
+										}
+										return null;
+									}).catch(() => null);
+								}
+								return null;
+							}).catch(() => null)
+						);
+					}
+					
+					await Promise.all(monthPromises);
+					
+					document.getElementById('attendanceWorkDays').textContent = totalWorkDays;
+					document.getElementById('attendanceAbsentDays').textContent = totalAbsentDays;
+					document.getElementById('attendanceOvertime').textContent = totalOvertimeHours.toFixed(1) + 'h';
+					document.getElementById('attendanceLate').textContent = totalLateMinutes + 'm';
+					document.getElementById('attendanceEarly').textContent = totalEarlyMinutes + 'm';
+					
+					return totalWorkDays > 0 || totalAbsentDays > 0;
+				} else {
+					// For month/week, use single month
+					const response = await fetch(`${attendanceApiBase}/api/attendance/monthly?year=${dateRange.year}&month=${dateRange.month}&page=1&limit=100`, {
+						headers: {
+							'Authorization': `Bearer ${authManager.getToken()}`,
+							'Content-Type': 'application/json'
+						}
+					});
+					
+					if (response.ok) {
+						const data = await response.json();
+						// The API returns an array of employee attendance records
+						// Find the one matching currentEmployeeId
+						let attendance = null;
+						if (Array.isArray(data)) {
+							attendance = data.find(emp => emp.employee_id === currentEmployeeId);
+						} else if (data.data && Array.isArray(data.data)) {
+							attendance = data.data.find(emp => emp.employee_id === currentEmployeeId);
+						} else if (data.employee_id === currentEmployeeId) {
+							attendance = data;
+						}
+						
+						if (attendance) {
+							document.getElementById('attendanceWorkDays').textContent = attendance.worked_days || 0;
+							document.getElementById('attendanceAbsentDays').textContent = attendance.absence_days || 0;
+							const overtimeHours = parseFloat(attendance.overtime_hours) || 0;
+							document.getElementById('attendanceOvertime').textContent = overtimeHours.toFixed(1) + 'h';
+							document.getElementById('attendanceLate').textContent = (parseInt(attendance.late_minutes) || 0) + 'm';
+							document.getElementById('attendanceEarly').textContent = (parseInt(attendance.early_minutes) || 0) + 'm';
+							return true;
+						}
+					}
+				}
+			} catch (error) {
+				console.error('Error loading attendance statistics:', error);
+			}
+			
+			// Fallback: show zeros
+			document.getElementById('attendanceWorkDays').textContent = '0';
+			document.getElementById('attendanceAbsentDays').textContent = '0';
+			document.getElementById('attendanceOvertime').textContent = '0.0h';
+			document.getElementById('attendanceLate').textContent = '0m';
+			document.getElementById('attendanceEarly').textContent = '0m';
+			return false;
+		}
+		
+		// Load employee schedule/timetable
+		async function loadSchedule() {
+			try {
+				if (!currentEmployeeId) {
+					await loadEmployeeProfile();
+					if (!currentEmployeeId) {
+						document.getElementById('scheduleLoading').classList.add('hidden');
+						document.getElementById('scheduleDisplay').classList.remove('hidden');
+						document.getElementById('noScheduleMessage').classList.remove('hidden');
+						return false;
+					}
+				}
+				
+				const timetableApiBase = window.API_SERVICES?.timetable || 'http://localhost:3005';
+				const response = await fetch(`${timetableApiBase}/employee-assignments/${currentEmployeeId}`, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				document.getElementById('scheduleLoading').classList.add('hidden');
+				document.getElementById('scheduleDisplay').classList.remove('hidden');
+				
+				if (!response.ok) {
+					if (response.status === 404) {
+						document.getElementById('noScheduleMessage').classList.remove('hidden');
+						return false;
+					}
+					throw new Error('Failed to load schedule');
+				}
+				
+				const data = await response.json();
+				const intervals = data.intervals || [];
+				const assignment = data.assignment || null;
+				
+				if (!intervals || intervals.length === 0) {
+					document.getElementById('noScheduleMessage').classList.remove('hidden');
+					return false;
+				}
+				
+				document.getElementById('noScheduleMessage').classList.add('hidden');
+				
+				// Display timetable name
+				if (assignment && assignment.timetable_name) {
+					document.getElementById('timetableName').textContent = `Timetable: ${assignment.timetable_name}`;
+					if (assignment.timetable_type) {
+						document.getElementById('scheduleType').textContent = assignment.timetable_type.charAt(0).toUpperCase() + assignment.timetable_type.slice(1);
+					}
+				}
+				
+				// Calculate statistics
+				const totalDays = intervals.length;
+				let totalHours = 0;
+				
+				intervals.forEach(interval => {
+					if (interval.start_time && interval.end_time) {
+						const start = new Date(`2000-01-01T${interval.start_time}`);
+						const end = new Date(`2000-01-01T${interval.end_time}`);
+						const diffMs = end - start;
+						const diffHours = diffMs / (1000 * 60 * 60);
+						totalHours += diffHours;
+					}
+				});
+				
+				document.getElementById('scheduleTotalDays').textContent = totalDays;
+				document.getElementById('scheduleTotalHours').textContent = totalHours.toFixed(1) + 'h';
+				
+				// Display weekly schedule
+				const daysContainer = document.querySelector('#scheduleDisplay .grid.grid-cols-1.md\\:grid-cols-7');
+				if (daysContainer) {
+					const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+					const dayNamesShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+					
+					daysContainer.innerHTML = '';
+					
+					for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+						const dayIntervals = intervals.filter(i => parseInt(i.weekday) === dayIndex);
+						const hasSchedule = dayIntervals.length > 0;
+						
+						const dayCard = document.createElement('div');
+						dayCard.className = `rounded-lg p-4 border-2 ${hasSchedule ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`;
+						
+						const dayName = document.createElement('div');
+						dayName.className = `font-semibold mb-2 ${hasSchedule ? 'text-blue-900' : 'text-gray-500'}`;
+						dayName.textContent = dayNamesShort[dayIndex];
+						
+						const dayNameFull = document.createElement('div');
+						dayNameFull.className = `text-xs mb-3 ${hasSchedule ? 'text-blue-700' : 'text-gray-400'}`;
+						dayNameFull.textContent = dayNames[dayIndex];
+						
+						dayCard.appendChild(dayName);
+						dayCard.appendChild(dayNameFull);
+						
+						if (hasSchedule) {
+							dayIntervals.forEach((interval, idx) => {
+								const timeSlot = document.createElement('div');
+								timeSlot.className = 'mb-2';
+								
+								if (interval.start_time && interval.end_time) {
+									const startTime = formatTime(interval.start_time);
+									const endTime = formatTime(interval.end_time);
+									
+									const timeText = document.createElement('div');
+									timeText.className = 'text-sm font-medium text-blue-900';
+									timeText.textContent = `${startTime} - ${endTime}`;
+									
+									timeSlot.appendChild(timeText);
+									
+									// Calculate duration
+									const start = new Date(`2000-01-01T${interval.start_time}`);
+									const end = new Date(`2000-01-01T${interval.end_time}`);
+									const diffMs = end - start;
+									const diffHours = diffMs / (1000 * 60 * 60);
+									
+									const durationText = document.createElement('div');
+									durationText.className = 'text-xs text-blue-600 mt-1';
+									durationText.textContent = `${diffHours.toFixed(1)}h`;
+									
+									timeSlot.appendChild(durationText);
+								}
+								
+								dayCard.appendChild(timeSlot);
+							});
+						} else {
+							const offDay = document.createElement('div');
+							offDay.className = 'text-sm text-gray-400 italic';
+							offDay.textContent = 'Day Off';
+							dayCard.appendChild(offDay);
+						}
+						
+						daysContainer.appendChild(dayCard);
+					}
+				}
+				
+				return true;
+			} catch (error) {
+				console.error('Error loading schedule:', error);
+				document.getElementById('scheduleLoading').classList.add('hidden');
+				document.getElementById('scheduleDisplay').classList.remove('hidden');
+				document.getElementById('noScheduleMessage').classList.remove('hidden');
+				return false;
+			}
+		}
+		
+		// Format time for display (HH:MM:SS -> HH:MM)
+		function formatTime(timeString) {
+			if (!timeString) return '';
+			const parts = timeString.split(':');
+			return `${parts[0]}:${parts[1]}`;
+		}
+		
+		// Format currency
+		function formatCurrency(amount) {
+			return new Intl.NumberFormat('en-US', {
+				minimumFractionDigits: 0,
+				maximumFractionDigits: 0
+			}).format(amount || 0);
+		}
+		
+		// Load signals statistics
+		async function loadSignalsStatistics(dateRange) {
+			try {
+				if (!currentEmployeeId) {
+					await loadEmployeeProfile();
+					if (!currentEmployeeId) return false;
+				}
+				
+				const signalsApiBase = window.API_SERVICES?.hr_tasks || 'http://localhost:3020';
+				const from = dateRange.start.toISOString().split('T')[0];
+				const to = dateRange.end.toISOString().split('T')[0];
+				
+				const response = await fetch(`${signalsApiBase}/api/signals/employee/${currentEmployeeId}/statistics?from=${from}&to=${to}`, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				if (response.ok) {
+					const data = await response.json();
+					const overview = data.overview || {};
+					
+					document.getElementById('signalsTotal').textContent = overview.total || 0;
+					document.getElementById('signalsPending').textContent = overview.pending || 0;
+					document.getElementById('signalsTreated').textContent = overview.treated || 0;
+					document.getElementById('signalsHighPriority').textContent = overview.high_priority || 0;
+					
+					return (overview.total || 0) > 0;
+				} else {
+					console.warn('Signals statistics API response not OK:', response.status);
+					document.getElementById('signalsTotal').textContent = '0';
+					document.getElementById('signalsPending').textContent = '0';
+					document.getElementById('signalsTreated').textContent = '0';
+					document.getElementById('signalsHighPriority').textContent = '0';
+					return false;
+				}
+			} catch (error) {
+				console.error('Error loading signals statistics:', error);
+				document.getElementById('signalsTotal').textContent = '0';
+				document.getElementById('signalsPending').textContent = '0';
+				document.getElementById('signalsTreated').textContent = '0';
+				document.getElementById('signalsHighPriority').textContent = '0';
+				return false;
+			}
+		}
+		
+		// Load complaints statistics
+		async function loadComplaintsStatistics(dateRange) {
+			try {
+				if (!currentEmployeeId) {
+					await loadEmployeeProfile();
+					if (!currentEmployeeId) return false;
+				}
+				
+				const complaintsApiBase = window.API_SERVICES?.hr_tasks || 'http://localhost:3020';
+				const from = dateRange.start.toISOString().split('T')[0];
+				const to = dateRange.end.toISOString().split('T')[0];
+				
+				const response = await fetch(`${complaintsApiBase}/api/complaints/employee/${currentEmployeeId}/statistics?from=${from}&to=${to}`, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				if (response.ok) {
+					const data = await response.json();
+					const overview = data.overview || {};
+					
+					document.getElementById('complaintsTotal').textContent = overview.total || 0;
+					document.getElementById('complaintsPending').textContent = overview.pending || 0;
+					document.getElementById('complaintsCompleted').textContent = overview.completed || 0;
+					document.getElementById('complaintsOverdue').textContent = overview.overdue || 0;
+					
+					return (overview.total || 0) > 0;
+				} else {
+					console.warn('Complaints statistics API response not OK:', response.status);
+					document.getElementById('complaintsTotal').textContent = '0';
+					document.getElementById('complaintsPending').textContent = '0';
+					document.getElementById('complaintsCompleted').textContent = '0';
+					document.getElementById('complaintsOverdue').textContent = '0';
+					return false;
+				}
+			} catch (error) {
+				console.error('Error loading complaints statistics:', error);
+				document.getElementById('complaintsTotal').textContent = '0';
+				document.getElementById('complaintsPending').textContent = '0';
+				document.getElementById('complaintsCompleted').textContent = '0';
+				document.getElementById('complaintsOverdue').textContent = '0';
+				return false;
+			}
+		}
+		
+		// Function to update user display name in dashboard header
+		async function updateDashboardUserDisplayName() {
+			const userDisplayNameEl = document.getElementById('userDisplayName');
+			if (!userDisplayNameEl) return;
+			
+			try {
+				const user = authManager.getUser();
+				if (user && (user.firstName || user.first_name) && (user.lastName || user.last_name)) {
+					const firstName = user.firstName || user.first_name || '';
+					const lastName = user.lastName || user.last_name || '';
+					if (firstName.toLowerCase() !== 'prenom' && lastName.toLowerCase() !== 'nom') {
+						userDisplayNameEl.textContent = `${firstName} ${lastName}`.trim();
+						return;
+					}
+				}
+				
+				const usersApiBase = window.API_SERVICES?.users || 'http://localhost:3002';
+				const response = await fetch(`${usersApiBase}/profile`, {
+					headers: {
+						'Authorization': `Bearer ${authManager.getToken()}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				
+				if (response.ok) {
+					const profile = await response.json();
+					if (profile.first_name && profile.last_name) {
+						const firstName = profile.first_name;
+						const lastName = profile.last_name;
+						if (firstName.toLowerCase() !== 'prenom' && lastName.toLowerCase() !== 'nom') {
+							userDisplayNameEl.textContent = `${firstName} ${lastName}`.trim();
+							return;
+						}
+					}
+				}
+			} catch (error) {
+				console.warn('Failed to update user display name:', error);
+			}
+			
+			if (userDisplayNameEl.textContent === 'User') {
+				const user = authManager.getUser();
+				if (user && user.username) {
+					userDisplayNameEl.textContent = user.username;
+				}
+			}
+		}
+		
+		// Sync language selector with current app language
+		function syncLanguageSelector() {
+			const languageSelector = document.getElementById('languageSelector');
+			if (!languageSelector) return;
+			
+			const currentLang = localStorage.getItem('language') || 
+			                   localStorage.getItem('lang') || 
+			                   (typeof window !== 'undefined' && window.currentLanguage) || 
+			                   'en';
+			
+			languageSelector.value = currentLang;
+			
+			if (!languageSelector.hasAttribute('data-listener-added')) {
+				languageSelector.addEventListener('change', function() {
+					const newLang = this.value;
+					localStorage.setItem('language', newLang);
+					localStorage.setItem('lang', newLang);
+					if (typeof window !== 'undefined') {
+						window.currentLanguage = newLang;
+					}
+					if (typeof setLanguage === 'function') {
+						setLanguage(newLang);
+					}
+				});
+				
+				languageSelector.setAttribute('data-listener-added', 'true');
+			}
+			
+			window.addEventListener('languageChanged', function(event) {
+				if (event.detail && event.detail.language) {
+					languageSelector.value = event.detail.language;
+				}
+			});
+			
+			window.addEventListener('storage', function(event) {
+				if (event.key === 'language' || event.key === 'lang') {
+					languageSelector.value = event.newValue || 'en';
+				}
+			});
+			
+			let syncInterval = setInterval(function() {
+				const currentLang = localStorage.getItem('language') || 
+				                   localStorage.getItem('lang') || 
+				                   (typeof window !== 'undefined' && window.currentLanguage) || 
+				                   'en';
+				if (languageSelector.value !== currentLang) {
+					languageSelector.value = currentLang;
+				}
+			}, 1000);
+			
+			if (typeof window !== 'undefined') {
+				window.languageSyncInterval = syncInterval;
+			}
+		}
+		
+		// Setup notifications UI for dashboard
+		function setupDashboardNotificationsUI() {
+			try {
+				const bell = document.getElementById('empNotifBell');
+				const dd = document.getElementById('empNotifDropdown');
+				const markAll = document.getElementById('empNotifMarkAll');
+				const clearAll = document.getElementById('empNotifClearAll');
+				
+				if (bell && dd) {
+					bell.addEventListener('click', (e) => {
+						e.stopPropagation();
+						if (dd.classList.contains('hidden')) {
+							dd.classList.remove('hidden');
+							setTimeout(() => {
+								dd.classList.remove('opacity-0', 'translate-y-2');
+								dd.classList.add('opacity-100', 'translate-y-0');
+							}, 10);
+						} else {
+							dd.classList.remove('opacity-100', 'translate-y-0');
+							dd.classList.add('translate-y-2');
+							setTimeout(() => {
+								dd.classList.add('hidden');
+							}, 200);
+						}
+					});
+					
+					document.addEventListener('click', (e) => {
+						if (!dd.contains(e.target) && e.target !== bell && !bell.contains(e.target)) {
+							dd.classList.remove('opacity-100', 'translate-y-0');
+							dd.classList.add('translate-y-2');
+							setTimeout(() => {
+								dd.classList.add('hidden');
+							}, 200);
+						}
+					});
+				}
+				
+				if (markAll) {
+					markAll.addEventListener('click', async () => {
+						console.log('Mark all notifications as read');
+					});
+				}
+				
+				if (clearAll) {
+					clearAll.addEventListener('click', async () => {
+						console.log('Clear all notifications');
+					});
+				}
+			} catch (error) {
+				console.error('Error setting up notifications UI:', error);
+			}
+		}
+	</script>
+	<script src="../assets/js/navbar.js"></script>
+</body>
+</html>

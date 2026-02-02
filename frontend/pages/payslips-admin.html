@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payslips Manager - HR Operations Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../components/api.js"></script>
+    <style>
+        .stat-chip {
+            transition: all 0.2s ease;
+        }
+
+        .stat-chip:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            width: fit-content;
+            min-width: auto;
+        }
+
+        .status-uploaded {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-not_uploaded {
+            background-color: #fecaca;
+            color: #991b1b;
+        }
+
+        .status-unmatched {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .table-row:hover {
+            background-color: #f9fafb;
+        }
+
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- The reusable navbar will be automatically inserted here -->
+
+    <!-- Main Content -->
+    <div class="main-content flex-1 overflow-y-auto">
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6">
+            <div class="max-w-7xl mx-auto">
+                <!-- Header -->
+                <div class="bg-white rounded-lg shadow-sm mb-6 p-6">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h1 class="text-2xl font-semibold text-gray-900 mb-2"
+                                data-translate="salary.payslips_manager">Payslips Manager</h1>
+                            <p class="text-gray-600" data-translate="salary.payslips_description">Upload and manage
+                                monthly payslips for all employees</p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <!-- Language Selector -->
+                            <select id="languageSelector"
+                                class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="en">English</option>
+                                <option value="fr">Français</option>
+                                <option value="ar">العربية</option>
+                            </select>
+                            <button id="openUploadModal"
+                                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                <i class="fas fa-upload mr-2"></i>
+                                Upload Batch
+                            </button>
+                            <button id="refreshBtn"
+                                class="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+                                title="Refresh">
+                                <i class="fas fa-rotate"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-white rounded-lg shadow-sm mb-6 p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Employee</label>
+                            <div class="relative">
+                                <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                                <input id="filterEmployee" type="text" placeholder="Search employee name..."
+                                    class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                            <select id="filterDept"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">All Departments</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Month</label>
+                            <select id="filterMonth"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6">June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                            <select id="filterYear"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="loadPayslips()"
+                                class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                <i class="fas fa-search mr-2"></i>
+                                Load
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Table -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Employee</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Department</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        File</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payslipsTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Table rows will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="payslipsLoading" class="text-center py-12 hidden">
+                        <div class="loading-spinner rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p class="text-gray-500">Loading payslips data...</p>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="payslipsEmpty" class="text-center py-12 hidden">
+                        <i class="fas fa-file-invoice-dollar text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">No payslips found</p>
+                        <p class="text-sm text-gray-400">No records for the selected period</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg max-w-lg w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900">Upload Payslips Batch</h3>
+                    <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <form id="uploadForm">
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Month</label>
+                                <select id="upMonth"
+                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="1">January</option>
+                                    <option value="2">February</option>
+                                    <option value="3">March</option>
+                                    <option value="4">April</option>
+                                    <option value="5">May</option>
+                                    <option value="6">June</option>
+                                    <option value="7">July</option>
+                                    <option value="8">August</option>
+                                    <option value="9">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                                <select id="upYear"
+                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">PDF Files</label>
+                            <input type="file" id="upFiles" accept="application/pdf" multiple
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            <p class="text-xs text-gray-500 mt-2">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                You can select multiple PDF files (up to 100+). Files will be automatically matched to
+                                employees.
+                            </p>
+                        </div>
+                        <div id="uploadProgress" class="hidden">
+                            <div class="bg-gray-200 rounded-full h-2">
+                                <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                    style="width: 0%"></div>
+                            </div>
+                            <p id="progressText" class="text-sm text-gray-600 mt-2">Uploading...</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeUploadModal()"
+                            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="button" onclick="doUpload()"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-upload mr-2"></i>
+                            Upload Files
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg border-l-4 p-4 max-w-sm">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i id="toastIcon" class="text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <p id="toastMessage" class="text-sm font-medium text-gray-900"></p>
+                </div>
+                <div class="ml-auto pl-3">
+                    <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentEmployees = [];
+        let currentDepartments = [];
+        let isLoading = false;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function () {
+            // Language selector
+            const languageSelector = document.getElementById('languageSelector');
+            if (languageSelector) {
+                languageSelector.value = (typeof currentLanguage !== 'undefined' ? currentLanguage : (window.currentLanguage || 'en'));
+                languageSelector.addEventListener('change', (e) => {
+                    if (typeof setLanguage === 'function') {
+                        setLanguage(e.target.value);
+                    }
+                    if (typeof updatePageTranslations === 'function') {
+                        updatePageTranslations();
+                    }
+                });
+            }
+
+            // Initialize translations
+            if (typeof updatePageTranslations === 'function') {
+                updatePageTranslations();
+            }
+            if (!requireAuth()) return;
+
+            // Check role access (with Live Server dev bypass)
+            const isLiveServer = ['5502', '5503', '5504'].includes(window.location.port);
+            const allowedRoles = ['HR_Manager', 'Director', 'Admin', 'Administrator', 'SuperAdmin'];
+            const resolvedRole = (typeof authManager !== 'undefined' && authManager.getUserRole)
+                ? authManager.getUserRole()
+                : (localStorage.getItem('userRole') || '');
+            let userRole = resolvedRole;
+            if (!allowedRoles.includes(userRole)) {
+                if (isLiveServer) {
+                    localStorage.setItem('userRole', 'HR_Manager');
+                    userRole = 'HR_Manager';
+                    showToast('warning', 'Dev bypass: HR role granted for Live Server.');
+                } else {
+                    showToast('error', 'Access denied. HR Manager or Admin role required.');
+                    window.location.href = '/frontend/pages/hr-dashboard.html';
+                    return;
+                }
+            }
+
+            initializePage();
+
+            // Event listeners
+            const logoutEl = document.getElementById('logoutBtn');
+            if (logoutEl) logoutEl.addEventListener('click', handleLogout);
+            document.getElementById('filterMonth').addEventListener('change', loadPayslips);
+            document.getElementById('filterYear').addEventListener('change', loadPayslips);
+            document.getElementById('filterDept').addEventListener('change', loadPayslips);
+            document.getElementById('filterEmployee').addEventListener('input', debounce(loadPayslips, 300));
+            document.getElementById('refreshBtn').addEventListener('click', loadPayslips);
+            document.getElementById('openUploadModal').addEventListener('click', openUploadModal);
+        });
+
+        async function initializePage() {
+            try {
+                // Setup current month/year
+                const now = new Date();
+                document.getElementById('filterMonth').value = now.getMonth() + 1;
+
+                // Setup years (last 5 years to next 2 years)
+                const currentYear = now.getFullYear();
+                const yearSelect = document.getElementById('filterYear');
+                yearSelect.innerHTML = '';
+                for (let year = currentYear - 5; year <= currentYear + 2; year++) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    if (year === currentYear) option.selected = true;
+                    yearSelect.appendChild(option);
+                }
+
+                // Setup upload modal years
+                const upYearSelect = document.getElementById('upYear');
+                upYearSelect.innerHTML = '';
+                for (let year = currentYear - 5; year <= currentYear + 2; year++) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    if (year === currentYear) option.selected = true;
+                    upYearSelect.appendChild(option);
+                }
+                document.getElementById('upMonth').value = now.getMonth() + 1;
+
+                // Load departments and payslips
+                await loadDepartments();
+                await loadPayslips();
+            } catch (error) {
+                console.error('Initialize page error:', error);
+                showToast('error', 'Failed to initialize page');
+            }
+        }
+
+        async function loadDepartments() {
+            try {
+                // Use shared API helper which handles Live Server base URL
+                const result = await API.getDepartments();
+                currentDepartments = (result && (result.departments || result.items)) || [];
+
+                const deptSelect = document.getElementById('filterDept');
+                deptSelect.innerHTML = '<option value="">All Departments</option>' +
+                    currentDepartments.map(dept => `<option value="${dept.id}">${dept.name}</option>`).join('');
+            } catch (error) {
+                console.error('Load departments error:', error);
+                showToast('error', 'Failed to load departments');
+            }
+        }
+
+        async function loadPayslips() {
+            if (isLoading) return;
+
+            try {
+                isLoading = true;
+                showPayslipsLoading();
+
+                const month = parseInt(document.getElementById('filterMonth').value);
+                const year = parseInt(document.getElementById('filterYear').value);
+                const department = document.getElementById('filterDept').value;
+                const searchQuery = document.getElementById('filterEmployee').value.toLowerCase().trim();
+
+                const params = { month, year, limit: 200 };
+                if (department) params.department = department;
+
+                const response = await fetch(`http://localhost:3010/payslips/admin?${new URLSearchParams(params)}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load payslips');
+                }
+
+                const data = await response.json();
+                currentEmployees = data.items || [];
+
+                // Filter by search query
+                const filteredEmployees = currentEmployees.filter(emp =>
+                    !searchQuery || (emp.employee_name || '').toLowerCase().includes(searchQuery)
+                );
+
+                displayPayslips(filteredEmployees);
+
+            } catch (error) {
+                console.error('Load payslips error:', error);
+                showToast('error', error.message || 'Failed to load payslips');
+                showPayslipsEmpty();
+            } finally {
+                isLoading = false;
+                hidePayslipsLoading();
+            }
+        }
+
+        function displayPayslips(employees) {
+            const tableBody = document.getElementById('payslipsTableBody');
+
+            if (employees.length === 0) {
+                showPayslipsEmpty();
+                return;
+            }
+
+            tableBody.innerHTML = employees.map(emp => {
+                const statusClass = getStatusClass(emp.status);
+                return `
+                    <tr class="table-row cursor-pointer" data-employee-id="${emp.employee_id}">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            ${emp.employee_name || 'Unknown Employee'}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${emp.department_name || 'No Department'}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${emp.payslip_id ?
+                        `<a href="#" data-dl="${emp.payslip_id}" class="text-blue-600 hover:text-blue-900 flex items-center">
+                                    <i class="fas fa-file-pdf text-red-600 mr-2"></i>
+                                    ${emp.original_name || 'payslip.pdf'}
+                                </a>` :
+                        '<span class="text-gray-400 italic">No file uploaded</span>'
+                    }
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge ${statusClass}">
+                                ${getStatusText(emp.status)}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Add event listeners
+            addTableEventListeners();
+            hidePayslipsEmpty();
+        }
+
+        function addTableEventListeners() {
+            const tableBody = document.getElementById('payslipsTableBody');
+
+            // Row click opens employee detail
+            tableBody.querySelectorAll('tr[data-employee-id]').forEach(tr => {
+                tr.addEventListener('click', function (e) {
+                    if (e.target.closest('a[data-dl]')) return; // skip if clicking download
+                    const empId = this.getAttribute('data-employee-id');
+                    window.location.href = `payslips-employee-detail.html?employee=${empId}`;
+                });
+            });
+
+            // Download links
+            tableBody.querySelectorAll('a[data-dl]').forEach(a => {
+                a.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    try {
+                        const payslipId = a.getAttribute('data-dl');
+                        await downloadPayslip(payslipId);
+                    } catch (error) {
+                        console.error('Download error:', error);
+                        showToast('error', 'Failed to download payslip');
+                    }
+                });
+            });
+        }
+
+        async function downloadPayslip(payslipId) {
+            try {
+                const response = await fetch(`http://localhost:3010/payslips/download/${payslipId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to download payslip');
+                }
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'payslip.pdf';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
+
+                showToast('success', 'Payslip downloaded successfully');
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        function openUploadModal() {
+            document.getElementById('uploadModal').classList.remove('hidden');
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').classList.add('hidden');
+            document.getElementById('uploadProgress').classList.add('hidden');
+            document.getElementById('upFiles').value = '';
+        }
+
+        async function doUpload() {
+            try {
+                const month = document.getElementById('upMonth').value;
+                const year = document.getElementById('upYear').value;
+                const files = document.getElementById('upFiles').files;
+
+                if (!files || files.length === 0) {
+                    showToast('warning', 'Please select PDF files to upload');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('month', month);
+                formData.append('year', year);
+
+                Array.from(files).forEach(file => {
+                    formData.append('files', file);
+                });
+
+                // Show progress
+                document.getElementById('uploadProgress').classList.remove('hidden');
+                document.getElementById('progressText').textContent = `Uploading ${files.length} files...`;
+
+                const response = await fetch('http://localhost:3010/payslips/upload-batch', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'x-dev-role': localStorage.getItem('userRole') || 'HR_Manager'
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    let message = 'Upload failed';
+                    try {
+                        const err = await response.json();
+                        console.error('Upload failed JSON:', err);
+                        if (err && err.error) {
+                            message = err.error + (err.details ? `: ${err.details}` : '');
+                        }
+                    } catch (_) {
+                        try {
+                            const text = await response.text();
+                            console.error('Upload failed raw response:', response.status, text);
+                            message = `HTTP ${response.status}: ${text || message}`;
+                        } catch (e2) {
+                            console.error('Upload failed and no body could be read');
+                        }
+                    }
+                    throw new Error(message);
+                }
+
+                const result = await response.json();
+
+                showToast('success', `Successfully uploaded ${result.uploaded} files`);
+                closeUploadModal();
+                loadPayslips();
+
+            } catch (error) {
+                console.error('Upload error:', error && (error.stack || error.message || error));
+                showToast('error', error.message || 'Failed to upload payslips');
+                document.getElementById('uploadProgress').classList.add('hidden');
+            }
+        }
+
+        // Utility functions
+        function getStatusClass(status) {
+            switch (status) {
+                case 'uploaded': return 'status-uploaded';
+                case 'unmatched': return 'status-unmatched';
+                default: return 'status-not_uploaded';
+            }
+        }
+
+        function getStatusText(status) {
+            switch (status) {
+                case 'uploaded': return 'Uploaded';
+                case 'unmatched': return 'Unmatched';
+                default: return 'Not Uploaded';
+            }
+        }
+
+        function showPayslipsLoading() {
+            document.getElementById('payslipsLoading').classList.remove('hidden');
+            document.getElementById('payslipsEmpty').classList.add('hidden');
+        }
+
+        function hidePayslipsLoading() {
+            document.getElementById('payslipsLoading').classList.add('hidden');
+        }
+
+        function showPayslipsEmpty() {
+            document.getElementById('payslipsEmpty').classList.remove('hidden');
+            document.getElementById('payslipsLoading').classList.add('hidden');
+        }
+
+        function hidePayslipsEmpty() {
+            document.getElementById('payslipsEmpty').classList.add('hidden');
+        }
+
+        function showToast(type, message) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const messageEl = document.getElementById('toastMessage');
+
+            // Set icon and colors based on type
+            let iconClass, borderColor;
+            switch (type) {
+                case 'success':
+                    iconClass = 'fas fa-check-circle text-green-600';
+                    borderColor = 'border-green-600';
+                    break;
+                case 'error':
+                    iconClass = 'fas fa-exclamation-circle text-red-600';
+                    borderColor = 'border-red-600';
+                    break;
+                case 'warning':
+                    iconClass = 'fas fa-exclamation-triangle text-yellow-600';
+                    borderColor = 'border-yellow-600';
+                    break;
+                default:
+                    iconClass = 'fas fa-info-circle text-blue-600';
+                    borderColor = 'border-blue-600';
+            }
+
+            icon.className = iconClass;
+            messageEl.textContent = message;
+            toast.querySelector('div').className = `bg-white rounded-lg shadow-lg border-l-4 p-4 max-w-sm ${borderColor}`;
+
+            toast.classList.remove('hidden');
+
+            // Auto hide after 5 seconds
+            setTimeout(hideToast, 5000);
+        }
+
+        function hideToast() {
+            document.getElementById('toast').classList.add('hidden');
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userRole');
+            window.location.href = '/frontend/pages/login.html';
+        }
+
+        function requireAuth() {
+            const isLiveServer = ['5502', '5503', '5504'].includes(window.location.port);
+            const token = localStorage.getItem('token');
+            if (!token) {
+                if (isLiveServer) {
+                    localStorage.setItem('token', 'dev');
+                    showToast('warning', 'Dev bypass: mock token set for Live Server.');
+                    return true;
+                }
+                window.location.href = '/frontend/pages/login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+
+    <!-- Scripts -->
+    <script src="../assets/js/translations.js"></script>
+    <script src="../assets/js/navbar.js"></script>
+</body>
+
+</html>

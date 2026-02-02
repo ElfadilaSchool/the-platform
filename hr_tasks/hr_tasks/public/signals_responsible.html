@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الإشارات المستلمة - المسؤول</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #ffffff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 25px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      color: #1e293b;
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 25px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .stat-card.total {
+      background: linear-gradient(135deg, #06b6d4, #0891b2);
+      color: white;
+    }
+
+    .stat-card.pending {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white;
+    }
+
+    .stat-card.treated {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: 700;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-title {
+      font-size: 20px;
+      color: #1e293b;
+      margin-bottom: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border-radius: 2px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 0;
+    }
+
+    .form-label {
+      display: block;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: #06b6d4;
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-secondary {
+      background: #64748b;
+      color: white;
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+
+    .btn-secondary:hover {
+      background: #475569;
+    }
+
+    .btn-success {
+      background: #10b981;
+      color: white;
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+
+    .btn-success:hover {
+      background: #059669;
+    }
+
+    .btn-warning {
+      background: #f59e0b;
+      color: white;
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+
+    .btn-warning:hover {
+      background: #d97706;
+    }
+
+    .signals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 20px;
+    }
+
+    .signal-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s;
+      border-right: 4px solid #e2e8f0;
+    }
+
+    .signal-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .signal-card.pending {
+      border-right-color: #f59e0b;
+    }
+
+    .signal-card.treated {
+      border-right-color: #10b981;
+    }
+
+    .signal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+
+    .signal-type {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .signal-status {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .status-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-treated {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .signal-employee {
+      color: #64748b;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .signal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .signal-desc {
+      color: #64748b;
+      font-size: 14px;
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+
+    .signal-location {
+      color: #94a3b8;
+      font-size: 13px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .signal-date {
+      color: #cbd5e1;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    .signal-photo {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      cursor: pointer;
+    }
+
+    .signal-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .alert {
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      animation: slideIn 0.3s ease;
+    }
+
+    .alert-success {
+      background: #d1fae5;
+      color: #065f46;
+      border-right: 4px solid #10b981;
+    }
+
+    .alert-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border-right: 4px solid #ef4444;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #94a3b8;
+    }
+
+    .empty-state svg {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 20px;
+      opacity: 0.4;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .loading {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 50;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-content {
+      width: min(1200px, 96vw);
+      max-height: 86vh;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: #fff;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .modal-body {
+      padding: 16px;
+      overflow: auto;
+    }
+
+    .loc-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .loc-chip {
+      background: #f1f5f9;
+      color: #0f172a;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .loc-section {
+      margin-bottom: 18px;
+    }
+
+    .loc-section-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .loc-floor {
+      margin: 10px 0 6px;
+      color: #334155;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .loc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .loc-card {
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .loc-card .code {
+      font-weight: 800;
+      color: #0f172a;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .loc-card .meta {
+      color: #64748b;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .loc-card .desc {
+      color: #334155;
+      font-size: 13px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 999px;
+      background: #ecfeff;
+      color: #155e75;
+      font-weight: 700;
+    }
+
+    .section-toggle {
+      background: #fff;
+      border-radius: 999px;
+      display: inline-flex;
+      padding: 6px;
+      gap: 6px;
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+      margin: 0 0 24px 0;
+    }
+
+    .section-btn {
+      border: none;
+      background: transparent;
+      padding: 10px 24px;
+      border-radius: 999px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .section-btn.active {
+      background: #3b82f6;
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(59, 130, 246, 0.35);
+    }
+
+    .section-btn:not(.active):hover {
+      background: #e2e8f0;
+    }
+
+    .section-content {
+      display: none;
+    }
+
+    .section-content.active {
+      display: block;
+    }
+  </style>
+  <script src="auth.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📬 الإشارات المستلمة</h1>
+      <p>إدارة ومتابعة الإشارات</p>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary" id="viewLocalisationsBtn">عرض المواقع</button>
+        <button class="btn btn-primary" id="openAddSignalBtn">إضافة إشارة</button>
+        <button class="btn btn-primary" id="viewStatisticsBtn">📊 الإحصائيات</button>
+      </div>
+    </div>
+
+    <div id="alert"></div>
+
+    <div class="stats">
+      <div class="stat-card total">
+        <div class="stat-label">إجمالي الإشارات</div>
+        <div class="stat-value" id="statTotal">0</div>
+      </div>
+      <div class="stat-card pending">
+        <div class="stat-label">قيد المعالجة</div>
+        <div class="stat-value" id="statPending">0</div>
+      </div>
+      <div class="stat-card treated">
+        <div class="stat-label">تمت المعالجة</div>
+        <div class="stat-value" id="statTreated">0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">الفلاتر</h2>
+      <div class="filters">
+        <div class="form-group">
+          <label class="form-label">نوع الإشارة</label>
+          <select id="typeId">
+            <option value="">جميع الأنواع</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">الحالة</label>
+          <select id="status">
+            <option value="">الكل</option>
+            <option value="pending">قيد المعالجة</option>
+            <option value="treated">تمت المعالجة</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">من تاريخ</label>
+          <input id="from" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">إلى تاريخ</label>
+          <input id="to" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">بحث</label>
+          <input id="q" type="text" placeholder="العنوان أو الوصف">
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <button class="btn btn-primary" id="applyBtn" style="width:100%">تطبيق</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-toggle" id="signalsSectionToggle">
+      <button class="section-btn active" data-section="receivedSignalsSection">قائمة الإشارات</button>
+      <button class="section-btn" data-section="mySignalsSection">إشاراتي السابقة</button>
+    </div>
+
+    <div id="receivedSignalsSection" class="section-content active">
+      <div class="card">
+        <h2 class="card-title">قائمة الإشارات</h2>
+        <div id="signalsList" class="signals-grid"></div>
+      </div>
+    </div>
+
+    <div id="mySignalsSection" class="section-content">
+      <div class="card">
+        <h2 class="card-title">إشاراتي السابقة</h2>
+        <div id="mySignalsList" class="signals-grid"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">إدارة المواقع (Localisations)</h2>
+      <div class="filters" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">المبنى (اختيار موجود)</label>
+          <select id="locBatimentSelect"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">أو مبنى جديد</label>
+          <input id="locBatimentNew" type="text" placeholder="مثال: A / B / C">
+        </div>
+        <div class="form-group">
+          <label class="form-label">الطابق (اختيار موجود)</label>
+          <select id="locEtageSelect"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">أو طابق جديد</label>
+          <input id="locEtageNew" type="text" placeholder="مثال: 0 / 1 / 2 / R+1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">رمز القاعة / المكان (code)</label>
+          <input id="locCode" type="text" placeholder="EX: B-2-205" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">الوصف (عربي)</label>
+          <input id="locDescAr" type="text" placeholder="وصف قصير للمكان" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">النوع</label>
+          <select id="locType">
+            <option value="">غير محدد</option>
+            <option value="salle">قاعة</option>
+            <option value="bureau">مكتب</option>
+            <option value="sanitaire">مرفق صحي</option>
+            <option value="laboratoire">مخبر</option>
+            <option value="salle_informatique">قاعة إعلام آلي</option>
+            <option value="atelier">ورشة</option>
+            <option value="restaurant">مطعم</option>
+            <option value="stockage">مخزن</option>
+            <option value="autre">أخرى (اكتب نوعًا جديدًا)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">نوع جديد (اختياري)</label>
+          <input id="locTypeCustom" type="text" placeholder="مثال: قاعة محاضرات، قاعة اجتماعات" />
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <button class="btn btn-primary" id="addLocalisationBtn" style="width:100%">
+            إضافة موقع
+          </button>
+        </div>
+      </div>
+      <div style="margin-top:14px">
+        <button class="btn btn-secondary" id="reloadLocsBtn">تحديث القوائم</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">إدارة أنواع الإشارات (قسم الصيانة)</h2>
+      <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary" id="viewTypeResponsiblesBtn">عرض مسؤولي الأنواع</button>
+      </div>
+      <div class="filters" style="margin-bottom:16px">
+        <div class="form-group">
+          <label class="form-label">نوع الإشارة</label>
+          <select id="manageTypeId"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">الموظف (قسم الصيانة)</label>
+          <select id="manageEmployeeId"></select>
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <button class="btn btn-primary" id="assignBtn" style="width:100%">إضافة المسؤول</button>
+        </div>
+      </div>
+      <div>
+        <h3 class="card-title" style="margin-bottom:12px">المسؤولون عن النوع المحدد</h3>
+        <ul id="responsiblesList" style="list-style:none;padding:0;display:grid;gap:10px"></ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">إضافة نوع إشارة جديد</h2>
+      <div class="filters" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">اسم النوع</label>
+          <input id="newTypeName" type="text" placeholder="مثال: كهرباء، صيانة عامة">
+        </div>
+        <div class="form-group">
+          <label class="form-label">الموظف المسؤول (اختياري)</label>
+          <select id="newTypeEmployeeId">
+            <option value="">اختر الموظف</option>
+          </select>
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <button class="btn btn-primary" id="addTypeBtn" style="width:100%">إضافة النوع</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Localisations Modal -->
+  <div id="locModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="locModalTitle">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title" id="locModalTitle">📍 قائمة المواقع</div>
+        <button class="modal-close" id="closeLocModalBtn">إغلاق</button>
+      </div>
+      <div class="modal-body">
+        <div id="locModalBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Signalisation Modal -->
+  <div id="addSignalModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="addSignalTitle">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title" id="addSignalTitle">➕ إضافة إشارة جديدة</div>
+        <button class="modal-close" id="closeAddSignalBtn">إغلاق</button>
+      </div>
+      <div class="modal-body">
+        <div class="filters" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">نوع الإشارة</label>
+            <select id="addTypeId"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">العنوان</label>
+            <input id="addTitle" type="text" placeholder="عنوان مختصر" />
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label">الوصف</label>
+            <input id="addDesc" type="text" placeholder="وصف مختصر (اختياري)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">الموقع (نص حر)</label>
+            <input id="addLocationText" type="text" placeholder="مثال: مبنى A، طابق 1، أمام القاعة 101" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">المبنى</label>
+            <select id="addLocBatiment"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">الطابق</label>
+            <select id="addLocEtage"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">القاعة/المكان</label>
+            <select id="addLocSalle"></select>
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label">صورة (اختياري)</label>
+            <input id="addPhoto" type="file" accept="image/*" />
+          </div>
+          <div class="form-group" style="display:flex;align-items:flex-end;grid-column:1/-1">
+            <button class="btn btn-primary" id="submitAddSignalBtn">حفظ الإشارة</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Types → Responsibles Overview Modal -->
+  <div id="typeRespModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="typeRespTitle">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title" id="typeRespTitle">👥 مسؤولو الأنواع</div>
+        <button class="modal-close" id="closeTypeRespBtn">إغلاق</button>
+      </div>
+      <div class="modal-body">
+        <div id="typeRespBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const API = 'http://localhost:3020/api/signals';
+    const CORE_API = 'http://localhost:3020';
+    let responsibleId = '';
+    let cachedTypes = [];
+    let locModalEl, locModalBodyEl;
+    let addSignalModalEl;
+    let cachedAddLocs = [];
+    let typeRespModalEl, typeRespBodyEl;
+    let cachedEmployees = [];
+
+    // ---- Auth helpers ----
+    function getAuthHeaders() {
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get('token') || params.get('access_token');
+      const tokenFromAuth = (typeof authManager !== 'undefined' && authManager.getToken) ? authManager.getToken() : null;
+      const storedToken = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const token = urlToken || tokenFromAuth || storedToken;
+      return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
+
+    function isUuidLike(v) {
+      return typeof v === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(v);
+    }
+
+    async function resolveResponsibleId() {
+      const params = new URLSearchParams(window.location.search);
+      const urlId = params.get('responsibleId') || params.get('responsible_id') || params.get('id');
+      const user = (typeof authManager !== 'undefined' && authManager.getUser) ? authManager.getUser() : null;
+      const storedId = localStorage.getItem('signals.responsibleId');
+
+      // Priority: auth employee_id -> stored -> url param (for embedded)
+      let candidate = user?.employee_id || storedId || urlId;
+      if (candidate && isUuidLike(candidate)) return candidate;
+
+      const userId = user?.id || user?.user_id;
+      if (!userId) return urlId && isUuidLike(urlId) ? urlId : null;
+
+      try {
+        const res = await fetch(`${CORE_API}/employees/by-user/${userId}`, { headers: getAuthHeaders() });
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          const empId = data?.employee?.id || data?.id;
+          if (empId) {
+            localStorage.setItem('signals.responsibleId', empId);
+            return empId;
+          }
+        }
+      } catch (_) { /* ignore */ }
+
+      return urlId && isUuidLike(urlId) ? urlId : null;
+    }
+
+    function showAlert(msg, isError = false) {
+      const alert = $('alert');
+      alert.className = `alert ${isError ? 'alert-error' : 'alert-success'}`;
+      alert.textContent = msg;
+      alert.style.display = 'block';
+      setTimeout(() => alert.style.display = 'none', 4000);
+    }
+
+    async function fetchAPI(url, options = {}) {
+      const headers = {
+        ...(options.headers || {}),
+        ...getAuthHeaders(),
+        'Content-Type': (options.body && !(options.body instanceof FormData)) ? 'application/json' : undefined
+      };
+      const res = await fetch(url, { ...options, headers });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'خطأ في الخادم' }));
+        throw new Error(data.error || 'خطأ في الخادم');
+      }
+      return res.json();
+    }
+
+    async function loadTypes() {
+      try {
+        const types = await fetchAPI(`${API}/types`);
+        cachedTypes = types;
+        const select = $('typeId');
+        select.innerHTML = '<option value="">جميع الأنواع</option>' +
+          types.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    async function loadManageTypes() {
+      try {
+        const types = await fetchAPI(`${API}/maintenance/${responsibleId}/types-with-responsibles`);
+        const select = $('manageTypeId');
+        select.innerHTML = types.map(t => `<option value="${t.id}">${t.name} (${t.responsibles_count} مسؤول)</option>`).join('');
+        await loadManageResponsibles();
+      } catch (e) { showAlert(e.message, true); }
+    }
+
+    async function loadManageEmployees() {
+      try {
+        const employees = await fetchAPI(`${API}/maintenance/${responsibleId}/employees`);
+        cachedEmployees = employees;
+        const select = $('manageEmployeeId');
+        select.innerHTML = employees.length ? employees.map(e => `<option value="${e.id}">${e.first_name} ${e.last_name}</option>`).join('') : '<option>لا يوجد موظفين</option>';
+        populateNewTypeEmployees();
+      } catch (e) { showAlert(e.message, true); }
+    }
+
+    async function loadManageResponsibles() {
+      const typeId = $('manageTypeId').value;
+      if (!typeId) return;
+      try {
+        const responsibles = await fetchAPI(`${API}/maintenance/${responsibleId}/types/${typeId}/responsibles`);
+        const list = $('responsiblesList');
+        if (!responsibles.length) {
+          list.innerHTML = '<li style="padding:12px;background:#f8fafc;border-radius:10px;color:#64748b">لا يوجد مسؤولون لهذا النوع</li>';
+          return;
+        }
+        list.innerHTML = responsibles.map(r => `
+          <li style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8fafc;border-radius:10px">
+            <span>${r.first_name} ${r.last_name}</span>
+            <button class="btn btn-secondary" onclick="removeResponsible('${r.id}')">إزالة</button>
+          </li>
+        `).join('');
+      } catch (e) { showAlert(e.message, true); }
+    }
+
+    async function loadSignals() {
+      if (!responsibleId) return;
+
+      const params = new URLSearchParams();
+      if ($('typeId').value) params.set('typeId', $('typeId').value);
+      if ($('status').value) params.set('status', $('status').value);
+      if ($('from').value) params.set('from', $('from').value);
+      if ($('to').value) params.set('to', $('to').value);
+      if ($('q').value.trim()) params.set('q', $('q').value.trim());
+
+      try {
+        const data = await fetchAPI(`${API}/responsible/${responsibleId}/signalisations?${params}`);
+        updateStats(data.stats || { total: 0, pending: 0, treated: 0 });
+        renderSignals(data.data || []);
+        // Auto-mark viewed for all items (no click needed)
+        autoMarkViewed(data.data || []);
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    function updateStats(stats) {
+      $('statTotal').textContent = stats.total || 0;
+      $('statPending').textContent = stats.pending || 0;
+      $('statTreated').textContent = stats.treated || 0;
+    }
+
+    async function autoMarkViewed(signals) {
+      const idsToView = (signals || []).filter(s => !s.is_treated) // don't care about treated state, but keep
+        .map(s => s.id);
+      if (!idsToView.length) return;
+      try {
+        await Promise.all(idsToView.map(id => fetchAPI(`${API}/responsible/${responsibleId}/signalisations/${id}/mark-viewed`, { method: 'POST' })));
+      } catch (_) { /* silent */ }
+    }
+
+    function renderSignals(signals) {
+      const list = $('signalsList');
+      if (signals.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+            </svg>
+            <p>لا توجد إشارات تطابق المعايير المحددة</p>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = signals.map(s => {
+        const date = new Date(s.created_at).toLocaleDateString('ar-DZ', {
+          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        const statusClass = s.is_treated ? 'treated' : 'pending';
+        return `
+          <div class="signal-card ${statusClass}">
+            <div class="signal-header">
+              <span class="signal-type">${s.type_name || ''}</span>
+              <span class="signal-status ${s.is_treated ? 'status-treated' : 'status-pending'}">
+                ${s.is_treated ? '✅ تمت المعالجة' : '⏳ قيد المعالجة'}
+              </span>
+            </div>
+            <div class="signal-employee">👤 من: ${s.employee_name || ''}</div>
+            <h3 class="signal-title">${s.title || ''}</h3>
+            ${s.description ? `<p class="signal-desc">${s.description}</p>` : ''}
+            ${s.location ? `<div class="signal-location">📍 ${s.location}</div>` : ''}
+            <div class="signal-date">🕒 ${date}</div>
+            ${s.photo_path ? `<button class="btn btn-secondary" style="margin-bottom:8px;padding:6px 12px;font-size:12px;" onclick="openSignalPhotoModal('${s.photo_path}')">📷 عرض الصورة</button>` : ''}
+            <div class="signal-actions">
+              <button class="btn btn-secondary" onclick="markViewed('${s.id}')">تم المشاهدة</button>
+              ${!s.is_treated ? `<button class="btn btn-warning" onclick="markInProgress('${s.id}')">قيد المعالجة</button>` : ''}
+              ${!s.is_treated ? `<button class="btn btn-success" onclick="markTreated('${s.id}')">تمت المعالجة</button>` : ''}
+          </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function markViewed(id) {
+      try {
+        await fetchAPI(`${API}/responsible/${responsibleId}/signalisations/${id}/mark-viewed`, { method: 'POST' });
+        showAlert('✅ تم تسجيل المشاهدة');
+        loadSignals();
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    async function markTreated(id) {
+      if (!confirm('هل أنت متأكد من معالجة هذه الإشارة؟')) return;
+      try {
+        await fetchAPI(`${API}/responsible/${responsibleId}/signalisations/${id}/mark-treated`, { method: 'POST' });
+        showAlert('✅ تمت معالجة الإشارة بنجاح');
+        loadSignals();
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    async function markInProgress(id) {
+      try {
+        await fetchAPI(`${API}/responsible/${responsibleId}/signalisations/${id}/mark-in-progress`, { method: 'POST' });
+        showAlert('🔧 تم وضع الإشارة قيد المعالجة');
+        loadSignals();
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    // ===== Localisations management =====
+    async function loadLocalisationDistincts() {
+      try {
+        const d = await fetchAPI(`${API}/localisations/distincts`);
+        const batSel = $('locBatimentSelect');
+        const etgSel = $('locEtageSelect');
+        batSel.innerHTML = ['<option value="">— اختر مبنى —</option>']
+          .concat((d.batiments || []).map(b => `<option value="${b}">${b}</option>`)).join('');
+        etgSel.innerHTML = ['<option value="">— اختر طابق —</option>']
+          .concat((d.etages || []).map(e => `<option value="${e}">${e}</option>`)).join('');
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    async function addLocalisation() {
+      const batiment = $('locBatimentNew').value.trim() || $('locBatimentSelect').value.trim();
+      const etage = $('locEtageNew').value.trim() || $('locEtageSelect').value.trim();
+      const code_emplacement = $('locCode').value.trim();
+      const description_ar = $('locDescAr').value.trim();
+      const type_local = $('locType').value || null;
+      const type_local_custom = $('locTypeCustom').value.trim();
+
+      if (!code_emplacement || !batiment || !etage) {
+        showAlert('⚠️ أدخل الرمز والمبنى والطابق', true);
+        return;
+      }
+
+      try {
+        const body = { code_emplacement, batiment, etage, description_ar, type_local };
+        if (type_local_custom) body.type_local_custom = type_local_custom;
+        await fetchAPI(`${API}/maintenance/${responsibleId}/localisations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        showAlert('✅ تم إضافة الموقع');
+        $('locCode').value = '';
+        $('locDescAr').value = '';
+        $('locTypeCustom').value = '';
+        $('locBatimentNew').value = '';
+        $('locEtageNew').value = '';
+        await loadLocalisationDistincts();
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    async function assignResponsible() {
+      const typeId = $('manageTypeId').value;
+      const employeeId = $('manageEmployeeId').value;
+      if (!typeId || !employeeId) return;
+      try {
+        await fetchAPI(`${API}/maintenance/${responsibleId}/types/${typeId}/responsibles`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ employeeId })
+        });
+        showAlert('✅ تم إضافة المسؤول');
+        await loadManageTypes();
+        await loadManageResponsibles();
+      } catch (e) { showAlert(e.message, true); }
+    }
+
+    async function removeResponsible(employeeId) {
+      const typeId = $('manageTypeId').value;
+      if (!confirm('هل تريد إزالة هذا المسؤول؟')) return;
+      try {
+        await fetchAPI(`${API}/maintenance/${responsibleId}/types/${typeId}/responsibles/${employeeId}`, { method: 'DELETE' });
+        showAlert('✅ تم الإزالة');
+        await loadManageTypes();
+        await loadManageResponsibles();
+      } catch (e) { showAlert(e.message, true); }
+    }
+
+    $('applyBtn').addEventListener('click', loadSignals);
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.id === 'manageTypeId') loadManageResponsibles();
+    });
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'assignBtn') assignResponsible();
+      if (e.target && e.target.id === 'addLocalisationBtn') addLocalisation();
+      if (e.target && e.target.id === 'reloadLocsBtn') loadLocalisationDistincts();
+      if (e.target && e.target.id === 'viewLocalisationsBtn') loadAllLocalisations();
+      // Use a relative URL so it keeps the current host/port (avoids 404 when served behind a prefix)
+      if (e.target && e.target.id === 'viewStatisticsBtn') window.location.href = `signals_statistique.html?responsibleId=${responsibleId}`;
+      if (e.target && e.target.id === 'closeLocModalBtn') closeLocModal();
+      if (e.target && e.target.id === 'locModal') closeLocModal();
+      if (e.target && e.target.id === 'openAddSignalBtn') openAddSignalModal();
+      if (e.target && e.target.id === 'closeAddSignalBtn') closeAddSignalModal();
+      if (e.target && e.target.id === 'addSignalModal') closeAddSignalModal();
+      if (e.target && e.target.id === 'submitAddSignalBtn') { e.preventDefault(); submitAddSignal(); }
+      if (e.target && e.target.id === 'viewTypeResponsiblesBtn') loadTypeResponsiblesOverview();
+      if (e.target && e.target.id === 'closeTypeRespBtn') closeTypeRespModal();
+      if (e.target && e.target.id === 'typeRespModal') closeTypeRespModal();
+      if (e.target && e.target.id === 'addTypeBtn') addSignalType();
+    });
+
+    function openLocModal() {
+      locModalEl.classList.add('open');
+    }
+
+    function closeLocModal() {
+      locModalEl.classList.remove('open');
+    }
+
+    function groupBy(arr, keyFn) {
+      const map = new Map();
+      for (const item of arr) {
+        const key = keyFn(item) || '';
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push(item);
+      }
+      return map;
+    }
+
+    function renderLocalisations(localisations) {
+      const total = localisations.length;
+      const byBat = groupBy(localisations, l => l.batiment);
+      const chips = [
+        `<span class="loc-chip">الإجمالي: <strong>${total}</strong></span>`,
+        `<span class="loc-chip">المباني: <strong>${byBat.size}</strong></span>`
+      ];
+      let html = `<div class="loc-summary">${chips.join('')}</div>`;
+      for (const [bat, list] of byBat) {
+        const byEtage = groupBy(list, l => l.etage);
+        html += `<div class="loc-section">
+          <div class="loc-section-title">🏢 المبنى: ${bat || 'غير محدد'}</div>`;
+        for (const [etg, items] of byEtage) {
+          html += `<div class="loc-floor">الطابق: ${etg || 'غير محدد'}</div>
+            <div class="loc-grid">`;
+          html += items.map(l => `
+              <div class="loc-card">
+                <div class="code">${l.code_emplacement || '-'}</div>
+                <div class="meta">
+                  <span class="badge">${l.type_local_custom || l.type_local || 'غير محدد'}</span>
+                  ${l.batiment ? ` • ${l.batiment}` : ''}${l.etage ? ` • ${l.etage}` : ''}
+                </div>
+                ${l.description_ar ? `<div class="desc">${l.description_ar}</div>` : ''}
+              </div>
+          `).join('');
+          html += `</div>`;
+        }
+        html += `</div>`;
+      }
+      if (!html) html = '<div class="empty-state"><p>لا توجد مواقع</p></div>';
+      locModalBodyEl.innerHTML = html;
+    }
+
+    // ===== Types → Responsibles overview =====
+    function openTypeRespModal() { typeRespModalEl.classList.add('open'); }
+    function closeTypeRespModal() { typeRespModalEl.classList.remove('open'); }
+
+    async function loadTypeResponsiblesOverview() {
+      try {
+        // Get all types with counts
+        const types = await fetchAPI(`${API}/maintenance/${responsibleId}/types-with-responsibles`);
+        // For each type, load responsibles
+        const enriched = await Promise.all((types || []).map(async (t) => {
+          try {
+            const resps = await fetchAPI(`${API}/maintenance/${responsibleId}/types/${t.id}/responsibles`);
+            return { ...t, responsibles: resps || [] };
+          } catch (_) {
+            return { ...t, responsibles: [] };
+          }
+        }));
+        renderTypeResponsiblesOverview(enriched);
+        openTypeRespModal();
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    function renderTypeResponsiblesOverview(items) {
+      const body = typeRespBodyEl;
+      if (!items || items.length === 0) {
+        body.innerHTML = '<div class="empty-state"><p>لا توجد أنواع</p></div>';
+        return;
+      }
+      const grid = items.map(t => {
+        const list = (t.responsibles && t.responsibles.length)
+          ? t.responsibles.map(r => `${r.first_name} ${r.last_name}`).join('، ')
+          : '— لا يوجد مسؤولون —';
+        return `
+          <div class="loc-card">
+            <div class="code">${t.name}</div>
+            <div class="desc">${list}</div>
+          </div>
+        `;
+      }).join('');
+      body.innerHTML = `<div class="loc-grid">${grid}</div>`;
+    }
+
+    async function loadAllLocalisations() {
+      try {
+        const data = await fetchAPI(`${API}/localisations`);
+        renderLocalisations(data || []);
+        openLocModal();
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    // ===== Add Signalisation (as responsible) =====
+    function openAddSignalModal() {
+      // populate types and localisations if needed
+      populateAddTypes();
+      populateAddLocalisations();
+      editingMySignalId = null;
+      const btn = $('submitAddSignalBtn');
+      if (btn) btn.textContent = 'حفظ الإشارة';
+      addSignalModalEl.classList.add('open');
+    }
+    function closeAddSignalModal() { addSignalModalEl.classList.remove('open'); }
+
+    function populateAddTypes() {
+      const sel = $('addTypeId');
+      if (!sel) return;
+      const options = (cachedTypes || []).map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+      sel.innerHTML = options || '<option value="">— لا توجد أنواع —</option>';
+    }
+
+    function populateNewTypeEmployees() {
+      const sel = $('newTypeEmployeeId');
+      if (!sel) return;
+      if (!cachedEmployees.length) {
+        sel.innerHTML = '<option value="">لا يوجد موظفين</option>';
+        return;
+      }
+      sel.innerHTML = ['<option value="">اختر الموظف</option>']
+        .concat(cachedEmployees.map(e => `<option value="${e.id}">${e.first_name} ${e.last_name}</option>`))
+        .join('');
+    }
+
+    async function populateAddLocalisations() {
+      try {
+        cachedAddLocs = await fetchAPI(`${API}/localisations`);
+        populateAddBatiments();
+      } catch (_) { /* silent */ }
+    }
+
+    function populateAddBatiments() {
+      const bSel = $('addLocBatiment');
+      const eSel = $('addLocEtage');
+      const sSel = $('addLocSalle');
+      const bats = Array.from(new Set((cachedAddLocs || []).map(l => l.batiment).filter(Boolean)));
+      bSel.innerHTML = ['<option value="">اختر المبنى</option>'].concat(bats.map(b => `<option value="${b}">${b}</option>`)).join('');
+      eSel.innerHTML = '<option value="">اختر الطابق</option>';
+      sSel.innerHTML = '<option value="">اختر القاعة</option>';
+    }
+
+    function populateAddEtages() {
+      const bat = $('addLocBatiment').value;
+      const eSel = $('addLocEtage');
+      const sSel = $('addLocSalle');
+      const etgs = Array.from(new Set((cachedAddLocs || []).filter(l => !bat || l.batiment === bat).map(l => l.etage).filter(Boolean)));
+      eSel.innerHTML = ['<option value="">اختر الطابق</option>'].concat(etgs.map(e => `<option value="${e}">${e}</option>`)).join('');
+      sSel.innerHTML = '<option value="">اختر القاعة</option>';
+    }
+
+    function populateAddSalles() {
+      const bat = $('addLocBatiment').value;
+      const etg = $('addLocEtage').value;
+      const sSel = $('addLocSalle');
+      const rooms = (cachedAddLocs || [])
+        .filter(l => (!bat || l.batiment === bat) && (!etg || l.etage === etg));
+      sSel.innerHTML = ['<option value="">اختر القاعة</option>']
+        .concat(rooms.map(l => {
+          const label = `${l.code_emplacement}${l.description_ar ? ' (' + l.description_ar + ')' : ''}`;
+          return `<option value="${l.id}">${label}</option>`;
+        })).join('');
+    }
+
+    let editingMySignalId = null;
+
+    async function submitAddSignal() {
+      const btn = $('submitAddSignalBtn');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<span class="loading"></span>'; }
+      const typeId = $('addTypeId').value;
+      const title = $('addTitle').value.trim();
+      const description = $('addDesc').value.trim();
+      const locationText = $('addLocationText').value.trim();
+      // Champ input optionnel (non présent actuellement dans le HTML) pour choisir une localisation par ID direct
+      const locInputEl = $('addLocalisationId');
+      const localisationId = locInputEl ? locInputEl.value.trim() : '';
+      const photoInput = $('addPhoto');
+      if (!typeId || !title) {
+        showAlert('⚠️ النوع والعنوان إجباريان', true);
+        if (btn) { btn.disabled = false; btn.textContent = 'حفظ الإشارة'; }
+        return;
+      }
+      try {
+        if (editingMySignalId) {
+          // Mise à jour d'une de ses propres signalisations (texte seulement)
+          await fetchAPI(`${API}/employee/${responsibleId}/signalisations/${editingMySignalId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ typeId, title, description })
+          });
+          showAlert('✅ تم تحديث الإشارة بنجاح');
+        } else {
+          // Création d'une nouvelle signalisation
+          const fd = new FormData();
+          fd.append('typeId', typeId);
+          fd.append('title', title);
+          if (description) fd.append('description', description);
+          if (localisationId) {
+            fd.append('localisation_id', localisationId);
+          } else if (locationText) {
+            fd.append('location', locationText);
+          }
+          // Prefer cascaded selects if chosen
+          const selRoom = $('addLocSalle').value;
+          if (selRoom) {
+            fd.set('localisation_id', selRoom);
+            fd.delete('location');
+          }
+          if (photoInput && photoInput.files && photoInput.files[0]) {
+            fd.append('photo', photoInput.files[0]);
+          }
+          const res = await fetch(`${API}/employee/${responsibleId}/signalisations`, {
+            method: 'POST',
+            body: fd
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ error: 'خطأ في الخادم' }));
+            throw new Error(err.error || 'خطأ في الخادم');
+          }
+          await res.json();
+          showAlert('✅ تم إضافة الإشارة بنجاح');
+        }
+        closeAddSignalModal();
+        // refresh lists
+        await loadSignals();
+        await loadMySignals();
+      } catch (e) {
+        showAlert(e.message, true);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'حفظ الإشارة'; }
+      }
+    }
+
+    async function addSignalType() {
+      const nameInput = $('newTypeName');
+      const name = nameInput.value.trim();
+      const employeeId = $('newTypeEmployeeId').value;
+      if (!name) {
+        showAlert('⚠️ أدخل اسم النوع', true);
+        return;
+      }
+      try {
+        await fetchAPI(`${API}/maintenance/${responsibleId}/types`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, employeeId: employeeId || undefined })
+        });
+        showAlert('✅ تم إضافة النوع');
+        nameInput.value = '';
+        $('newTypeEmployeeId').value = '';
+        await loadTypes();
+        populateAddTypes();
+        await loadManageTypes();
+        await loadManageResponsibles();
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    let mySignalsCache = [];
+
+    async function loadMySignals() {
+      try {
+        const data = await fetchAPI(`${API}/employee/${responsibleId}/signalisations`);
+        mySignalsCache = data || [];
+        renderMySignals(mySignalsCache);
+      } catch (e) {
+        // show but don't block
+        const list = $('mySignalsList');
+        if (list) list.innerHTML = '<div class="empty-state"><p>تعذر تحميل إشاراتي</p></div>';
+      }
+    }
+
+    function openEditMySignalModal(id) {
+      const sig = mySignalsCache.find(s => String(s.id) === String(id));
+      if (!sig) return;
+      editingMySignalId = id;
+      const typeSelect = $('addTypeId');
+      if (typeSelect && sig.type_id) {
+        typeSelect.value = sig.type_id;
+      }
+      $('addTitle').value = sig.title || '';
+      $('addDesc').value = sig.description || '';
+      $('addLocationText').value = sig.location || '';
+      const btn = $('submitAddSignalBtn');
+      if (btn) btn.textContent = 'تحديث الإشارة';
+      addSignalModalEl.classList.add('open');
+    }
+
+    async function deleteMySignal(id) {
+      if (!confirm('هل تريد حذف هذه الإشارة؟')) return;
+      try {
+        await fetchAPI(`${API}/employee/${responsibleId}/signalisations/${id}`, { method: 'DELETE' });
+        showAlert('✅ تم حذف الإشارة بنجاح');
+        await loadSignals();
+        await loadMySignals();
+      } catch (e) {
+        showAlert(e.message, true);
+      }
+    }
+
+    function renderMySignals(signals) {
+      const list = $('mySignalsList');
+      if (!list) return;
+      if (!signals || !signals.length) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+            </svg>
+            <p>لا توجد إشارات سابقة</p>
+          </div>
+        `;
+        return;
+      }
+      list.innerHTML = signals.map(s => {
+        const date = new Date(s.created_at).toLocaleDateString('ar-DZ', {
+          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        const statusClass = s.is_treated ? 'treated' : 'pending';
+        return `
+          <div class="signal-card ${statusClass}">
+            <div class="signal-header">
+              <span class="signal-type">${s.type_name || ''}</span>
+              <span class="signal-status ${s.is_treated ? 'status-treated' : 'status-pending'}">
+                ${s.is_treated ? '✅ تمت المعالجة' : '⏳ قيد المعالجة'}
+              </span>
+            </div>
+            <h3 class="signal-title">${s.title || ''}</h3>
+            ${s.description ? `<p class="signal-desc">${s.description}</p>` : ''}
+            ${s.location ? `<div class="signal-location">📍 ${s.location}</div>` : ''}
+            <div class="signal-date">🕒 ${date}</div>
+            ${s.photo_path ? `<button class="btn btn-secondary" style="margin-top:8px;padding:6px 12px;font-size:12px;" onclick="openSignalPhotoModal('${s.photo_path}')">📷 عرض الصورة</button>` : ''}
+            ${!s.is_treated ? `
+              <div style="display:flex;gap:8px;margin-top:10px;">
+                <button class="btn btn-secondary" style="flex:1;padding:8px 12px;font-size:12px;" onclick="openEditMySignalModal('${s.id}')">✏️ تعديل</button>
+                <button class="btn btn-secondary" style="flex:1;padding:8px 12px;font-size:12px;background:#ef4444;" onclick="deleteMySignal('${s.id}')">🗑 حذف</button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    (async function init() {
+      responsibleId = await resolveResponsibleId();
+
+      if (!responsibleId) {
+        showAlert('⚠️ معرف المسؤول مفقود', true);
+        return;
+      }
+      localStorage.setItem('signals.responsibleId', responsibleId);
+      await loadTypes();
+      await loadSignals();
+      await loadMySignals();
+      await loadManageTypes();
+      await loadManageEmployees();
+      await loadLocalisationDistincts();
+      locModalEl = $('locModal');
+      locModalBodyEl = $('locModalBody');
+      addSignalModalEl = $('addSignalModal');
+      typeRespModalEl = $('typeRespModal');
+      typeRespBodyEl = $('typeRespBody');
+      // direct binding to avoid delegation issues
+      const submitBtn = $('submitAddSignalBtn');
+      if (submitBtn) submitBtn.addEventListener('click', (e) => { e.preventDefault(); submitAddSignal(); });
+      // Cascading events for add signal modal
+      const b = $('addLocBatiment'); const e = $('addLocEtage');
+      if (b) b.addEventListener('change', () => { populateAddEtages(); populateAddSalles(); });
+      if (e) e.addEventListener('change', populateAddSalles);
+
+      // exposer les helpers de modification / suppression de "إشاراتي السابقة" au scope global
+      window.openEditMySignalModal = openEditMySignalModal;
+      window.deleteMySignal = deleteMySignal;
+
+      // Section toggle between "قائمة الإشارات" و "إشاراتي السابقة"
+      const sectionToggle = document.getElementById('signalsSectionToggle');
+      const receivedSection = document.getElementById('receivedSignalsSection');
+      const mySection = document.getElementById('mySignalsSection');
+      let activeSection = localStorage.getItem('signalsRespActiveSection') || 'receivedSignalsSection';
+
+      function setSection(section, { skipStorage } = {}) {
+        if (section !== 'receivedSignalsSection' && section !== 'mySignalsSection') {
+          section = 'receivedSignalsSection';
+        }
+        activeSection = section;
+        if (!skipStorage) {
+          localStorage.setItem('signalsRespActiveSection', section);
+        }
+        if (receivedSection) receivedSection.classList.toggle('active', section === 'receivedSignalsSection');
+        if (mySection) mySection.classList.toggle('active', section === 'mySignalsSection');
+        if (sectionToggle) {
+          sectionToggle.querySelectorAll('.section-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.section === section);
+          });
+        }
+      }
+
+      if (sectionToggle) {
+        sectionToggle.querySelectorAll('.section-btn').forEach(btn => {
+          btn.addEventListener('click', () => setSection(btn.dataset.section));
+        });
+      }
+      setSection(activeSection, { skipStorage: true });
+    })();
+  </script>
+
+  <script>
+    function openSignalPhotoModal(path) {
+      let modal = document.getElementById('signalPhotoModal');
+      let img = document.getElementById('signalPhotoPreview');
+      if (!modal) {
+        // create modal lazily if missing
+        modal = document.createElement('div');
+        modal.id = 'signalPhotoModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.65);display:flex;align-items:center;justify-content:center;z-index:1600;padding:1rem;';
+        modal.innerHTML = `
+          <div style="background:white;border-radius:12px;max-width:90vw;max-height:90vh;padding:1rem;box-shadow:0 10px 25px rgba(0,0,0,0.25);position:relative;">
+            <button type="button" style="position:absolute;top:0.25rem;left:0.5rem;border:none;background:transparent;font-size:1.5rem;cursor:pointer;color:#1f2937;" onclick="closeSignalPhotoModal()">✕</button>
+            <img id="signalPhotoPreview" src="" alt="صورة الإشارة" style="max-width:80vw;max-height:80vh;border-radius:8px;object-fit:contain;display:block;" />
+          </div>
+        `;
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) closeSignalPhotoModal();
+        });
+        document.body.appendChild(modal);
+        img = document.getElementById('signalPhotoPreview');
+      }
+      if (!img || !path) return;
+      img.src = path;
+      modal.style.display = 'flex';
+    }
+
+    function closeSignalPhotoModal() {
+      const modal = document.getElementById('signalPhotoModal');
+      const img = document.getElementById('signalPhotoPreview');
+      if (img) img.src = '';
+      if (modal) modal.style.display = 'none';
+    }
+
+    window.openSignalPhotoModal = openSignalPhotoModal;
+    window.closeSignalPhotoModal = closeSignalPhotoModal;
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,2255 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Manager Dashboard - HR Operations Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+    <style>
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .gradient-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .gradient-card-green {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .gradient-card-orange {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .gradient-card-purple {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .gradient-card-blue {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .quick-action-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .quick-action-card:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .stat-card-2 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .stat-card-3 {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+
+        .stat-card-4 {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+
+        .floating-action {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 50;
+        }
+
+        .notification-badge {
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-10px);
+            }
+
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* Fix header layout for RTL (Arabic) - prevents rectangle shape */
+        [dir="rtl"] .dashboard-header {
+            flex-direction: row !important;
+            direction: ltr;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        /* Ensure header left content is right-aligned in RTL */
+        [dir="rtl"] .dashboard-header>div:first-child {
+            text-align: right;
+            direction: rtl;
+        }
+
+        /* Keep header right controls in LTR order */
+        [dir="rtl"] .dashboard-header>div:last-child {
+            flex-direction: row !important;
+            direction: ltr;
+        }
+
+        /* Fix space-x-4 spacing in header controls for RTL */
+        [dir="rtl"] .dashboard-header .space-x-4>*+* {
+            margin-left: 1rem !important;
+            margin-right: 0 !important;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Mobile menu toggle button -->
+    <button id="mobileMenuToggle"
+        class="mobile-menu-toggle md:hidden bg-white border border-gray-300 rounded-lg p-2 shadow-sm">
+        <i class="fas fa-bars text-gray-600"></i>
+    </button>
+
+    <!-- Dashboard Content -->
+    <main class="p-6">
+        <!-- Welcome Header Section -->
+        <div class="mb-8">
+            <div class="dashboard-header flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold text-gray-900" data-translate="dashboard.welcome">Welcome to HR
+                        Dashboard</h1>
+                    <p class="text-gray-600 mt-2 text-lg" id="welcomeMessage" data-translate="dashboard.loading">
+                        Loading...</p>
+                    <!-- NEW: Data Period Indicator -->
+                    <div id="dataPeriodIndicator"
+                        class="mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                        <i class="fas fa-calendar-alt mr-2"></i>
+                        <span id="dataPeriodText" data-translate="dashboard.data_period">Current Month Data</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Language Selector -->
+                    <select id="languageSelector"
+                        class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                        <option value="en">English</option>
+                        <option value="fr">Français</option>
+                        <option value="ar">العربية</option>
+                    </select>
+
+                    <!-- Notifications -->
+                    <div class="relative">
+                        <button id="notificationButton"
+                            class="p-2 text-gray-600 hover:text-blue-600 relative bg-white rounded-lg border border-gray-200 shadow-sm">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span id="notificationBadge"
+                                class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center notification-badge">0</span>
+                        </button>
+                    </div>
+
+                    <!-- User Profile -->
+                    <div class="flex items-center bg-white rounded-lg border border-gray-200 shadow-sm px-3 py-2">
+                        <div
+                            class="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                            <i class="fas fa-user text-white text-sm"></i>
+                        </div>
+                        <span class="ml-2 text-sm font-medium text-gray-700" id="sidebarUserName">HR Manager</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Employees Card -->
+            <div class="stat-card rounded-xl shadow-lg p-6 card-hover slide-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm font-medium" data-translate="dashboard.total_employees">Total
+                            Employees</p>
+                        <p class="text-3xl font-bold text-white mt-2" id="totalEmployees">-</p>
+                        <p class="text-white/70 text-xs mt-1" id="totalEmployeesChange">+0 this month</p>
+                    </div>
+                    <div class="p-4 bg-white/20 rounded-full">
+                        <i class="fas fa-users text-white text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Institutes Card (replaces Last Month Added) -->
+            <div class="stat-card-2 rounded-xl shadow-lg p-6 card-hover slide-in" style="animation-delay: 0.1s;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm font-medium" data-translate="dashboard.institutes">Institutes
+                        </p>
+                        <p class="text-3xl font-bold text-white mt-2" id="institutesCount">-</p>
+                        <p class="text-white/70 text-xs mt-1" id="institutesSubtitle"
+                            data-translate="dashboard.active_institutes">Active institutes</p>
+                    </div>
+                    <div class="p-4 bg-white/20 rounded-full">
+                        <i class="fas fa-university text-white text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Salary Card -->
+            <div class="stat-card-3 rounded-xl shadow-lg p-6 card-hover slide-in" style="animation-delay: 0.2s;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm font-medium" data-translate="dashboard.total_salary">Total
+                            Salary</p>
+                        <p class="text-3xl font-bold text-white mt-2" id="totalSalary">-</p>
+                        <p class="text-white/70 text-xs mt-1" id="totalSalaryChange"
+                            data-translate="dashboard.this_month">This month</p>
+                    </div>
+                    <div class="p-4 bg-white/20 rounded-full">
+                        <i class="fas fa-coins text-white text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Rate Card -->
+            <div class="stat-card-4 rounded-xl shadow-lg p-6 card-hover slide-in" style="animation-delay: 0.3s;">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm font-medium" data-translate="dashboard.attendance_rate">
+                            Attendance Rate</p>
+                        <p class="text-3xl font-bold text-white mt-2" id="attendanceRate">-</p>
+                        <p class="text-white/70 text-xs mt-1" id="attendanceRateChange"
+                            data-translate="dashboard.this_month">This month</p>
+                    </div>
+                    <div class="p-4 bg-white/20 rounded-full">
+                        <i class="fas fa-chart-line text-white text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Section -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-900" data-translate="dashboard.quick_actions">Quick Actions</h2>
+                <div class="flex items-center space-x-2 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+                    <i class="fas fa-filter text-blue-600 text-sm"></i>
+                    <label for="qaTimeFilter" class="text-sm text-blue-800 font-medium"
+                        data-translate="dashboard.filter_quick_actions">Filter Quick Actions:</label>
+                    <select id="qaTimeFilter"
+                        class="border border-blue-300 bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="current" selected data-translate="dashboard.current_month">Current Month</option>
+                        <option value="last" data-translate="dashboard.last_month">Last Month</option>
+                        <option value="year" data-translate="dashboard.this_year">This Year</option>
+                    </select>
+                    <span class="text-xs text-blue-700 ml-2" data-translate="dashboard.all_data_filtered">(All Data
+                        Filtered)</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Exceptions Quick Action -->
+                <div class="quick-action-card bg-white rounded-xl shadow-lg p-6 glass-effect"
+                    onclick="window.open('exceptions.html', '_blank')">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-red-100 rounded-full">
+                            <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                        </div>
+                        <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full"
+                            id="pendingExceptionsCount">0</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4"
+                        data-translate="dashboard.exception_management">Exception Management</h3>
+
+                    <!-- Statistics Grid -->
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="bg-red-50 p-3 rounded-lg text-center">
+                            <p class="text-xs text-red-600 font-medium" data-translate="dashboard.pending">Pending</p>
+                            <p class="text-lg font-bold text-red-800" id="pendingExceptions">0</p>
+                        </div>
+                        <div class="bg-orange-50 p-3 rounded-lg text-center">
+                            <p class="text-xs text-orange-600 font-medium" data-translate="dashboard.this_week">This
+                                Week</p>
+                            <p class="text-lg font-bold text-orange-800" id="weeklyExceptions">0</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center text-blue-600 text-sm font-medium">
+                        <span data-translate="dashboard.view_details">View Details</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+
+                <!-- Attendance Validation Quick Action -->
+                <div class="quick-action-card bg-white rounded-xl shadow-lg p-6 glass-effect"
+                    onclick="window.open('../attendance-service/attendance-master.html', '_blank')">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-orange-100 rounded-full">
+                            <i class="fas fa-clock text-orange-600 text-xl"></i>
+                        </div>
+                        <span class="bg-orange-500 text-white text-xs px-2 py-1 rounded-full"
+                            id="pendingValidationCount">0</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4"
+                        data-translate="dashboard.attendance_validation">Attendance Validation</h3>
+
+                    <!-- Statistics Grid -->
+                    <div class="space-y-2 mb-4">
+                        <div class="bg-green-50 p-2 rounded-lg flex justify-between items-center">
+                            <span class="text-xs text-green-600 font-medium"
+                                data-translate="dashboard.validated_records">Validated Records</span>
+                            <span class="text-sm font-bold text-green-800" id="validatedRecords">0</span>
+                        </div>
+                        <div class="bg-orange-50 p-2 rounded-lg flex justify-between items-center">
+                            <span class="text-xs text-orange-600 font-medium"
+                                data-translate="dashboard.pending_validation">Pending Validation</span>
+                            <span class="text-sm font-bold text-orange-800" id="pendingValidation">0</span>
+                        </div>
+                        <div class="bg-yellow-50 p-2 rounded-lg flex justify-between items-center">
+                            <span class="text-xs text-yellow-600 font-medium"
+                                data-translate="dashboard.partial_pending">Partial Pending</span>
+                            <span class="text-sm font-bold text-yellow-800" id="partialPending">0</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center text-blue-600 text-sm font-medium">
+                        <span data-translate="dashboard.validate_now">Validate Now</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+
+                <!-- Department Management Quick Action -->
+                <div class="quick-action-card bg-white rounded-xl shadow-lg p-6 glass-effect"
+                    onclick="window.open('departments.html', '_blank')">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-blue-100 rounded-full">
+                            <i class="fas fa-building text-blue-600 text-xl"></i>
+                        </div>
+                        <span class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full"
+                            id="totalDepartmentsCount">0</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4"
+                        data-translate="dashboard.department_management">Department Management</h3>
+
+                    <!-- Statistics Grid -->
+                    <div class="space-y-2 mb-4">
+                        <div class="bg-blue-50 p-2 rounded-lg flex justify-between items-center">
+                            <span class="text-xs text-blue-600 font-medium"
+                                data-translate="dashboard.total_departments">Total Departments</span>
+                            <span class="text-sm font-bold text-blue-800" id="totalDepartments">0</span>
+                        </div>
+                        <div class="bg-purple-50 p-2 rounded-lg flex justify-between items-center">
+                            <span class="text-xs text-purple-600 font-medium"
+                                data-translate="dashboard.active_departments">Active Departments</span>
+                            <span class="text-sm font-bold text-purple-800" id="activeDepartments">0</span>
+                        </div>
+                        <div class="bg-indigo-50 p-2 rounded-lg flex justify-between items-center">
+                            <span class="text-xs text-indigo-600 font-medium"
+                                data-translate="dashboard.avg_employees">Avg Employees</span>
+                            <span class="text-sm font-bold text-indigo-800" id="avgEmployeesPerDept">0</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center text-blue-600 text-sm font-medium">
+                        <span data-translate="dashboard.manage">Manage</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+
+                <!-- Salary Management Quick Action -->
+                <div class="quick-action-card bg-white rounded-xl shadow-lg p-6 glass-effect"
+                    onclick="window.open('salary-management.html', '_blank')">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-green-100 rounded-full">
+                            <i class="fas fa-coins text-green-600 text-xl"></i>
+                        </div>
+                        <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full"
+                            id="salaryStatusCount">0</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4" data-translate="dashboard.salary_management">
+                        Salary Management</h3>
+
+                    <!-- Statistics Grid -->
+                    <div class="space-y-2 mb-4">
+                        <div class="bg-green-50 p-2 rounded-lg flex justify-between items-center">
+                            <span class="text-xs text-green-600 font-medium"
+                                data-translate="dashboard.total_payroll">Total Payroll</span>
+                            <span class="text-sm font-bold text-green-800" id="totalPayrollAmount">0 DA</span>
+                        </div>
+                        <div class="bg-blue-50 p-2 rounded-lg flex justify-between items-center">
+                            <span class="text-xs text-blue-600 font-medium" data-translate="dashboard.paid">Paid</span>
+                            <span class="text-sm font-bold text-blue-800" id="paidSalaries">0</span>
+                        </div>
+                        <div class="bg-orange-50 p-2 rounded-lg flex justify-between items-center">
+                            <span class="text-xs text-orange-600 font-medium"
+                                data-translate="dashboard.pending">Pending</span>
+                            <span class="text-sm font-bold text-orange-800" id="pendingSalaries">0</span>
+                        </div>
+                        <div class="bg-emerald-50 p-2 rounded-lg flex justify-between items-center">
+                            <span class="text-xs text-emerald-600 font-medium"
+                                data-translate="dashboard.total_raise">Total Raise</span>
+                            <span class="text-sm font-bold text-emerald-800" id="totalRaiseAmount">0 DA</span>
+                        </div>
+                        <div class="bg-red-50 p-2 rounded-lg flex justify-between items-center">
+                            <span class="text-xs text-red-600 font-medium"
+                                data-translate="dashboard.total_decrease">Total Decrease</span>
+                            <span class="text-sm font-bold text-red-800" id="totalDecreaseAmount">0 DA</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center text-blue-600 text-sm font-medium">
+                        <span data-translate="dashboard.manage">Manage</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts and Analytics Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Institution Distribution Chart -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900" data-translate="dashboard.institution_distribution">
+                        Institution Distribution</h3>
+                    <div class="flex space-x-2">
+                        <button onclick="refreshDepartmentChart()" class="p-2 text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="departmentChart"></canvas>
+                </div>
+                <p class="text-xs text-gray-500 mt-2 text-center" data-translate="dashboard.total_salary_grouped">Total
+                    salary grouped by institution</p>
+            </div>
+
+            <!-- Teacher Salary by Teaching Level Chart -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900" data-translate="dashboard.salaries_by_position">
+                        Salaries by Position</h3>
+                    <div class="flex space-x-2">
+                        <button onclick="refreshSalaryChart()" class="p-2 text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="salaryChart"></canvas>
+                </div>
+                <p class="text-xs text-gray-500 mt-2 text-center" data-translate="dashboard.total_salary_by_position">
+                    Total salary by position (Teacher, HR Manager, etc.)</p>
+            </div>
+        </div>
+
+        <!-- Recent Activity and Statistics -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Recent Employees -->
+            <div class="bg-white rounded-xl shadow-lg">
+                <div class="p-6 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900" data-translate="dashboard.recent_employees_title">
+                        Recent Employees</h3>
+                </div>
+                <div class="p-6">
+                    <div id="recentEmployeesList" class="space-y-4">
+                        <div class="loading-skeleton h-16 rounded-lg"></div>
+                        <div class="loading-skeleton h-16 rounded-lg"></div>
+                        <div class="loading-skeleton h-16 rounded-lg"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meeting Calendar -->
+            <div class="bg-white rounded-xl shadow-lg">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900" data-translate="dashboard.meeting_calendar">
+                            Meeting Calendar</h3>
+                        <div class="flex space-x-2">
+                            <button onclick="previousMonth()" class="text-blue-600 hover:text-blue-800 p-1">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button onclick="nextMonth()" class="text-blue-600 hover:text-blue-800 p-1">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <button onclick="loadUpcomingMeetings()" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <!-- Calendar Header -->
+                    <div class="text-center mb-4">
+                        <h4 class="text-lg font-semibold text-gray-900" id="calendarMonth">January 2024</h4>
+                    </div>
+
+                    <!-- Calendar Grid -->
+                    <div class="calendar-grid mb-4">
+                        <div class="grid grid-cols-7 gap-1 text-center text-xs font-medium text-gray-500 mb-2">
+                            <div data-translate="dashboard.sun">Sun</div>
+                            <div data-translate="dashboard.mon">Mon</div>
+                            <div data-translate="dashboard.tue">Tue</div>
+                            <div data-translate="dashboard.wed">Wed</div>
+                            <div data-translate="dashboard.thu">Thu</div>
+                            <div data-translate="dashboard.fri">Fri</div>
+                            <div data-translate="dashboard.sat">Sat</div>
+                        </div>
+                        <div id="calendarDays" class="grid grid-cols-7 gap-1">
+                            <!-- Calendar days will be generated here -->
+                        </div>
+                    </div>
+
+                    <!-- Meeting List -->
+                    <div class="border-t pt-4">
+                        <h4 class="text-sm font-medium text-gray-700 mb-3" data-translate="dashboard.todays_meetings">
+                            Today's Meetings</h4>
+                        <div id="todaysMeetings" class="space-y-2">
+                            <!-- Today's meetings will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Quick Action Modals -->
+    <!-- Exceptions Quick Modal -->
+    <div id="quickExceptionsModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-semibold text-gray-900" data-translate="dashboard.exception_management">
+                            Exception Management</h3>
+                        <button onclick="closeQuickExceptions()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="quickExceptionsContent">
+                        <div class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4">
+                            </div>
+                            <p class="text-gray-500" data-translate="dashboard.loading_exceptions">Loading exceptions...
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Validation Quick Modal -->
+    <div id="quickAttendanceModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-semibold text-gray-900"
+                            data-translate="dashboard.attendance_validation">Attendance Validation</h3>
+                        <button onclick="closeQuickAttendance()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="quickAttendanceContent">
+                        <div class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4">
+                            </div>
+                            <p class="text-gray-500" data-translate="dashboard.loading_attendance">Loading attendance
+                                data...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Management Quick Modal -->
+    <div id="quickDepartmentsModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-screen overflow-y-auto">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-semibold text-gray-900"
+                            data-translate="dashboard.department_management">Department Management</h3>
+                        <button onclick="closeQuickDepartments()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="quickDepartmentsContent">
+                        <div class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4">
+                            </div>
+                            <p class="text-gray-500" data-translate="dashboard.loading_departments">Loading department
+                                data...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="floating-action">
+        <button onclick="refreshAllData()"
+            class="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110">
+            <i class="fas fa-sync-alt text-xl"></i>
+        </button>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/translations.js?v=4"></script>
+    <script src="../assets/js/auth.js?v=4"></script>
+    <script src="../assets/js/main.js?v=4"></script>
+    <script src="../components/api.js?v=4"></script>
+    <script src="../assets/js/simple-nav.js?v=4"></script>
+    <script>
+        // Enhanced HR Dashboard functionality
+        let departmentChart = null;
+        let salaryChart = null;
+        let dashboardData = {
+            employees: [],
+            departments: [],
+            meetings: [],
+            exceptions: [],
+            salaryData: []
+        };
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            if (!authManager.isAuthenticated()) {
+                if (!window.location.pathname.includes("index.html")) {
+                    if (window.location.pathname.includes("/pages/")) {
+                        window.location.href = "../index.html";
+                    } else {
+                        window.location.href = "index.html";
+                    }
+                }
+                return;
+            }
+
+            const userRole = authManager.getUserRole();
+            if (userRole !== 'HR_Manager' && userRole !== 'Director') {
+                const accessDeniedMsg = typeof translate === 'function' ? translate('dashboard.access_denied') : 'Access denied. HR Manager or Director role required.';
+                Utils.showNotification(accessDeniedMsg, 'error');
+                authManager.redirectToDashboard();
+                return;
+            }
+
+            initializeMobileMenu();
+
+            // Initialize language selector
+            const langSelector = document.getElementById('languageSelector');
+            if (langSelector) {
+                // Set current language
+                const currentLang = localStorage.getItem('language') || localStorage.getItem('lang') || 'en';
+                langSelector.value = currentLang;
+
+                // Listen for language changes
+                langSelector.addEventListener('change', function (e) {
+                    const newLang = e.target.value;
+                    if (typeof setLanguage === 'function') {
+                        setLanguage(newLang);
+                        // Reload dashboard data to update all dynamic content
+                        loadDashboardData();
+                        updateDataPeriodIndicator();
+                        generateCalendar();
+                        if (departmentChart && salaryChart) {
+                            updateCharts();
+                        }
+                    }
+                });
+            }
+
+            // Initialize charts FIRST before loading data
+            initializeCharts();
+
+            // Then load data which will update the charts
+            await loadDashboardData();
+
+            const qaSel = document.getElementById('qaTimeFilter');
+            if (qaSel) qaSel.addEventListener('change', handleQAFilterChange);
+
+            // Initialize the data period indicator
+            updateDataPeriodIndicator();
+
+            // Listen for language change events from translations.js
+            document.addEventListener('languageChanged', function () {
+                loadDashboardData();
+                updateDataPeriodIndicator();
+                generateCalendar();
+                if (departmentChart && salaryChart) {
+                    updateCharts();
+                }
+            });
+
+            // Set up real-time updates
+            setInterval(loadDashboardData, 30000);
+        });
+
+        function initializeMobileMenu() {
+            const mobileToggle = document.getElementById('mobileMenuToggle');
+            const sidebar = document.getElementById('collapsibleSidebar');
+
+            if (mobileToggle && sidebar) {
+                mobileToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('mobile-open');
+                    const icon = mobileToggle.querySelector('i');
+                    if (sidebar.classList.contains('mobile-open')) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 768 &&
+                        !sidebar.contains(e.target) &&
+                        !mobileToggle.contains(e.target) &&
+                        sidebar.classList.contains('mobile-open')) {
+                        sidebar.classList.remove('mobile-open');
+                        const icon = mobileToggle.querySelector('i');
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                });
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                const user = authManager.getUser();
+                const welcomeText = typeof translate === 'function' ? translate('dashboard.welcome_back').replace('{username}', user.username) : `Welcome back, ${user.username}!`;
+                document.getElementById('welcomeMessage').textContent = welcomeText;
+                document.getElementById('sidebarUserName').textContent = user.username;
+
+                // Get current filter settings for Quick Actions only
+                const filters = getQAFilters();
+
+                await Promise.all([
+                    loadAllTimeStats(),               // NEW: Load all-time stats for top 4 cards (no filters)
+                    loadQuickActionStats(filters),    // NEW: Load filtered stats for Quick Actions section
+                    loadRecentEmployees(),
+                    loadUpcomingMeetings(),
+                    loadDepartmentOverview()
+                ]);
+
+                // Update charts only if they are initialized
+                if (departmentChart && salaryChart) {
+                    updateCharts();
+                } else {
+                    console.warn('Charts not initialized yet, skipping update');
+                }
+                generateCalendar();
+
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                const errorMsg = typeof translate === 'function' ? translate('dashboard.error_loading_data') : 'Error loading dashboard data';
+                Utils.showNotification(errorMsg, 'error');
+            }
+        }
+
+        // NEW: Load all-time stats for top 4 cards (no filters)
+        async function loadAllTimeStats() {
+            try {
+                console.log('📊 Loading ALL-TIME stats for top cards (no filters)');
+
+                // Call API without any time filters to get all-time data
+                const response = await API.getDashboardStats({});
+
+                if (response && response.success) {
+                    const data = response.data;
+
+                    console.log('=== ALL-TIME STATS LOADED ===');
+                    console.log('Total employees:', data.total_employees);
+                    console.log('Institutions:', data.institutions_count);
+                    console.log('Total salary:', data.total_salary);
+                    console.log('Attendance rate:', data.attendance_rate);
+
+                    // Store employee data for charts
+                    dashboardData.employees = data.employees || [];
+
+                    // Update Top Statistics Cards with ALL-TIME data
+                    document.getElementById('totalEmployees').textContent = data.total_employees || 0;
+
+                    // Show "All time" subtitle for employee card
+                    const allTimeText = typeof translate === 'function' ? translate('dashboard.all_time') : 'All time';
+                    document.getElementById('totalEmployeesChange').textContent = allTimeText;
+
+                    document.getElementById('institutesCount').textContent = data.institutions_count || 0;
+                    const activeInstitutesText = typeof translate === 'function' ? translate('dashboard.active_institutes') : 'Active institutes';
+                    document.getElementById('institutesSubtitle').textContent = activeInstitutesText;
+
+                    document.getElementById('totalSalary').textContent = formatCurrency(data.total_salary || 0);
+                    document.getElementById('totalSalaryChange').textContent = allTimeText;
+
+                    document.getElementById('attendanceRate').textContent = `${data.attendance_rate || 0}%`;
+                    document.getElementById('attendanceRateChange').textContent = allTimeText;
+
+                    console.log('✅ All-time stats loaded successfully for top cards');
+                } else {
+                    throw new Error('Invalid response from dashboard-stats API');
+                }
+
+            } catch (error) {
+                console.error('Error loading all-time stats:', error);
+            }
+        }
+
+        // NEW: Load filtered stats for Quick Actions section only
+        async function loadQuickActionStats(filters = {}) {
+            try {
+                console.log('📊 Loading FILTERED stats for Quick Actions:', filters);
+
+                await Promise.all([
+                    loadExceptionStats(filters),
+                    loadAttendanceValidationStats(filters),
+                    loadSalaryManagementStats(filters)
+                ]);
+
+                console.log('✅ Quick Action stats loaded successfully');
+
+            } catch (error) {
+                console.error('Error loading Quick Action stats:', error);
+            }
+        }
+
+        // NEW: Load attendance validation stats with filters
+        async function loadAttendanceValidationStats(filters = {}) {
+            try {
+                const params = {};
+
+                // Apply filter settings
+                if (filters.month && filters.year) {
+                    params.month = filters.month;
+                    params.year = filters.year;
+                } else if (filters.year) {
+                    params.year = filters.year;
+                }
+
+                let attendanceValidationStats = {
+                    validated_records: 0,
+                    pending_validation: 0,
+                    partial_pending: 0
+                };
+
+                if (filters.year && !filters.month) {
+                    // This Year: Aggregate stats for all months
+                    const year = filters.year;
+                    const monthPromises = [];
+
+                    for (let month = 1; month <= 12; month++) {
+                        const monthParams = { month: month, year: year };
+                        monthPromises.push(API.getDashboardStats(monthParams));
+                    }
+
+                    const monthResults = await Promise.all(monthPromises);
+
+                    // Sum stats from all months
+                    monthResults.forEach(result => {
+                        if (result && result.success && result.data) {
+                            const monthData = result.data;
+                            attendanceValidationStats.validated_records += parseInt(monthData.validated_records || 0);
+                            attendanceValidationStats.pending_validation += parseInt(monthData.pending_validation || 0);
+                            attendanceValidationStats.partial_pending += parseInt(monthData.partial_pending || 0);
+                        }
+                    });
+                } else {
+                    // Current Month or Last Month: Single API call
+                    const response = await API.getDashboardStats(params);
+
+                    if (response && response.success) {
+                        const data = response.data;
+                        attendanceValidationStats = {
+                            validated_records: data.validated_records || 0,
+                            pending_validation: data.pending_validation || 0,
+                            partial_pending: data.partial_pending || 0
+                        };
+                    }
+                }
+
+                // Update Attendance Validation Stats (Quick Actions)
+                document.getElementById('validatedRecords').textContent = attendanceValidationStats.validated_records;
+                document.getElementById('pendingValidation').textContent = attendanceValidationStats.pending_validation;
+                document.getElementById('partialPending').textContent = attendanceValidationStats.partial_pending;
+                document.getElementById('pendingValidationCount').textContent =
+                    attendanceValidationStats.pending_validation + attendanceValidationStats.partial_pending;
+
+            } catch (error) {
+                console.error('Error loading attendance validation stats:', error);
+            }
+        }
+
+        // OLD: Optimized core stats loader using dashboard-stats endpoint (DEPRECATED - keeping for reference)
+        async function loadCoreStats(filters = {}) {
+            try {
+                const params = {};
+
+                // Apply filter settings to get data for the selected period
+                if (filters.month && filters.year) {
+                    params.month = filters.month;
+                    params.year = filters.year;
+                } else if (filters.year) {
+                    params.year = filters.year;
+                }
+                // If no filters, show current month data
+                if (!params.month && !params.year) {
+                    const now = new Date();
+                    params.month = now.getMonth() + 1;
+                    params.year = now.getFullYear();
+                }
+
+                console.log('📊 Loading dashboard stats with params:', params);
+
+                let data;
+                let attendanceValidationStats = {
+                    validated_records: 0,
+                    pending_validation: 0,
+                    partial_pending: 0
+                };
+
+                if (filters.year && !filters.month) {
+                    // This Year: Aggregate stats for all months
+                    console.log('📊 Aggregating stats for entire year:', filters.year);
+
+                    const year = filters.year;
+                    const monthPromises = [];
+
+                    // Create promises for all 12 months
+                    for (let month = 1; month <= 12; month++) {
+                        const monthParams = { month: month, year: year };
+                        monthPromises.push(API.getDashboardStats(monthParams));
+                    }
+
+                    try {
+                        const monthResults = await Promise.all(monthPromises);
+
+                        // Initialize aggregated data
+                        let aggregatedData = {
+                            total_employees: 0,
+                            total_salary: 0,
+                            institutions_count: 0,
+                            attendance_rate: 0,
+                            employees_added_this_month: 0,
+                            employees: []
+                        };
+
+                        // Sum stats from all months
+                        monthResults.forEach(result => {
+                            if (result && result.success && result.data) {
+                                const monthData = result.data;
+
+                                // Sum attendance validation stats
+                                attendanceValidationStats.validated_records += parseInt(monthData.validated_records || 0);
+                                attendanceValidationStats.pending_validation += parseInt(monthData.pending_validation || 0);
+                                attendanceValidationStats.partial_pending += parseInt(monthData.partial_pending || 0);
+
+                                // Sum salary and employee counts
+                                aggregatedData.total_salary += parseFloat(monthData.total_salary || 0);
+                                aggregatedData.employees_added_this_month += parseInt(monthData.employees_added_this_month || 0);
+
+                                // Keep the latest employee data and other stats
+                                if (monthData.employees && monthData.employees.length > 0) {
+                                    aggregatedData.employees = monthData.employees;
+                                }
+                                if (monthData.institutions_count) {
+                                    aggregatedData.institutions_count = monthData.institutions_count;
+                                }
+                                if (monthData.attendance_rate) {
+                                    aggregatedData.attendance_rate = monthData.attendance_rate;
+                                }
+                            }
+                        });
+
+                        // For total employees, use the latest month's count (since it's cumulative)
+                        const lastResult = monthResults[monthResults.length - 1];
+                        if (lastResult && lastResult.success && lastResult.data) {
+                            aggregatedData.total_employees = lastResult.data.total_employees || 0;
+                        }
+
+                        console.log('📊 Yearly aggregated stats:', {
+                            total_employees: aggregatedData.total_employees,
+                            total_salary: aggregatedData.total_salary,
+                            employees_added: aggregatedData.employees_added_this_month,
+                            attendance_validation: attendanceValidationStats
+                        });
+
+                        data = aggregatedData;
+
+                    } catch (error) {
+                        console.warn('⚠️ Error aggregating yearly data:', error);
+                        // Fallback to current month
+                        const response = await API.getDashboardStats(params);
+                        if (response && response.success) {
+                            data = response.data;
+                            attendanceValidationStats = {
+                                validated_records: data.validated_records || 0,
+                                pending_validation: data.pending_validation || 0,
+                                partial_pending: data.partial_pending || 0
+                            };
+                        }
+                    }
+                } else {
+                    // Current Month or Last Month: Single API call
+                    const response = await API.getDashboardStats(params);
+
+                    if (response && response.success) {
+                        data = response.data;
+                        attendanceValidationStats = {
+                            validated_records: data.validated_records || 0,
+                            pending_validation: data.pending_validation || 0,
+                            partial_pending: data.partial_pending || 0
+                        };
+                    } else {
+                        throw new Error('Invalid response from dashboard-stats API');
+                    }
+                }
+
+                if (data) {
+                    // Store employee data for charts
+                    dashboardData.employees = data.employees || [];
+
+                    console.log('=== DASHBOARD STATS LOADED ===');
+                    console.log('Total employees:', data.total_employees);
+                    console.log('Institutions:', data.institutions_count);
+                    console.log('Total salary:', data.total_salary);
+                    console.log('Attendance rate:', data.attendance_rate);
+                    console.log('Sample employee:', data.employees[0]);
+
+                    // Update Top Statistics Cards
+                    document.getElementById('totalEmployees').textContent = data.total_employees || 0;
+                    // Update employee count change text based on filter
+                    const filterValue = document.getElementById('qaTimeFilter')?.value || 'current';
+                    let changeText = '';
+                    const thisMonthLabel = typeof translate === 'function' ? translate('dashboard.this_month') : 'this month';
+                    const lastMonthLabel = typeof translate === 'function' ? translate('dashboard.last_month_data') : 'last month';
+                    const thisYearLabel = typeof translate === 'function' ? translate('dashboard.this_year') : 'this year';
+                    if (filterValue === 'current') {
+                        changeText = `+${data.employees_added_this_month || 0} ${thisMonthLabel}`;
+                    } else if (filterValue === 'last') {
+                        changeText = `+${data.employees_added_this_month || 0} ${lastMonthLabel}`;
+                    } else if (filterValue === 'year') {
+                        changeText = `+${data.employees_added_this_month || 0} ${thisYearLabel}`;
+                    } else {
+                        changeText = `Total: ${data.employees_added_this_month || 0}`;
+                    }
+                    document.getElementById('totalEmployeesChange').textContent = changeText;
+
+                    document.getElementById('institutesCount').textContent = data.institutions_count || 0;
+                    const activeInstitutesText = typeof translate === 'function' ? translate('dashboard.active_institutes') : 'Active institutes';
+                    document.getElementById('institutesSubtitle').textContent = activeInstitutesText;
+
+                    document.getElementById('totalSalary').textContent = formatCurrency(data.total_salary || 0);
+
+                    // Update salary change text based on filter
+                    let salaryChangeText = '';
+                    if (filterValue === 'current') {
+                        salaryChangeText = typeof translate === 'function' ? translate('dashboard.this_month') : 'This month';
+                    } else if (filterValue === 'last') {
+                        salaryChangeText = typeof translate === 'function' ? translate('dashboard.last_month_data') : 'Last month';
+                    } else if (filterValue === 'year') {
+                        salaryChangeText = typeof translate === 'function' ? translate('dashboard.this_year_sum') : 'This year (sum of all months)';
+                    } else {
+                        salaryChangeText = typeof translate === 'function' ? translate('dashboard.all_time') : 'All time';
+                    }
+                    document.getElementById('totalSalaryChange').textContent = salaryChangeText;
+
+                    document.getElementById('attendanceRate').textContent = `${data.attendance_rate || 0}%`;
+                    const thisMonthText = typeof translate === 'function' ? translate('dashboard.this_month') : 'This month';
+                    document.getElementById('attendanceRateChange').textContent = thisMonthText;
+
+                    // Update Attendance Validation Stats (Quick Actions) with aggregated data
+                    document.getElementById('validatedRecords').textContent = attendanceValidationStats.validated_records;
+                    document.getElementById('pendingValidation').textContent = attendanceValidationStats.pending_validation;
+                    document.getElementById('partialPending').textContent = attendanceValidationStats.partial_pending;
+                    document.getElementById('pendingValidationCount').textContent =
+                        attendanceValidationStats.pending_validation + attendanceValidationStats.partial_pending;
+
+                    console.log('✅ Dashboard stats loaded successfully');
+                }
+
+            } catch (error) {
+                console.error('Error loading core stats:', error);
+                // Fallback to old method
+                await Promise.all([
+                    loadEmployeeStats(),
+                    loadSalaryStats(),
+                    loadAttendanceStats()
+                ]);
+            }
+        }
+
+        // Quick Action time filter helpers
+        function getQAFilters() {
+            const select = document.getElementById('qaTimeFilter');
+            const value = select ? select.value : 'current';  // Default to current month
+            const now = new Date();
+            console.log('🔍 Filter value:', value);
+
+            if (value === 'current') {
+                // Current month
+                const filters = { month: (now.getMonth() + 1), year: now.getFullYear() };
+                console.log('📅 Applying current month filter:', filters);
+                return filters;
+            }
+            if (value === 'last') {
+                // Last month
+                const lastMonth = now.getMonth() === 0 ? 12 : now.getMonth();
+                const lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+                const filters = { month: lastMonth, year: lastMonthYear };
+                console.log('📅 Applying last month filter:', filters);
+                return filters;
+            }
+            if (value === 'year') {
+                // This year
+                const filters = { year: now.getFullYear() };
+                console.log('📅 Applying this year filter:', filters);
+                return filters;
+            }
+            console.log('📅 No filter applied (all time)');
+            return {}; // all
+        }
+
+        // Update the data period indicator
+        function updateDataPeriodIndicator() {
+            const select = document.getElementById('qaTimeFilter');
+            const value = select ? select.value : 'current';
+            const now = new Date();
+
+            // Get translated month names
+            const monthKeys = ['dashboard.january', 'dashboard.february', 'dashboard.march', 'dashboard.april',
+                'dashboard.may', 'dashboard.june', 'dashboard.july', 'dashboard.august',
+                'dashboard.september', 'dashboard.october', 'dashboard.november', 'dashboard.december'];
+            const monthNames = monthKeys.map(key => typeof translate === 'function' ? translate(key) : key.replace('dashboard.', ''));
+
+            const allDataFiltered = typeof translate === 'function' ? translate('dashboard.all_data_filtered_period') : '(All Data Filtered)';
+            const yearLabel = typeof translate === 'function' ? translate('dashboard.year') : 'Year';
+
+            let indicatorText = typeof translate === 'function' ? translate('dashboard.data_period') : 'Current Month Data';
+            let indicatorClass = 'bg-blue-100 text-blue-800 border-blue-200';
+
+            if (value === 'current') {
+                indicatorText = `${monthNames[now.getMonth()]} ${now.getFullYear()} ${allDataFiltered}`;
+                indicatorClass = 'bg-green-100 text-green-800 border-green-200';
+            } else if (value === 'last') {
+                const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+                const lastMonthYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+                indicatorText = `${monthNames[lastMonth]} ${lastMonthYear} ${allDataFiltered}`;
+                indicatorClass = 'bg-purple-100 text-purple-800 border-purple-200';
+            } else if (value === 'year') {
+                indicatorText = `${yearLabel} ${now.getFullYear()} ${allDataFiltered}`;
+                indicatorClass = 'bg-orange-100 text-orange-800 border-orange-200';
+            }
+
+            const indicator = document.getElementById('dataPeriodIndicator');
+            if (indicator) {
+                indicator.className = `mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${indicatorClass}`;
+                document.getElementById('dataPeriodText').textContent = indicatorText;
+            }
+        }
+
+        function handleQAFilterChange() {
+            console.log('🔄 Filter changed! Reloading Quick Actions only (top cards remain all-time)...');
+
+            // Update the visual indicator
+            updateDataPeriodIndicator();
+
+            // Show loading indicator for Quick Action cards only
+            const quickActionCards = document.querySelectorAll('.quick-action-card');
+            quickActionCards.forEach(card => {
+                card.style.opacity = '0.5';
+            });
+
+            // Get current filter settings
+            const filters = getQAFilters();
+            console.log('🔍 Current filters:', filters);
+
+            // Only reload Quick Actions section (NOT the top 4 stat cards)
+            loadQuickActionStats(filters).then(() => {
+                // Remove loading indicator
+                quickActionCards.forEach(card => {
+                    card.style.opacity = '1';
+                });
+
+                console.log('✅ Quick Actions reloaded with filter');
+                console.log('🔍 Filter applied:', filters);
+                console.log('📊 Top cards remain showing all-time data');
+
+                // Show success notification
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    const filterText = document.getElementById('dataPeriodText').textContent;
+                    const updateMsg = typeof translate === 'function' ? translate('dashboard.dashboard_updated').replace('{period}', filterText) : `Quick Actions updated: ${filterText}`;
+                    Utils.showNotification(updateMsg, 'success');
+                }
+            }).catch(err => {
+                console.error('❌ Error reloading Quick Actions:', err);
+                quickActionCards.forEach(card => {
+                    card.style.opacity = '1';
+                });
+                if (typeof Utils !== 'undefined' && Utils.showNotification) {
+                    const errorMsg = typeof translate === 'function' ? translate('dashboard.error_updating') : 'Error updating Quick Actions';
+                    Utils.showNotification(errorMsg, 'error');
+                }
+            });
+        }
+
+        async function loadEmployeeStats() {
+            try {
+                const response = await APIService.getEmployees();
+                // Handle wrapped response: {success: true, employees: [...]}
+                const employees = response.employees || response;
+                dashboardData.employees = employees;
+
+                console.log('=== EMPLOYEE DATA DEBUG ===');
+                console.log('API Response:', response);
+                console.log('Total employees loaded:', employees.length);
+
+                if (employees.length > 0) {
+                    console.log('Sample employee object:', employees[0]);
+                    console.log('Fields available:', Object.keys(employees[0]));
+
+                    // Check position_name and salary fields
+                    console.log('Employee data check:', employees.map(e => ({
+                        name: e.first_name + ' ' + e.last_name,
+                        position_name: e.position_name,
+                        salary_amount: e.salary_amount,
+                        base_salary: e.base_salary,
+                        institution: e.institution,
+                        education_level: e.education_level
+                    })));
+                }
+
+                const totalEmployees = employees.length;
+                document.getElementById('totalEmployees').textContent = totalEmployees;
+
+                // Update institutes count (use correct 'institution' field)
+                const institutionsSet = new Set(employees.map(e => e.institution).filter(Boolean));
+                const institutionsCount = institutionsSet.size || 0;
+                const institutesEl = document.getElementById('institutesCount');
+                if (institutesEl) institutesEl.textContent = institutionsCount;
+
+            } catch (error) {
+                console.error('Error loading employee stats:', error);
+            }
+        }
+
+        async function loadSalaryStats() {
+            try {
+                const currentDate = new Date();
+                const currentMonth = currentDate.getMonth() + 1;
+                const currentYear = currentDate.getFullYear();
+
+                // Get salary summary for current month
+                const response = await fetch(`http://localhost:3010/salaries/summary?month=${currentMonth}&year=${currentYear}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const totalSalary = data.summary?.total_payroll || 0;
+                    document.getElementById('totalSalary').textContent = formatCurrency(totalSalary);
+                    document.getElementById('totalSalaryChange').textContent = 'This month';
+                    dashboardData.salaryData = data.summary;
+                } else {
+                    // Fallback calculation
+                    const totalSalary = dashboardData.employees.reduce((sum, emp) => sum + (emp.base_salary || 0), 0);
+                    document.getElementById('totalSalary').textContent = formatCurrency(totalSalary);
+                }
+
+            } catch (error) {
+                console.error('Error loading salary stats:', error);
+                document.getElementById('totalSalary').textContent = 'N/A';
+            }
+        }
+
+        async function loadExceptionStats() {
+            try {
+                const filters = getQAFilters();
+                console.log('📊 Loading exceptions with filters:', filters);
+
+                const [exceptionsResult, overtimeResult] = await Promise.all([
+                    API.getPendingExceptions(filters),
+                    API.getPendingOvertime(filters)
+                ]);
+
+                const exceptions = exceptionsResult?.success ? (exceptionsResult.data || []) : [];
+                const overtime = overtimeResult?.success ? (overtimeResult.data || []) : [];
+
+                console.log('📊 Exception Stats Response:', {
+                    exceptions: exceptions.length,
+                    overtime: overtime.length,
+                    total: exceptions.length + overtime.length
+                });
+
+                const totalPending = exceptions.length + overtime.length;
+
+                // Calculate weekly exceptions
+                const oneWeekAgo = new Date();
+                oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+                const weeklyExceptions = exceptions.filter(ex =>
+                    new Date(ex.created_at) >= oneWeekAgo
+                ).length;
+
+                document.getElementById('pendingExceptionsCount').textContent = totalPending;
+                document.getElementById('pendingExceptions').textContent = exceptions.length;
+                document.getElementById('weeklyExceptions').textContent = weeklyExceptions;
+                document.getElementById('notificationBadge').textContent = totalPending;
+
+                console.log('✏️ Updated Exception UI:', {
+                    pendingCount: totalPending,
+                    exceptions: exceptions.length,
+                    weekly: weeklyExceptions
+                });
+
+                if (totalPending > 0) {
+                    document.getElementById('notificationBadge').classList.remove('hidden');
+                } else {
+                    document.getElementById('notificationBadge').classList.add('hidden');
+                }
+
+                dashboardData.exceptions = [...exceptions, ...overtime];
+
+            } catch (error) {
+                console.error('Error loading exception stats:', error);
+            }
+        }
+
+        async function loadAttendanceStats(updateTopCard = true) {
+            try {
+                const filter = getQAFilters();
+                const now = new Date();
+
+                // The attendance API requires both month and year
+                // For year-only or all-time filters, we'll use the current month for the API call
+                // but the other stats (exceptions, salary) will still use the correct filter
+                let params = { month: now.getMonth() + 1, year: now.getFullYear() };
+
+                // Only use filter params if both month and year are present
+                if (filter.month && filter.year) {
+                    params = filter;
+                } else if (filter.year && !filter.month) {
+                    // Year-only filter: use current month of that year
+                    params = { month: now.getMonth() + 1, year: filter.year };
+                    console.log('⚠️ Attendance API requires month+year. Using current month for year filter:', params);
+                }
+                // For "all" time (empty filter), we already default to current month/year above
+
+                console.log('📋 Loading attendance stats with params:', params, 'updateTopCard:', updateTopCard);
+
+                const data = await API.getMonthlyStatistics(params);
+
+                console.log('📋 Attendance Stats Response:', {
+                    validated_records: data.validated_records,
+                    pending_validation: data.pending_validation,
+                    partial_pending: data.partial_pending,
+                    attendance_rate: data.attendance_rate
+                });
+
+                if (data) {
+                    // Only update top statistics card on initial load or when updateTopCard is true
+                    if (updateTopCard) {
+                        const attendanceRate = data.attendance_rate || 0;
+                        const attendanceRateEl = document.getElementById('attendanceRate');
+                        if (attendanceRateEl) attendanceRateEl.textContent = `${attendanceRate.toFixed(1)}%`;
+                        const attendanceRateChangeEl = document.getElementById('attendanceRateChange');
+                        if (attendanceRateChangeEl) attendanceRateChangeEl.textContent = 'This month';
+                        console.log('✏️ Updated TOP card attendance rate:', attendanceRate.toFixed(1) + '%');
+                    } else {
+                        console.log('⏭️ Skipping top card update (filter mode)');
+                    }
+
+                    // Always update quick action card statistics
+                    const validatedEl = document.getElementById('validatedRecords');
+                    const pendingValEl = document.getElementById('pendingValidation');
+                    const partialPendingEl = document.getElementById('partialPending');
+                    const pendingBadgeEl = document.getElementById('pendingValidationCount');
+                    if (validatedEl) validatedEl.textContent = data.validated_records || 0;
+                    if (pendingValEl) pendingValEl.textContent = data.pending_validation || 0;
+                    if (partialPendingEl) partialPendingEl.textContent = data.partial_pending || 0;
+                    if (pendingBadgeEl) pendingBadgeEl.textContent = (data.pending_validation || 0) + (data.partial_pending || 0);
+
+                    console.log('✏️ Updated Attendance Quick Action Card:', {
+                        validated: data.validated_records || 0,
+                        pending: data.pending_validation || 0,
+                        partial: data.partial_pending || 0
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading attendance stats:', error);
+                if (updateTopCard) {
+                    const attendanceRateEl = document.getElementById('attendanceRate');
+                    if (attendanceRateEl) attendanceRateEl.textContent = 'N/A';
+                }
+            }
+        }
+
+        // Load department statistics
+        async function loadDepartmentStats() {
+            try {
+                const departments = await APIService.getDepartments();
+                const employees = dashboardData.employees;
+
+                const totalDepartments = departments.length;
+                const activeDepartments = departments.filter(dept => dept.status === 'active').length;
+                const avgEmployeesPerDept = totalDepartments > 0 ? Math.round(employees.length / totalDepartments) : 0;
+
+                document.getElementById('totalDepartmentsCount').textContent = totalDepartments;
+                document.getElementById('totalDepartments').textContent = totalDepartments;
+                document.getElementById('activeDepartments').textContent = activeDepartments;
+                document.getElementById('avgEmployeesPerDept').textContent = avgEmployeesPerDept;
+
+            } catch (error) {
+                console.error('Error loading department stats:', error);
+            }
+        }
+
+        // Load salary management statistics
+        async function loadSalaryManagementStats() {
+            try {
+                const filters = getQAFilters();
+                console.log('💰 Loading salary stats with filters:', filters);
+
+                let summary = {
+                    total_payroll: 0,
+                    paid_count: 0,
+                    pending_count: 0,
+                    total_raise: 0,
+                    total_decrease: 0
+                };
+
+                if (filters.year && !filters.month) {
+                    // This Year: Sum all months of the current year
+                    console.log('💰 Aggregating salary data for entire year:', filters.year);
+
+                    const year = filters.year;
+                    const monthPromises = [];
+
+                    // Create promises for all 12 months
+                    for (let month = 1; month <= 12; month++) {
+                        const url = `http://localhost:3010/salaries/summary?month=${month}&year=${year}`;
+                        monthPromises.push(
+                            fetch(url, {
+                                headers: {
+                                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                    'Content-Type': 'application/json'
+                                }
+                            }).then(response => response.ok ? response.json() : { summary: {} })
+                        );
+                    }
+
+                    try {
+                        const monthResults = await Promise.all(monthPromises);
+
+                        // Sum all months
+                        monthResults.forEach(result => {
+                            const monthSummary = result.summary || {};
+                            summary.total_payroll += parseFloat(monthSummary.total_payroll || 0);
+                            summary.paid_count += parseInt(monthSummary.paid_count || 0);
+                            summary.pending_count += parseInt(monthSummary.pending_count || 0);
+                            summary.total_raise += parseFloat(monthSummary.total_raise || 0);
+                            summary.total_decrease += parseFloat(monthSummary.total_decrease || 0);
+                        });
+
+                        console.log('💰 Yearly aggregated salary stats:', summary);
+
+                    } catch (error) {
+                        console.warn('⚠️ Error aggregating yearly salary data:', error);
+                        // Fallback to current month
+                        const currentDate = new Date();
+                        const url = `http://localhost:3010/salaries/summary?month=${currentDate.getMonth() + 1}&year=${currentDate.getFullYear()}`;
+                        const response = await fetch(url, {
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            summary = data.summary || summary;
+                        }
+                    }
+
+                } else {
+                    // Current Month or Last Month: Single API call
+                    const queryString = new URLSearchParams(filters).toString();
+                    const url = `http://localhost:3010/salaries/summary?${queryString}`;
+
+                    console.log('💰 Salary API URL:', url);
+
+                    const response = await fetch(url, {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        summary = data.summary || summary;
+                        console.log('💰 Salary Stats Response:', summary);
+                    } else {
+                        console.warn('⚠️ Salary API failed, using fallback calculation');
+                        // Fallback calculation
+                        const totalPayroll = dashboardData.employees.reduce((sum, emp) => sum + (emp.base_salary || 0), 0);
+                        const paidCount = Math.floor(dashboardData.employees.length * 0.8);
+                        const pendingCount = dashboardData.employees.length - paidCount;
+
+                        summary = {
+                            total_payroll: totalPayroll,
+                            paid_count: paidCount,
+                            pending_count: pendingCount,
+                            total_raise: totalPayroll * 0.05,
+                            total_decrease: totalPayroll * 0.02
+                        };
+                    }
+                }
+
+                // Update UI with aggregated data
+                document.getElementById('totalPayrollAmount').textContent = formatCurrency(summary.total_payroll || 0);
+                document.getElementById('paidSalaries').textContent = summary.paid_count || 0;
+                document.getElementById('pendingSalaries').textContent = summary.pending_count || 0;
+                document.getElementById('totalRaiseAmount').textContent = formatCurrency(summary.total_raise || 0);
+                document.getElementById('totalDecreaseAmount').textContent = formatCurrency(summary.total_decrease || 0);
+                document.getElementById('salaryStatusCount').textContent = (summary.paid_count || 0) + (summary.pending_count || 0);
+
+                console.log('✏️ Updated Salary UI:', {
+                    payroll: formatCurrency(summary.total_payroll || 0),
+                    paid: summary.paid_count || 0,
+                    pending: summary.pending_count || 0,
+                    raise: formatCurrency(summary.total_raise || 0),
+                    decrease: formatCurrency(summary.total_decrease || 0)
+                });
+
+            } catch (error) {
+                console.error('Error loading salary management stats:', error);
+            }
+        }
+
+        async function loadRecentEmployees() {
+            try {
+                const employees = dashboardData.employees;
+                const recentEmployees = employees
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                    .slice(0, 5);
+
+                const container = document.getElementById('recentEmployeesList');
+                if (recentEmployees.length === 0) {
+                    const noEmployeesText = typeof translate === 'function' ? translate('dashboard.no_recent_employees') : 'No recent employees';
+                    container.innerHTML = `<p class="text-gray-500 text-center">${noEmployeesText}</p>`;
+                    return;
+                }
+
+                const noPositionText = typeof translate === 'function' ? translate('dashboard.no_position') : 'No position';
+                const newLabel = typeof translate === 'function' ? translate('dashboard.new') : 'New';
+                container.innerHTML = recentEmployees.map(employee => `
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                        <div class="flex items-center">
+                            <div class="h-12 w-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                                <span class="text-white font-semibold text-sm">${employee.first_name[0]}${employee.last_name[0]}</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="font-semibold text-gray-900">${employee.first_name} ${employee.last_name}</p>
+                                <p class="text-sm text-gray-600">${employee.position_name || noPositionText}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                        <span class="text-xs text-gray-500">${Utils.formatDate(employee.created_at)}</span>
+                            <div class="mt-1">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    ${newLabel}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading recent employees:', error);
+            }
+        }
+
+        async function loadUpcomingMeetings() {
+            try {
+                const meetings = await APIService.request('meetings', '/meetings/upcoming/dashboard');
+                const upcomingMeetings = meetings
+                    .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+                    .slice(0, 5);
+
+                const container = document.getElementById('upcomingMeetingsList');
+                if (!container) return; // Calendar view active; guard if list container not present
+                if (upcomingMeetings.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center">No upcoming meetings</p>';
+                    return;
+                }
+
+                container.innerHTML = upcomingMeetings.map(meeting => `
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100">
+                                <div class="flex items-center">
+                            <div class="h-12 w-12 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center">
+                                <i class="fas fa-calendar text-white"></i>
+                                    </div>
+                            <div class="ml-4">
+                                <p class="font-semibold text-gray-900">${meeting.title}</p>
+                                <p class="text-sm text-gray-600">${Utils.formatDateTime(meeting.start_time)}</p>
+                                    </div>
+                                </div>
+                        <div class="text-right">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                Upcoming
+                            </span>
+                        </div>
+                            </div>
+                        `).join('');
+            } catch (error) {
+                console.error('Error loading upcoming meetings:', error);
+            }
+        }
+
+        async function loadDepartmentOverview() {
+            try {
+                const departments = await APIService.getDepartments();
+                dashboardData.departments = departments;
+
+                const container = document.getElementById('departmentOverview');
+                if (!container) return; // Section removed; guard DOM updates
+                if (departments.length === 0) {
+                    const noDeptsText = typeof translate === 'function' ? translate('dashboard.no_departments_found') : 'No departments found';
+                    container.innerHTML = `<p class="text-gray-500 text-center col-span-full">${noDeptsText}</p>`;
+                    return;
+                }
+
+                container.innerHTML = departments.map(dept => `
+                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100 hover:shadow-lg transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-gray-900 text-lg">${dept.name}</h4>
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                    ${dept.employee_count || 0} employees
+                                </span>
+                        </div>
+                        </div>
+                        <div class="space-y-2">
+                        <p class="text-sm text-gray-600">
+                            ${dept.responsible_first_name ?
+                        `Responsible: ${dept.responsible_first_name} ${dept.responsible_last_name}` :
+                        'No responsible assigned'
+                    }
+                        </p>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full" style="width: ${Math.min((dept.employee_count || 0) * 10, 100)}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                const countEl = document.getElementById('totalDepartmentsCount');
+                if (countEl) countEl.textContent = departments.length;
+
+            } catch (error) {
+                console.error('Error loading department overview:', error);
+            }
+        }
+
+        function initializeCharts() {
+            console.log('Initializing charts...');
+
+            // Destroy existing charts if they exist
+            if (departmentChart) {
+                departmentChart.destroy();
+                departmentChart = null;
+            }
+            if (salaryChart) {
+                salaryChart.destroy();
+                salaryChart = null;
+            }
+
+            // Department Chart (Salary Sum by Institute)
+            const deptCtx = document.getElementById('departmentChart');
+            if (deptCtx) {
+                try {
+                    departmentChart = new Chart(deptCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Loading...'],
+                            datasets: [{
+                                data: [1],
+                                backgroundColor: [
+                                    '#667eea',
+                                    '#764ba2',
+                                    '#f093fb',
+                                    '#f5576c',
+                                    '#4facfe',
+                                    '#00f2fe'
+                                ],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 20,
+                                        usePointStyle: true
+                                    }
+                                },
+                                title: {
+                                    display: true,
+                                    text: typeof translate === 'function' ? translate('dashboard.salary_sum_by_institution') : 'Salary Sum by Institution',
+                                    font: { size: 16, weight: 'bold' }
+                                }
+                            }
+                        }
+                    });
+                    console.log('Department chart initialized successfully');
+                } catch (error) {
+                    console.error('Error initializing department chart:', error);
+                }
+            } else {
+                console.error('Department chart canvas not found');
+            }
+
+            // Salary Chart (Salary Sum by Teacher Level)
+            const salaryCtx = document.getElementById('salaryChart');
+            if (salaryCtx) {
+                try {
+                    salaryChart = new Chart(salaryCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Loading...'],
+                            datasets: [{
+                                label: typeof translate === 'function' ? translate('dashboard.salary_sum_da') : 'Salary Sum (DA)',
+                                data: [1],
+                                backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                                borderColor: 'rgba(102, 126, 234, 1)',
+                                borderWidth: 1,
+                                borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                title: {
+                                    display: true,
+                                    text: typeof translate === 'function' ? translate('dashboard.salary_sum_by_position') : 'Salaries by Position',
+                                    font: { size: 16, weight: 'bold' }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function (value) {
+                                            return formatCurrency(value) + ' DA';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    console.log('Salary chart initialized successfully');
+                } catch (error) {
+                    console.error('Error initializing salary chart:', error);
+                }
+            } else {
+                console.error('Salary chart canvas not found');
+            }
+        }
+
+        function updateCharts() {
+            console.log('Updating charts with data...', {
+                employeeCount: dashboardData.employees ? dashboardData.employees.length : 0,
+                hasDepartmentChart: !!departmentChart,
+                hasSalaryChart: !!salaryChart
+            });
+
+            // Safety check: don't update if no employee data
+            if (!dashboardData.employees || dashboardData.employees.length === 0) {
+                console.warn('⚠️ No employee data available, skipping chart update');
+                return;
+            }
+
+            // Chart 1: Salary Sum by Institution (doughnut)
+            if (departmentChart) {
+                const byInstitution = {};
+
+                dashboardData.employees.forEach(emp => {
+                    const institution = emp.institution || 'Unassigned';
+                    // FIXED: Proper salary handling with parseFloat and null checks
+                    const salary = parseFloat(emp.salary_amount) || parseFloat(emp.base_salary) || 0;
+                    byInstitution[institution] = (byInstitution[institution] || 0) + salary;
+                });
+
+                const labels = Object.keys(byInstitution);
+                const values = labels.map(k => byInstitution[k]);
+
+                console.log('📊 Institution Chart Data:', {
+                    labels,
+                    values,
+                    total: values.reduce((a, b) => a + b, 0),
+                    employeesWithSalary: dashboardData.employees.filter(e =>
+                        parseFloat(e.salary_amount) || parseFloat(e.base_salary)
+                    ).length
+                });
+
+                if (labels.length > 0 && values.reduce((a, b) => a + b, 0) > 0) {
+                    departmentChart.data.labels = labels;
+                    departmentChart.data.datasets[0].data = values;
+                } else {
+                    const noSalaryDataText = typeof translate === 'function' ? translate('dashboard.no_salary_data') : 'No Salary Data';
+                    departmentChart.data.labels = [noSalaryDataText];
+                    departmentChart.data.datasets[0].data = [1];
+                }
+                departmentChart.update();
+
+            } else {
+                console.error('Department chart not initialized');
+            }
+
+            // Chart 2: Salary Sum by Position/Department (IMPROVED)
+            if (salaryChart) {
+                const positionSalaries = {};
+
+                console.log('📊 Position Analysis:', {
+                    totalEmployees: dashboardData.employees.length,
+                    positions: [...new Set(dashboardData.employees.map(e => e.position_name).filter(Boolean))],
+                    institutions: [...new Set(dashboardData.employees.map(e => e.institution).filter(Boolean))]
+                });
+
+                dashboardData.employees.forEach(emp => {
+                    // Use position_name as the grouping factor
+                    const position = emp.position_name || 'Unspecified Position';
+                    // FIXED: Proper salary handling
+                    const salary = parseFloat(emp.salary_amount) || parseFloat(emp.base_salary) || 0;
+
+                    positionSalaries[position] = (positionSalaries[position] || 0) + salary;
+                });
+
+                const labels = Object.keys(positionSalaries);
+                const values = labels.map(k => positionSalaries[k]);
+
+                console.log('📊 Position Chart Data:', {
+                    positions: labels,
+                    salaries: values,
+                    total: values.reduce((a, b) => a + b, 0)
+                });
+
+                if (labels.length > 0 && values.reduce((a, b) => a + b, 0) > 0) {
+                    salaryChart.data.labels = labels;
+                    salaryChart.data.datasets[0].data = values;
+                } else {
+                    // Show helpful message if no data found
+                    const noEmployeesText = typeof translate === 'function' ? translate('dashboard.no_employees_found') : 'No Employees Found';
+                    const noSalaryDataText = typeof translate === 'function' ? translate('dashboard.no_salary_data') : 'No Salary Data';
+                    salaryChart.data.labels = dashboardData.employees.length === 0 ? [noEmployeesText] : [noSalaryDataText];
+                    salaryChart.data.datasets[0].data = [0];
+                }
+                salaryChart.update();
+
+            } else {
+                console.error('Salary chart not initialized');
+            }
+
+            console.log('✅ Charts updated successfully');
+        }
+
+        // Quick Action Functions
+        async function openQuickExceptions() {
+            const modal = document.getElementById('quickExceptionsModal');
+            modal.classList.remove('hidden');
+
+            try {
+                const content = document.getElementById('quickExceptionsContent');
+                const pendingExceptionsLabel = typeof translate === 'function' ? translate('dashboard.pending') : 'Pending Exceptions';
+                const thisWeekLabel = typeof translate === 'function' ? translate('dashboard.this_week') : 'This Week';
+                const resolvedLabel = typeof translate === 'function' ? translate('dashboard.resolved') : 'Resolved';
+                const openFullViewText = typeof translate === 'function' ? translate('dashboard.open_full_view') : 'Open Full View';
+                const closeText = typeof translate === 'function' ? translate('common.close') : 'Close';
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                                <div class="flex items-center">
+                                    <i class="fas fa-exclamation-triangle text-red-600 text-xl mr-3"></i>
+                                    <div>
+                                        <p class="font-semibold text-red-800">${pendingExceptionsLabel}</p>
+                                        <p class="text-2xl font-bold text-red-900">${dashboardData.exceptions.length}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                                <div class="flex items-center">
+                                    <i class="fas fa-clock text-orange-600 text-xl mr-3"></i>
+                                    <div>
+                                        <p class="font-semibold text-orange-800">${thisWeekLabel}</p>
+                                        <p class="text-2xl font-bold text-orange-900">${Math.floor(dashboardData.exceptions.length * 0.3)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                                <div class="flex items-center">
+                                    <i class="fas fa-check-circle text-green-600 text-xl mr-3"></i>
+                                    <div>
+                                        <p class="font-semibold text-green-800">${resolvedLabel}</p>
+                                        <p class="text-2xl font-bold text-green-900">${Math.floor(dashboardData.exceptions.length * 0.7)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-4">
+                            <button onclick="window.open('exceptions.html', '_blank')" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-external-link-alt mr-2"></i>
+                                ${openFullViewText}
+                            </button>
+                            <button onclick="closeQuickExceptions()" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition-colors">
+                                ${closeText}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading exceptions:', error);
+            }
+        }
+
+        function closeQuickExceptions() {
+            document.getElementById('quickExceptionsModal').classList.add('hidden');
+        }
+
+        async function openQuickAttendance() {
+            const modal = document.getElementById('quickAttendanceModal');
+            modal.classList.remove('hidden');
+
+            try {
+                const content = document.getElementById('quickAttendanceContent');
+                const totalEmployeesLabel = typeof translate === 'function' ? translate('dashboard.total_employees') : 'Total Employees';
+                const attendanceRateLabel = typeof translate === 'function' ? translate('dashboard.attendance_rate') : 'Attendance Rate';
+                const openAttendanceMasterText = typeof translate === 'function' ? translate('dashboard.open_attendance_master') : 'Open Attendance Master';
+                const closeText = typeof translate === 'function' ? translate('common.close') : 'Close';
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <div class="flex items-center">
+                                    <i class="fas fa-users text-blue-600 text-xl mr-3"></i>
+                                    <div>
+                                        <p class="font-semibold text-blue-800">${totalEmployeesLabel}</p>
+                                        <p class="text-2xl font-bold text-blue-900">${dashboardData.employees.length}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                                <div class="flex items-center">
+                                    <i class="fas fa-chart-line text-green-600 text-xl mr-3"></i>
+                                    <div>
+                                        <p class="font-semibold text-green-800">${attendanceRateLabel}</p>
+                                        <p class="text-2xl font-bold text-green-900">${document.getElementById('attendanceRate').textContent}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-4">
+                            <button onclick="window.open('../attendance-service/attendance-master.html', '_blank')" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-external-link-alt mr-2"></i>
+                                ${openAttendanceMasterText}
+                            </button>
+                            <button onclick="closeQuickAttendance()" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition-colors">
+                                ${closeText}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading attendance:', error);
+            }
+        }
+
+        function closeQuickAttendance() {
+            document.getElementById('quickAttendanceModal').classList.add('hidden');
+        }
+
+        async function openQuickDepartments() {
+            const modal = document.getElementById('quickDepartmentsModal');
+            modal.classList.remove('hidden');
+
+            try {
+                const content = document.getElementById('quickDepartmentsContent');
+                const employeesLabel = typeof translate === 'function' ? translate('dashboard.employees') : 'employees';
+                const responsibleLabel = typeof translate === 'function' ? translate('dashboard.responsible') : 'Responsible';
+                const noResponsibleText = typeof translate === 'function' ? translate('dashboard.no_responsible_assigned') : 'No responsible assigned';
+                const openDeptMgmtText = typeof translate === 'function' ? translate('dashboard.open_department_management') : 'Open Department Management';
+                const closeText = typeof translate === 'function' ? translate('common.close') : 'Close';
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                            ${dashboardData.departments.map(dept => `
+                                <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100">
+                                    <h4 class="font-semibold text-gray-900 mb-2">${dept.name}</h4>
+                                    <p class="text-sm text-gray-600 mb-2">${dept.employee_count || 0} ${employeesLabel}</p>
+                                    <p class="text-xs text-gray-500">
+                                        ${dept.responsible_first_name ?
+                        `${responsibleLabel}: ${dept.responsible_first_name} ${dept.responsible_last_name}` :
+                        noResponsibleText
+                    }
+                                    </p>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="flex space-x-4">
+                            <button onclick="window.open('departments.html', '_blank')" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-external-link-alt mr-2"></i>
+                                ${openDeptMgmtText}
+                            </button>
+                            <button onclick="closeQuickDepartments()" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition-colors">
+                                ${closeText}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading departments:', error);
+            }
+        }
+
+        function closeQuickDepartments() {
+            document.getElementById('quickDepartmentsModal').classList.add('hidden');
+        }
+
+        // Chart refresh functions
+        function refreshDepartmentChart() {
+            updateCharts();
+            const msg = typeof translate === 'function' ? translate('dashboard.department_chart_refreshed') : 'Department chart refreshed';
+            Utils.showNotification(msg, 'success');
+        }
+
+        function refreshSalaryChart() {
+            updateCharts();
+            const msg = typeof translate === 'function' ? translate('dashboard.salary_chart_refreshed') : 'Salary chart refreshed';
+            Utils.showNotification(msg, 'success');
+        }
+
+        function refreshDepartmentOverview() {
+            loadDepartmentOverview();
+            const msg = typeof translate === 'function' ? translate('dashboard.department_overview_refreshed') : 'Department overview refreshed';
+            Utils.showNotification(msg, 'success');
+        }
+
+        function refreshAllData() {
+            loadDashboardData();
+            const msg = typeof translate === 'function' ? translate('dashboard.all_data_refreshed') : 'All data refreshed';
+            Utils.showNotification(msg, 'success');
+        }
+
+        // Utility functions
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'decimal',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount || 0);
+        }
+
+        // Calendar functionality
+        let currentCalendarDate = new Date();
+
+        function generateCalendar() {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+
+            // Get translated month names
+            const monthKeys = ['dashboard.january', 'dashboard.february', 'dashboard.march', 'dashboard.april',
+                'dashboard.may', 'dashboard.june', 'dashboard.july', 'dashboard.august',
+                'dashboard.september', 'dashboard.october', 'dashboard.november', 'dashboard.december'];
+            const monthNames = monthKeys.map(key => typeof translate === 'function' ? translate(key) : key.replace('dashboard.', ''));
+
+            document.getElementById('calendarMonth').textContent = `${monthNames[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = firstDay.getDay();
+
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'h-8 w-8 flex items-center justify-center text-gray-300';
+                calendarDays.appendChild(emptyDay);
+            }
+
+            // Add days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'h-8 w-8 flex items-center justify-center text-sm cursor-pointer hover:bg-blue-100 rounded-full';
+                dayElement.textContent = day;
+
+                // Highlight today
+                const today = new Date();
+                if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
+                    dayElement.className += ' bg-blue-500 text-white';
+                }
+
+                // Add meeting indicators (mock data)
+                const hasMeeting = Math.random() > 0.8; // 20% chance of having a meeting
+                if (hasMeeting) {
+                    dayElement.className += ' relative';
+                    const indicator = document.createElement('div');
+                    indicator.className = 'absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-red-500 rounded-full';
+                    dayElement.appendChild(indicator);
+                }
+
+                calendarDays.appendChild(dayElement);
+            }
+
+            loadTodaysMeetings();
+        }
+
+        function previousMonth() {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+            generateCalendar();
+        }
+
+        function nextMonth() {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+            generateCalendar();
+        }
+
+        async function loadTodaysMeetings() {
+            try {
+                const today = new Date();
+                const meetings = dashboardData.meetings || [];
+
+                const todaysMeetings = meetings.filter(meeting => {
+                    const meetingDate = new Date(meeting.date);
+                    return meetingDate.toDateString() === today.toDateString();
+                });
+
+                const container = document.getElementById('todaysMeetings');
+                if (todaysMeetings.length === 0) {
+                    const noMeetingsText = typeof translate === 'function' ? translate('dashboard.no_meetings_today') : 'No meetings today';
+                    container.innerHTML = `<p class="text-gray-500 text-sm">${noMeetingsText}</p>`;
+                    return;
+                }
+
+                container.innerHTML = todaysMeetings.map(meeting => `
+                    <div class="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                            <span class="text-sm font-medium text-gray-900">${meeting.title}</span>
+                        </div>
+                        <span class="text-xs text-gray-500">${meeting.time || 'TBD'}</span>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading today\'s meetings:', error);
+            }
+        }
+
+        // Load attendance stats on page load
+        loadAttendanceStats();
+    </script>
+</body>
+
+</html>

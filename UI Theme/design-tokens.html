@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل الألوان والتصميم - EL FADILA SCHOOL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #f5f7fb;
+            padding: 40px 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 24px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .color-card {
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s;
+        }
+
+        .color-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .color-preview {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .color-info {
+            padding: 16px;
+            background: white;
+        }
+
+        .color-name {
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .color-value {
+            font-family: monospace;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .spacing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .spacing-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .spacing-preview {
+            background: #3b82f6;
+            margin: 0 auto 12px;
+            border-radius: 4px;
+        }
+
+        .spacing-label {
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .spacing-value {
+            font-family: monospace;
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        .shadow-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+
+        .shadow-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .shadow-label {
+            font-weight: 600;
+            color: #0f172a;
+            margin-top: 16px;
+        }
+
+        .shadow-value {
+            font-family: monospace;
+            color: #64748b;
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+
+        .typography-example {
+            margin-bottom: 24px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+
+        .font-weight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+        }
+
+        .font-weight-card {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .gradient-preview {
+            height: 100px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            margin-top: 12px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎨 دليل الألوان والتصميم</h1>
+            <p>نظام التصميم الموحد لمدرسة الفضيلة</p>
+        </div>
+
+        <!-- Primary Colors -->
+        <div class="section">
+            <h2 class="section-title">الألوان الأساسية</h2>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-preview" style="background: #3b82f6;">Primary</div>
+                    <div class="color-info">
+                        <div class="color-name">الأزرق الأساسي</div>
+                        <div class="color-value">#3b82f6</div>
+                        <div class="code-block">--color-primary</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-preview" style="background: #2563eb;">Primary Dark</div>
+                    <div class="color-info">
+                        <div class="color-name">الأزرق الداكن</div>
+                        <div class="color-value">#2563eb</div>
+                        <div class="code-block">--color-primary-dark</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-preview" style="background: #8b5cf6;">Secondary</div>
+                    <div class="color-info">
+                        <div class="color-name">البنفسجي الثانوي</div>
+                        <div class="color-value">#8b5cf6</div>
+                        <div class="code-block">--color-secondary</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-preview" style="background: #7c3aed;">Secondary Dark</div>
+                    <div class="color-info">
+                        <div class="color-name">البنفسجي الداكن</div>
+                        <div class="color-value">#7c3aed</div>
+                        <div class="code-block">--color-secondary-dark</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Colors -->
+        <div class="section">
+            <h2 class="section-title">ألوان الحالة</h2>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-preview" style="background: #10b981;">Success</div>
+                    <div class="color-info">
+                        <div class="color-name">نجاح</div>
+                        <div class="color-value">#10b981</div>
+                        <div class="code-block">--color-success</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-preview" style="background: #f59e0b;">Warning</div>
+                    <div class="color-info">
+                        <div class="color-name">تحذير</div>
+                        <div class="color-value">#f59e0b</div>
+                        <div class="code-block">--color-warning</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-preview" style="background: #ef4444;">Error</div>
+                    <div class="color-info">
+                        <div class="color-name">خطأ</div>
+                        <div class="color-value">#ef4444</div>
+                        <div class="code-block">--color-error</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-preview" style="background: #3b82f6;">Info</div>
+                    <div class="color-info">
+                        <div class="color-name">معلومة</div>
+                        <div class="color-value">#3b82f6</div>
+                        <div class="code-block">--color-info</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Neutral Colors -->
+        <div class="section">
+            <h2 class="section-title">الألوان المحايدة (Slate)</h2>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-preview" style="background: #f8fafc; color: #0f172a;">50</div>
+                    <div class="color-info">
+                        <div class="color-name">Slate 50</div>
+                        <div class="color-value">#f8fafc</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-preview" style="background: #f1f5f9; color: #0f172a;">100</div>
+                    <div class="color-info">
+                        <div class="color-name">Slate 100</div>
+                        <div class="color-value">#f1f5f9</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-preview" style="background: #e2e8f0; color: #0f172a;">200</div>
+                    <div class="color-info">
+                        <div class="color-name">Slate 200</div>
+                        <div class="color-value">#e2e8f0</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-preview" style="background: #cbd5e1; color: #0f172a;">300</div>
+                    <div class="color-info">
+                        <div class="color-name">Slate 300</div>
+                        <div class="color-value">#cbd5e1</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-preview" style="background: #94a3b8;">400</div>
+                    <div class="color-info">
+                        <div class="color-name">Slate 400</div>
+                        <div class="color-value">#94a3b8</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-preview" style="background: #64748b;">500</div>
+                    <div class="color-info">
+                        <div class="color-name">Slate 500</div>
+                        <div class="color-value">#64748b</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-preview" style="background: #475569;">600</div>
+                    <div class="color-info">
+                        <div class="color-name">Slate 600</div>
+                        <div class="color-value">#475569</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-preview" style="background: #334155;">700</div>
+                    <div class="color-info">
+                        <div class="color-name">Slate 700</div>
+                        <div class="color-value">#334155</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-preview" style="background: #1e293b;">800</div>
+                    <div class="color-info">
+                        <div class="color-name">Slate 800</div>
+                        <div class="color-value">#1e293b</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-preview" style="background: #0f172a;">900</div>
+                    <div class="color-info">
+                        <div class="color-name">Slate 900</div>
+                        <div class="color-value">#0f172a</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gradients -->
+        <div class="section">
+            <h2 class="section-title">التدرجات اللونية</h2>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);"></div>
+                    <div class="color-info">
+                        <div class="color-name">Primary Gradient</div>
+                        <div class="code-block">linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%);"></div>
+                    <div class="color-info">
+                        <div class="color-name">Hero Gradient</div>
+                        <div class="code-block">linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%)</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
+                    <div class="color-info">
+                        <div class="color-name">Success Gradient</div>
+                        <div class="code-block">linear-gradient(135deg, #10b981 0%, #059669 100%)</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);"></div>
+                    <div class="color-info">
+                        <div class="color-name">Error Gradient</div>
+                        <div class="code-block">linear-gradient(135deg, #ef4444 0%, #dc2626 100%)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spacing -->
+        <div class="section">
+            <h2 class="section-title">المسافات</h2>
+            <div class="spacing-grid">
+                <div class="spacing-card">
+                    <div class="spacing-preview" style="width: 4px; height: 4px;"></div>
+                    <div class="spacing-label">XS</div>
+                    <div class="spacing-value">0.25rem (4px)</div>
+                    <div class="code-block">--spacing-xs</div>
+                </div>
+                <div class="spacing-card">
+                    <div class="spacing-preview" style="width: 8px; height: 8px;"></div>
+                    <div class="spacing-label">SM</div>
+                    <div class="spacing-value">0.5rem (8px)</div>
+                    <div class="code-block">--spacing-sm</div>
+                </div>
+                <div class="spacing-card">
+                    <div class="spacing-preview" style="width: 16px; height: 16px;"></div>
+                    <div class="spacing-label">MD</div>
+                    <div class="spacing-value">1rem (16px)</div>
+                    <div class="code-block">--spacing-md</div>
+                </div>
+                <div class="spacing-card">
+                    <div class="spacing-preview" style="width: 24px; height: 24px;"></div>
+                    <div class="spacing-label">LG</div>
+                    <div class="spacing-value">1.5rem (24px)</div>
+                    <div class="code-block">--spacing-lg</div>
+                </div>
+                <div class="spacing-card">
+                    <div class="spacing-preview" style="width: 32px; height: 32px;"></div>
+                    <div class="spacing-label">XL</div>
+                    <div class="spacing-value">2rem (32px)</div>
+                    <div class="code-block">--spacing-xl</div>
+                </div>
+                <div class="spacing-card">
+                    <div class="spacing-preview" style="width: 48px; height: 48px;"></div>
+                    <div class="spacing-label">2XL</div>
+                    <div class="spacing-value">3rem (48px)</div>
+                    <div class="code-block">--spacing-2xl</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shadows -->
+        <div class="section">
+            <h2 class="section-title">الظلال</h2>
+            <div class="shadow-grid">
+                <div class="shadow-card" style="box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);">
+                    <div style="font-size: 2rem;">📄</div>
+                    <div class="shadow-label">Small</div>
+                    <div class="shadow-value">--shadow-sm</div>
+                </div>
+                <div class="shadow-card" style="box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);">
+                    <div style="font-size: 2rem;">📋</div>
+                    <div class="shadow-label">Medium</div>
+                    <div class="shadow-value">--shadow-md</div>
+                </div>
+                <div class="shadow-card" style="box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);">
+                    <div style="font-size: 2rem;">📦</div>
+                    <div class="shadow-label">Large</div>
+                    <div class="shadow-value">--shadow-lg</div>
+                </div>
+                <div class="shadow-card" style="box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);">
+                    <div style="font-size: 2rem;">🎁</div>
+                    <div class="shadow-label">Extra Large</div>
+                    <div class="shadow-value">--shadow-xl</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Typography -->
+        <div class="section">
+            <h2 class="section-title">الطباعة</h2>
+            <div class="typography-example">
+                <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 16px;">عنوان رئيسي (H1)</h1>
+                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 16px;">عنوان ثانوي (H2)</h2>
+                <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 16px;">عنوان فرعي (H3)</h3>
+                <p style="font-size: 1rem; line-height: 1.6; color: #475569;">
+                    نص عادي - هذا مثال على النص العادي في النظام. يستخدم خط Outfit بوزن 400 ولون slate-600.
+                </p>
+            </div>
+
+            <h3 style="margin-bottom: 16px; color: #0f172a;">أوزان الخط</h3>
+            <div class="font-weight-grid">
+                <div class="font-weight-card" style="font-weight: 300;">
+                    <div>Light (300)</div>
+                </div>
+                <div class="font-weight-card" style="font-weight: 400;">
+                    <div>Regular (400)</div>
+                </div>
+                <div class="font-weight-card" style="font-weight: 500;">
+                    <div>Medium (500)</div>
+                </div>
+                <div class="font-weight-card" style="font-weight: 600;">
+                    <div>Semibold (600)</div>
+                </div>
+                <div class="font-weight-card" style="font-weight: 700;">
+                    <div>Bold (700)</div>
+                </div>
+                <div class="font-weight-card" style="font-weight: 800;">
+                    <div>Extrabold (800)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Border Radius -->
+        <div class="section">
+            <h2 class="section-title">نصف القطر (Border Radius)</h2>
+            <div class="spacing-grid">
+                <div class="spacing-card">
+                    <div
+                        style="width: 60px; height: 60px; background: #3b82f6; margin: 0 auto 12px; border-radius: 0.5rem;">
+                    </div>
+                    <div class="spacing-label">Small</div>
+                    <div class="spacing-value">0.5rem (8px)</div>
+                    <div class="code-block">--radius-sm</div>
+                </div>
+                <div class="spacing-card">
+                    <div
+                        style="width: 60px; height: 60px; background: #3b82f6; margin: 0 auto 12px; border-radius: 0.75rem;">
+                    </div>
+                    <div class="spacing-label">Medium</div>
+                    <div class="spacing-value">0.75rem (12px)</div>
+                    <div class="code-block">--radius-md</div>
+                </div>
+                <div class="spacing-card">
+                    <div
+                        style="width: 60px; height: 60px; background: #3b82f6; margin: 0 auto 12px; border-radius: 1rem;">
+                    </div>
+                    <div class="spacing-label">Large</div>
+                    <div class="spacing-value">1rem (16px)</div>
+                    <div class="code-block">--radius-lg</div>
+                </div>
+                <div class="spacing-card">
+                    <div
+                        style="width: 60px; height: 60px; background: #3b82f6; margin: 0 auto 12px; border-radius: 1.5rem;">
+                    </div>
+                    <div class="spacing-label">XL</div>
+                    <div class="spacing-value">1.5rem (24px)</div>
+                    <div class="code-block">--radius-xl</div>
+                </div>
+                <div class="spacing-card">
+                    <div
+                        style="width: 60px; height: 60px; background: #3b82f6; margin: 0 auto 12px; border-radius: 2rem;">
+                    </div>
+                    <div class="spacing-label">2XL</div>
+                    <div class="spacing-value">2rem (32px)</div>
+                    <div class="code-block">--radius-2xl</div>
+                </div>
+                <div class="spacing-card">
+                    <div
+                        style="width: 60px; height: 60px; background: #3b82f6; margin: 0 auto 12px; border-radius: 999px;">
+                    </div>
+                    <div class="spacing-label">Full</div>
+                    <div class="spacing-value">999px</div>
+                    <div class="code-block">border-radius: 999px</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

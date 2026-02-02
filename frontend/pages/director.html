@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HR Operations Platform - Director</title>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.14/dist/tailwind.min.css" rel="stylesheet" />
+  <style>
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    .responsible-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      color: #374151;
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      transition: all 150ms ease;
+    }
+
+    .responsible-btn:hover {
+      background: #2563eb;
+      color: #fff;
+      border-color: #2563eb;
+    }
+
+    .responsible-btn.selected {
+      background: #2563eb;
+      color: #fff;
+      border-color: #2563eb;
+    }
+
+    .pagination-btn {
+      padding: 0.375rem 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #374151;
+      transition: all 150ms ease;
+    }
+
+    .pagination-btn:hover {
+      background: #2563eb;
+      color: #fff;
+      border-color: #2563eb;
+    }
+
+    .pagination-btn.active {
+      background: #2563eb;
+      color: #fff;
+      border-color: #2563eb;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen p-4 sm:p-6">
+  <div class="max-w-7xl mx-auto">
+    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+      <h1 class="text-2xl font-bold text-gray-900">Director Dashboard</h1>
+      <nav class="flex flex-wrap items-center gap-2" aria-label="Breadcrumb">
+        <a href="/" class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600"><i
+            class="fa fa-home"></i> Home</a>
+      </nav>
+    </header>
+
+    <div id="taskManagementContainer" class="bg-white rounded-xl shadow border border-gray-200">
+      <div class="p-4 sm:p-6 border-b border-gray-200 flex flex-wrap gap-3 justify-between items-center">
+        <h2 class="text-xl font-semibold text-gray-900">Task Management</h2>
+        <nav class="flex flex-wrap items-center gap-4" role="tablist">
+          <button id="responsiblesTabButton"
+            class="px-1 py-2 text-sm font-semibold border-b-2 border-blue-600 text-blue-600" aria-selected="true"
+            role="tab">Responsibles</button>
+          <button id="departmentTabButton" class="px-1 py-2 text-sm font-medium text-gray-700 hover:text-blue-600"
+            aria-selected="false" role="tab">Departments</button>
+          <button id="employeesTabButton" class="px-1 py-2 text-sm font-medium text-gray-700 hover:text-blue-600"
+            aria-selected="false" role="tab">Employees</button>
+          <button id="tasksTabButton" class="px-1 py-2 text-sm font-medium text-gray-700 hover:text-blue-600"
+            aria-selected="false" role="tab">Tasks</button>
+        </nav>
+      </div>
+
+      <section id="responsiblesTabContent" role="tabpanel" aria-labelledby="responsiblesTabButton"
+        class="block p-4 sm:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <button id="openAddResponsibleModal"
+            class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <i class="fas fa-plus"></i>
+            <span>Add Responsible</span>
+          </button>
+          <div class="relative flex-1 min-w-[220px] max-w-sm">
+            <input id="responsiblesSearch" type="text" placeholder="Search Responsibles..."
+              aria-label="Search Responsibles"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition" />
+            <button id="responsiblesSearchClear" aria-label="Clear search" title="Clear search"
+              class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="responsiblesButtons" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-3"></div>
+        <div id="responsiblesPagination" class="flex justify-center items-center gap-2 mt-6"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Modal: Add Responsible -->
+  <div id="addResponsibleModal" aria-hidden="true" role="dialog" aria-modal="true"
+    aria-labelledby="addResponsibleModalLabel" class="modal-backdrop">
+    <div class="w-full h-full flex items-center justify-center p-4">
+      <div class="relative bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
+        <button class="close-modal absolute top-3 right-3 text-gray-500 hover:text-gray-700" aria-label="Close modal"
+          title="Close modal">
+          <i class="fa fa-times text-xl"></i>
+        </button>
+        <h2 id="addResponsibleModalLabel" class="text-lg font-semibold mb-4">Add Responsible</h2>
+        <form id="addResponsibleForm" class="space-y-4">
+          <div>
+            <label for="newResponsibleName" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input type="text" id="newResponsibleName" name="name" autocomplete="off" required
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+          </div>
+          <button type="submit"
+            class="w-full bg-blue-600 text-white rounded-lg px-4 py-2 font-semibold hover:bg-blue-700">Add</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Responsibles state
+    let responsibles = [];
+    let filteredResponsibles = [];
+    let currentPage = 1;
+    const itemsPerPage = 18;
+
+    const responsiblesButtons = document.getElementById('responsiblesButtons');
+    const responsiblesPagination = document.getElementById('responsiblesPagination');
+    const responsiblesSearch = document.getElementById('responsiblesSearch');
+    const responsiblesSearchClear = document.getElementById('responsiblesSearchClear');
+
+    async function loadResponsibles() {
+      try {
+        const response = await fetch('/api/responsibles');
+        responsibles = await response.json();
+        filteredResponsibles = Array.isArray(responsibles) ? [...responsibles] : [];
+        currentPage = 1;
+        renderResponsibles();
+        renderPagination();
+      } catch (error) {
+        console.error('Failed to load responsibles:', error);
+      }
+    }
+
+    function renderResponsibles() {
+      responsiblesButtons.innerHTML = '';
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const pageResponsibles = filteredResponsibles.slice(startIndex, endIndex);
+
+      pageResponsibles.forEach((responsible) => {
+        const btn = document.createElement('button');
+        btn.textContent = responsible.name;
+        btn.className = 'responsible-btn';
+        btn.addEventListener('click', () => {
+          [...responsiblesButtons.children].forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        });
+        responsiblesButtons.appendChild(btn);
+      });
+
+      if (pageResponsibles.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'col-span-full text-center text-gray-500 py-8';
+        empty.innerHTML = '<i class="fa fa-user-tie text-2xl text-gray-300 block mb-2"></i>No responsibles found';
+        responsiblesButtons.appendChild(empty);
+      }
+    }
+
+    function renderPagination() {
+      responsiblesPagination.innerHTML = '';
+      const pageCount = Math.ceil(filteredResponsibles.length / itemsPerPage);
+      if (!pageCount || pageCount <= 1) return;
+
+      const makeBtn = (label, page, disabled = false, active = false) => {
+        const b = document.createElement('button');
+        b.textContent = label;
+        b.className = 'pagination-btn' + (active ? ' active' : '') + (disabled ? ' opacity-50 cursor-not-allowed' : '');
+        if (!disabled) {
+          b.addEventListener('click', () => {
+            currentPage = page;
+            renderResponsibles();
+            renderPagination();
+          });
+        }
+        return b;
+      };
+
+      responsiblesPagination.appendChild(makeBtn('Prev', Math.max(1, currentPage - 1), currentPage === 1));
+      for (let i = 1; i <= pageCount; i++) {
+        responsiblesPagination.appendChild(makeBtn(String(i), i, false, i === currentPage));
+      }
+      responsiblesPagination.appendChild(makeBtn('Next', Math.min(pageCount, currentPage + 1), currentPage === pageCount));
+    }
+
+    responsiblesSearch.addEventListener('input', () => {
+      const searchTerm = responsiblesSearch.value.trim().toLowerCase();
+      responsiblesSearchClear.classList.toggle('hidden', searchTerm.length === 0);
+      filteredResponsibles = responsibles.filter(r => (r.name || '').toLowerCase().includes(searchTerm));
+      currentPage = 1;
+      renderResponsibles();
+      renderPagination();
+    });
+
+    responsiblesSearchClear.addEventListener('click', () => {
+      responsiblesSearch.value = '';
+      filteredResponsibles = [...responsibles];
+      responsiblesSearchClear.classList.add('hidden');
+      currentPage = 1;
+      renderResponsibles();
+      renderPagination();
+    });
+
+    // Modal handling
+    const openAddResponsibleModalBtn = document.getElementById('openAddResponsibleModal');
+    const addResponsibleModal = document.getElementById('addResponsibleModal');
+    const closeModalBtn = addResponsibleModal.querySelector('.close-modal');
+    const addResponsibleForm = document.getElementById('addResponsibleForm');
+
+    function openModal() {
+      addResponsibleModal.classList.add('show');
+      addResponsibleModal.setAttribute('aria-hidden', 'false');
+      setTimeout(() => document.getElementById('newResponsibleName').focus(), 0);
+    }
+    function closeModal() {
+      addResponsibleModal.classList.remove('show');
+      addResponsibleModal.setAttribute('aria-hidden', 'true');
+    }
+
+    openAddResponsibleModalBtn.addEventListener('click', openModal);
+    closeModalBtn.addEventListener('click', closeModal);
+    addResponsibleModal.addEventListener('click', (e) => { if (e.target === addResponsibleModal) closeModal(); });
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && addResponsibleModal.classList.contains('show')) closeModal(); });
+
+    addResponsibleForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(addResponsibleForm);
+      const name = String(formData.get('name') || '').trim();
+      if (!name) return;
+      try {
+        const response = await fetch('/api/responsibles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        if (!response.ok) throw new Error('Failed to add responsible');
+        closeModal();
+        addResponsibleForm.reset();
+        await loadResponsibles();
+      } catch (error) {
+        console.error(error);
+        alert('Failed to add responsible');
+      }
+    });
+
+    // Initial load
+    loadResponsibles();
+  </script>
+</body>
+
+</html>
